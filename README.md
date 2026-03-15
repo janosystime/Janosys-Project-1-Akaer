@@ -25,7 +25,7 @@
 
 ## 🏅 Desafio <a id="desafio"></a>
 
-Este projeto propõe o desenvolvimento de uma plataforma web estruturada para centralizar, organizar e correlacionar requisitos normativos aeronáuticos.
+Este projeto propõe o desenvolvimento de uma plataforma web estruturada, com diferentes níveis de permissão, que permita centralizar, organizar e correlacionar requisitos normativos aeronáuticos. Ao final, o projeto deve permir a filtragem e busca de normas, além de manter o histórico das diversas versões das mesmas e também de alterações no sistema. 
 
 O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como parceiro externo, no papel do celiente, a Akaer, empresa da região da área de engenharia aeroespacial e defesa.
 

@@ -13,6 +13,8 @@
   <a href ="#us">User Stories</a>  |   
   <a href ="#sprints">Sprints</a>  |
   <a href ="#tasks">Tasks</a>  |
+  <a href ="#dod">DoD</a>  |
+  <a href ="#dor">DoR</a>  |
   <a href ="#proximos">Próximos</a>  | 
   <a href ="#anexos">Anexos</a>  |
   <a href ="#time">Time</a> |
@@ -102,6 +104,26 @@ Um site navegável e que possibilite a gestão das normas e sua visualização.
 | 8 | Implantar a visualização da norma | 4  | 4 | 
 
 ---
+## 🏃‍ DoR - Definition of Ready <a id="dor"></a>
+  <ul>
+      <li> User Stories com critérios de aceitação definidos no formato “Como [persona], quero [ação] para que [objetivo]";</li>
+      <li> Subtarefas derivadas da User Storie estão identificadas; </li>
+      <li> Compreensão do time da necessidade do cliente e do valor de negócio; </li>
+      <li> Esforço estimado pelo planning poker; </li>
+      <li> Definição dos valores do negócio; </li>
+      <li> A história pode ser implementada sem depender de outra tarefa da mesma Sprint; </li>
+      <li> Estudo de aplicação de possíveis cenários com anotação de Gherkin
+      <li> Desenho do Banco de Dados definido </li>
+      <li> Definição das Tecnologias a serem usadas no processo </li> 
+  </ul>
+
+---
+
+## 🏆 DoD - Definition of Done <a id="dod"></a>
+  <ul>
+  </ul>
+ 
+---
 
 ## 📊 Critérios de Aceitação <a id="criterios"></a>
 
@@ -122,7 +144,8 @@ Um site navegável e que possibilite a gestão das normas e sua visualização.
 
 ## 📂 Anexos / Evidências <a id="anexos"></a>
 
-- [Modelo do Banco de Dados](../docs/bd_sp1.png)
+- [Cenários para as User Stories da Sprint 1](../docs/sp1/gherkin_sp1.pdf)
+- [Modelo do Banco de Dados](../docs/sp1/bd_sp1.png)
 
 ---
 
