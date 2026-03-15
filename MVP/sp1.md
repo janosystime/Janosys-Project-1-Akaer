@@ -10,6 +10,7 @@
   | <a href ="#objetivo">Objetivo</a>  |
   <a href ="#descricao">Descrição</a>  |   
   <a href ="#usuario">Usuário</a>  |
+  <a href ="#detalhamento">Detalhamento</a>  |
   <a href ="#us">User Stories</a>  |   
   <a href ="#sprints">Sprints</a>  |
   <a href ="#tasks">Tasks</a>  |
@@ -72,11 +73,15 @@ Um site navegável e que possibilite a gestão das normas e sua visualização.
 - **Engenheiro:**<br>Usuário que irá apenas visualizar as informações contidas no sistema, podendo filtrar as informações desejadas pelos filtros que serão implementados futuramente.
 
 ---
-## Resumo da Sprint 
 
-| Capacidade estimada da equipe por sprint | 40 Pontos | 
-| Meta da Sprint | User Stories do Rank #1 e #2 |
-| Previsão da Sprint (extra)| #User Stories do Rank #4 e #7 | 
+### 📋 Detalhamento do Backlog da Sprint <a id="detalhamento"></a>
+
+| Rank | ID | Título | Estimativa | Status |
+| :--- | :--- | :--- | :---: | :---: |
+| #1 | US01 | Gestão de normas | 7 pts | Planejado |
+| #2 | US02 | Visualização de normas | 4 pts | Planejado |
+| #4 | US04 | Filtro por Categoria (Pública/Privada) | 5 pts | Extra |
+| #7 | US03 | Filtragem de normas por Código | 7 pts | Extra |
 
 ---
 
