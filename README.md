@@ -156,7 +156,7 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
  
 ---
 
-## 📂 Nomenclatura de Branches e Estratégia de Branchs <a id="branch"></a>
+## 📂 Nomenclatura e Estratégia de Branchs <a id="branch"></a>
 
 A estrutura de ramificação do repositório segue este padrão de nomenclatura:
 
