@@ -122,10 +122,10 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 
 |      Sprint       |  Previsão  |    Status    |     Histórico     |
 | :---------------: | :--------: | :----------: | :---------------: |
-|        01         | 05/04/2026 |  Em construção  | [MVP](MVP/sp1.md) |
-|        02         | 03/05/2026 |  Em construção  | [MVP](MVP/sp2.md) |
-|        03         | 31/05/2026 |  Em construção  | [MVP](MVP/sp3.md) |
-| Feira de Soluções | 11/06/2026 |  Em construção  | [FEIRA](MVP/sp4.md) |
+|        01         | 05/04/2026 |  Em construção  | [Sprint Backlog - MVP](MVP/sp1.md) |
+|        02         | 03/05/2026 |  Em construção  | ---- |
+|        03         | 31/05/2026 |  Em construção  | ---- |
+| Feira de Soluções | 11/06/2026 |  Em construção  | ---- |
 
 ---
 
