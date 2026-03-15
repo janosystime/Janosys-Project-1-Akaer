@@ -1,9 +1,9 @@
-    # 📌 MVP - API 1º sem. DSM 2025/2º
+    # 📌 MVP - API 2º sem. DSM 2026/1º
 
 # Documentação (Sprint I)
 
 <p align="center">
-      <img src="https://github.com/user-attachments/assets/6a2c0103-81cb-4431-81b9-643b9f40add8" alt="logo da Buzz Tech" width="200">
+      <img src="https://github.com/user-attachments/assets/6a2c0103-81cb-4431-81b9-643b9f40add8" alt="logo da Janosys" width="200">
       <p align="center">"Entre o ontem e o amanhã, soluções que permanecem."</p>
 
 <p align="center">
@@ -12,8 +12,7 @@
   <a href ="#usuario">Usuário</a>  |
   <a href ="#us">User Stories</a>  |   
   <a href ="#sprints">Sprints</a>  |
-  <a href ="#criterios">Critérios</a>  | 
-  <a href ="#metricas">Métricas</a>  | 
+  <a href ="#tasks">Tasks</a>  |
   <a href ="#proximos">Próximos</a>  | 
   <a href ="#anexos">Anexos</a>  |
   <a href ="#time">Time</a> |
@@ -117,7 +116,7 @@ Um site navegável e que possibilite a gestão das normas e sua visualização.
 
 ## 📂 Anexos / Evidências <a id="anexos"></a>
 
-- Em construção
+- [Modelo do Banco de Dados](docs/bd_sp1)
 
 ---
 
