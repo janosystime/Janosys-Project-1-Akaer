@@ -105,8 +105,8 @@ Um site navegável e que possibilite a gestão das normas e sua visualização.
 | 4 | Implantar cadastro de norma | 1 | 4 | 
 | 5 | Implantar palavra-chave a norma| 1 | 4 | 
 | 6 | Implantar excluir norma | 1 | 2 | 
-| 7 | Implantar a visualização das observações da norma | 4 | 4 | 
-| 8 | Implantar a visualização da norma | 4  | 4 | 
+| 7 | Implantar a visualização das observações da norma | 2 | 4 | 
+| 8 | Implantar a visualização da norma | 2  | 4 | 
 
 ---
 ## 🏃‍ DoR - Definition of Ready <a id="dor"></a>
