@@ -1,0 +1,22 @@
+.login-footer {
+  position: fixed;
+  bottom: 24px;
+  right: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-text {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #77777B;
+  letter-spacing: 1px;
+}
+
+.janosys-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}

@@ -1,0 +1,23 @@
+.login-button {
+  width: 200px;
+  height: 56px;
+  background-color: #6C2139;
+  border: none;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-transform: uppercase;
+}
+
+.login-button:hover {
+  background-color: #5a1c30;
+}
+
+.login-button:active {
+  background-color: #4a1728;
+}
