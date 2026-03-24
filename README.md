@@ -1,16 +1,50 @@
-# React + Vite
+# SIGNA — Sistema Integrado de Gestão de Normativas Aeronáuticas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema interno da Akaer para gestão e consulta de normativas aeronáuticas.
 
-Currently, two official plugins are available:
+## Equipe
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Desenvolvido por **JanoSys Technologies**
 
-## React Compiler
+## Tecnologias
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- Vite
+- CSS puro
 
-## Expanding the ESLint configuration
+## Como rodar o projeto
+```bash
+npm install
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Estrutura do projeto
+```
+src/
+├── auth/
+│   └── Login.jsx
+├── components/
+│   └── Sidebar.jsx
+├── pages/
+│   ├── Dashboard.jsx
+│   ├── Normativas.jsx
+│   ├── Notas.jsx
+│   └── Usuarios.jsx
+├── styles/
+│   ├── global.css
+│   ├── sidebar.css
+│   └── login.css
+├── App.jsx
+└── main.jsx
+```
+
+## Branches
+
+- `main` — produção
+- `dev` — integração geral
+- `front` — integração do front
+- `back` — inegração do back
+- `dev/front/feature-login` — tela de login
+- `dev/front/feature-normativas` — tela de normativas
+- `dev/front/feature-notas` — tela de notas
+- `dev/front/feature-usuarios` — tela de usuários
