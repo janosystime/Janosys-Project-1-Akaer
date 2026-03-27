@@ -1,0 +1,199 @@
+/* ============================================
+   SIG-NA — Login
+============================================ */
+
+.login-pagina {
+  min-height: 100vh;
+  background: var(--cor-cinza-claro);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+}
+
+/* --- Logo no topo --- */
+.login-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-img {
+  height: 120px;
+  width: auto;
+}
+
+.login-logo-linha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.login-logo-linha span {
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--cor-cinza-escuro);
+  letter-spacing: 0.01em;
+}
+
+.login-logo-linha .badge-signa {
+  font-size: 18px;
+  font-weight: 700;
+  background: var(--cor-vinho);
+  color: var(--cor-branco);
+  padding: 2px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.login-logo-subtitulo {
+  font-size: 13px;
+  color: var(--cor-vinho);
+  letter-spacing: 0.01em;
+}
+
+/* --- Card do formulário --- */
+.login-card {
+  background: var(--cor-branco);
+  border-radius: 16px 16px 8px 8px;
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.login-card-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--cor-vinho);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* --- Campos do formulário --- */
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.login-campo label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--cor-cinza-escuro);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.login-campo input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--cor-cinza-linha);
+  border-radius: var(--raio-borda);
+  font-size: 13px;
+  font-family: var(--fonte-principal);
+  color: var(--cor-texto);
+  background: var(--cor-branco);
+  transition: border-color var(--transicao);
+  outline: none;
+}
+
+.login-campo input:focus {
+  border-color: var(--cor-vinho);
+}
+
+.login-campo input::placeholder {
+  color: #c0b8ba;
+}
+
+/* --- Link esqueci a senha --- */
+.login-esqueci {
+  font-size: 12px;
+  color: var(--cor-vinho);
+  text-align: right;
+  cursor: pointer;
+  transition: opacity var(--transicao);
+}
+
+.login-esqueci:hover {
+  opacity: 0.75;
+}
+
+/* --- Botão entrar --- */
+.btn-entrar {
+  width: 100%;
+  padding: 12px;
+  background: var(--cor-vinho);
+  color: var(--cor-branco);
+  border: none;
+  border-radius: var(--raio-borda);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background var(--transicao);
+}
+
+.btn-entrar:hover {
+  background: var(--cor-vinho-escuro);
+}
+
+/* --- Aviso de acesso restrito --- */
+.login-aviso {
+  font-size: 12px;
+  color: var(--cor-cinza-escuro);
+  text-align: center;
+}
+
+/* --- Rodapé --- */
+.login-rodape {
+  font-size: 11px;
+  color: var(--cor-inativo);
+  text-align: center
+}
+
+.login-rodape strong {
+  color: var(--cor-cinza-escuro);
+}
+
+
+/* --- Responsividade --- */
+
+/* Em telas menores que 480px, reduz o logo */
+@media (max-width: 480px) {
+  .logo-img {
+    height: 80px;
+  }
+
+  .login-card {
+    padding: 28px 32px;
+    max-width: 380px;
+    gap: 14px;
+    width: 80%;
+  }
+
+  .login-logo-subtitulo {
+    font-size: 11px;
+  }
+
+  .login-rodape {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+}

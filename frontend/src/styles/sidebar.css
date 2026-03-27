@@ -1,0 +1,188 @@
+/* ============================================
+   SIGNA — Sidebar
+============================================ */
+
+.sidebar {
+  width: 180px;
+  background: var(--cor-vinho);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* Estado recolhido */
+.sidebar.recolhida {
+  width: 52px;
+}
+
+/* Quando recolhida mas com hover, expande temporariamente */
+.sidebar.recolhida.expandida-hover {
+  width: 180px;
+}
+
+/* --- Switch toggle --- */
+.sidebar-toggle {
+  display: flex;
+  justify-content: flex-start;
+  padding: 10px 7px 2px;
+}
+
+.sidebar-toggle button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Centraliza toggle quando recolhida */
+.sidebar.recolhida:not(.expandida-hover) .sidebar-toggle {
+  justify-content: center;
+  padding: 10px 0 2px;
+}
+
+/* --- Itens de navegação --- */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 17px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background var(--transicao), padding var(--transicao), gap var(--transicao);
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+button.nav-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+}
+
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--cor-branco);
+}
+
+.nav-item.active {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--cor-branco);
+  font-weight: 500;
+}
+
+/* Garante tamanho fixo nos ícones do Lucide dentro do nav-item */
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.nav-icone {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Centraliza ícone e remove gap quando recolhida (sem hover) */
+.sidebar.recolhida:not(.expandida-hover) .nav-item {
+  justify-content: center;
+  padding: 13px 0;
+  gap: 0;
+  width: 52px;
+}
+
+/* Oculta o texto quando recolhida (sem hover) */
+.sidebar.recolhida:not(.expandida-hover) .nav-label,
+.sidebar.recolhida:not(.expandida-hover) .nav-secao-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.nav-label {
+  white-space: nowrap;
+}
+
+/* --- Separador e label de seção --- */
+.nav-divisor {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 6px 0;
+}
+
+.nav-secao-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 17px 4px;
+  white-space: nowrap;
+  transition: opacity var(--transicao);
+  text-align: center;
+}
+
+/* --- Área inferior (usuário + sair) --- */
+.sidebar-rodape {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 0 4px;
+}
+
+.sidebar-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 17px;
+  white-space: nowrap;
+}
+
+/* Centraliza avatar quando recolhida */
+.sidebar.recolhida:not(.expandida-hover) .sidebar-usuario {
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.sidebar-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--cor-branco);
+  flex-shrink: 0;
+}
+
+.sidebar-usuario-nome {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sidebar.recolhida:not(.expandida-hover) .sidebar-usuario-nome {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.nav-item.sair {
+  color: rgba(255, 255, 255, 0.45);
+  padding: 13px 17px;
+}
+
+/* Corrige padding do botão sair quando recolhida */
+.sidebar.recolhida:not(.expandida-hover) .nav-item.sair {
+  padding: 13px 0;
+  width: 52px;
+}

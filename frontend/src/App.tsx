@@ -1,121 +1,110 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+/**
+ * App.tsx — define quais páginas existem e quem pode acessar cada uma.
+ *
+ * Conceitos:
+ *  - Componente: função que retorna JSX
+ *  - Props: dados que um componente pai passa para o filho
+ *  - React Router: troca de "página" sem recarregar o navegador
+ *
+ * Mudança importante:
+ *  - O <Layout> envolve todas as rotas internas como rota pai.
+ *    Assim ele monta uma única vez e o estado persiste entre todas as navegações.
+ */
 
-function App() {
-  const [count, setCount] = useState(0)
+import { Routes, Route, Navigate } from 'react-router-dom'
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+import { obterUsuarioAtual } from './auth/session'
 
-      <div className="ticks"></div>
+import Login      from './auth/Login'
+import Dashboard  from './pages/MindMap'
+import Normativas from './pages/Normativas'
+import Notas      from './pages/Notas'
+import Usuarios   from './pages/Usuarios'
+import Layout     from './components/Layout'
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+// ------------------------------------------------------------
+// Componente: RotaProtegida
+// Só deixa entrar se houver um usuário salvo na sessão.
+// Se não houver, manda para /login.
+// Props recebidas:
+//   - children: qualquer conteúdo JSX passado entre as tags
+// ------------------------------------------------------------
+function RotaProtegida({ children }: { children: React.ReactNode }) {
+  const usuario = obterUsuarioAtual()
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  // Se não está logado, redireciona para login
+  if (!usuario) {
+    return <Navigate to="/login" />
+  }
+
+  // Se está logado, mostra o que foi pedido
+  return <>{children}</>
 }
 
-export default App
+// ------------------------------------------------------------
+// Componente: RotaAdmin
+// Só deixa entrar se o usuário for administrador.
+// Se não for, manda para /dashboard.
+// ------------------------------------------------------------
+function RotaAdmin({ children }: { children: React.ReactNode }) {
+  const usuario = obterUsuarioAtual()
+
+  if (!usuario || usuario.perfil !== 'administrador') {
+    return <Navigate to="/dashboard" />
+  }
+
+  return <>{children}</>
+}
+
+// ------------------------------------------------------------
+// Componente principal: App
+// Define todas as rotas do sistema.
+//
+// Estrutura de rotas:
+//   - /login              → fora do Layout, sem sidebar
+//   - rota pai (sem path) → Layout único compartilhado por todas as rotas internas.
+//                           O <Outlet /> dentro do Layout renderiza a rota filha ativa.
+//     - /dashboard        → protegida por RotaProtegida
+//     - /normativas       → protegida por RotaProtegida
+//     - /notas            → protegida por RotaProtegida
+//     - /usuarios         → protegida por RotaAdmin (só administrador)
+// ------------------------------------------------------------
+export default function App() {
+  return (
+    <Routes>
+
+      {/* Página de login — fora do layout, não tem sidebar */}
+      <Route path="/login" element={<Login />} />
+
+      {/* Rota pai: Layout único compartilhado por todas as páginas internas.
+          RotaProtegida garante que qualquer acesso exige login.
+          O Layout monta uma única vez — o estado da Sidebar persiste entre rotas. */}
+      <Route
+        element={
+          <RotaProtegida>
+            <Layout />
+          </RotaProtegida>
+        }
+      >
+        <Route path="/dashboard"  element={<Dashboard />} />
+        <Route path="/normativas" element={<Normativas />} />
+        <Route path="/notas"      element={<Notas />} />
+
+        {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
+            O Layout já está montado — só o <Outlet /> troca. */}
+        <Route
+          path="/usuarios"
+          element={
+            <RotaAdmin>
+              <Usuarios />
+            </RotaAdmin>
+          }
+        />
+      </Route>
+
+      {/* Qualquer URL desconhecida vai para /dashboard */}
+      <Route path="*" element={<Navigate to="/dashboard" />} />
+
+    </Routes>
+  )
+}

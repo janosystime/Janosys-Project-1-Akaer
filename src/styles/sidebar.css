@@ -1,0 +1,170 @@
+/* ============================================
+   SIG-NA — Sidebar
+============================================ */
+
+.sidebar {
+  width: 180px;
+  background: var(--cor-vinho);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width var(--transicao);
+}
+
+/* Estado recolhido */
+.sidebar.recolhida {
+  width: 52px;
+}
+
+/* Quando recolhida mas com hover, expande temporariamente */
+.sidebar.recolhida.expandida-hover {
+  width: 180px;
+}
+
+/* --- Switch toggle --- */
+.sidebar-toggle {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 14px 6px;
+}
+
+.sidebar-toggle button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.switch-trilho {
+  width: 36px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: background var(--transicao);
+}
+
+.switch-bolinha {
+  width: 16px;
+  height: 16px;
+  background: var(--cor-branco);
+  border-radius: 50%;
+  transition: transform var(--transicao);
+}
+
+/* Estado ativo — sidebar fixada */
+.switch-ativo .switch-trilho {
+  background: var(--cor-vinho-claro);
+}
+
+.switch-ativo .switch-bolinha {
+  transform: translateX(16px);
+}
+
+/* --- Itens de navegação --- */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 17px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background var(--transicao);
+}
+
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--cor-branco);
+}
+
+.nav-item.ativo {
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--cor-branco);
+  font-weight: 500;
+}
+
+.nav-icone {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Oculta o texto quando recolhida (sem hover) */
+.sidebar.recolhida:not(.expandida-hover) .nav-label,
+.sidebar.recolhida:not(.expandida-hover) .nav-secao-label {
+  opacity: 0;
+}
+
+.nav-label {
+  transition: opacity var(--transicao);
+  white-space: nowrap;
+}
+
+/* --- Separador e label de seção --- */
+.nav-divisor {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 6px 0;
+}
+
+.nav-secao-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 17px 4px;
+  white-space: nowrap;
+  transition: opacity var(--transicao);
+  text-align: center;
+}
+
+/* --- Área inferior (usuário + sair) --- */
+.sidebar-rodape {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 0 4px;
+}
+
+.sidebar-usuario {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 17px;
+  white-space: nowrap;
+}
+
+.sidebar-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--cor-branco);
+  flex-shrink: 0;
+}
+
+.sidebar-usuario-nome {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: opacity var(--transicao);
+}
+
+.sidebar.recolhida:not(.expandida-hover) .sidebar-usuario-nome {
+  opacity: 0;
+}
+
+.nav-item.sair {
+  color: rgba(255, 255, 255, 0.45);
+  padding: 8px 17px;
+}
