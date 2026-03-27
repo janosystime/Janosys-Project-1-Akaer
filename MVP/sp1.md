@@ -1,0 +1,168 @@
+    # 📌 MVP - API 2º sem. DSM 2026/1º
+
+# Documentação (Sprint I)
+
+<p align="center">
+      <img src="https://github.com/user-attachments/assets/6a2c0103-81cb-4431-81b9-643b9f40add8" alt="logo da Janosys" width="200">
+      <p align="center">"Entre o ontem e o amanhã, soluções que permanecem."</p>
+
+<p align="center">
+  | <a href ="#objetivo">Objetivo</a>  |
+  <a href ="#descricao">Descrição</a>  |   
+  <a href ="#usuario">Usuário</a>  |
+  <a href ="#detalhamento">Detalhamento</a>  |
+  <a href ="#us">User Stories</a>  |   
+  <a href ="#sprints">Sprints</a>  |
+  <a href ="#tasks">Tasks</a>  |
+  <a href ="#dod">DoD</a>  |
+  <a href ="#dor">DoR</a>  |
+  <a href ="#proximos">Próximos</a>  | 
+  <a href ="#anexos">Anexos</a>  |
+  <a href ="#time">Time</a> |
+</p>
+
+---
+
+## 🎯 Objetivo do MVP <a id="objetivo"></a>
+
+> Qual problema resolve?
+
+O foco desta sprint é solucionar a falta de centralização e gerenciamento das normas aeronáuticas no sistema da empresa parceira.
+
+> Qual hipótese será validada?
+
+A meta será a entrega de página web com as funcionalidades de gestão e visualização de normas, para que futuramente implementemos a filtragem das mesmas.
+
+> Qual valor será entregue ao usuário final?
+
+Um site navegável e que possibilite a gestão das normas e sua visualização.
+
+---
+
+## 📝 Descrição da Solução <a id="descricao"></a>
+
+> Funcionalidades principais incluídas
+
+<ul>
+  <li> Criação de um site básico acessível via navegador;</li>
+  <li> Implementação das divisões hierárquicas definidas pelo cliente;</li>
+  <li> A alocação e gestão das normas contidas em seus devidos locais;</li>
+  <li> Visualização gráfica das normas.</li>
+</ul>
+
+> Limitações conhecidas
+
+<ul>
+  <li> Baixo entendimento do time sobre a área de aplição do projeto;</li>
+  <li> Gestão de arquivos com linguagem e temas específicos</li>
+  <li> Necessidade pedagógica do uso de novas ferramentas;</li>
+</ul>
+
+> Escopo reduzido (somente o essencial para validar a ideia)
+
+<ul>
+  <li> Entrega da primeira versão do site com a funcionalidade de gerenciar normas;</li>
+</ul>
+
+---
+
+## 👥 Personas / Usuários-Alvo <a id="usuario"></a>
+
+- **Adminstrador** <br>Usuário do sistema responsável por gerenciar outros usuário, adicionar e retirar subdiretórios e adicionar, retirar ou alterar as normas.
+
+- **Engenheiro:**<br>Usuário que irá apenas visualizar as informações contidas no sistema, podendo filtrar as informações desejadas pelos filtros que serão implementados futuramente.
+
+---
+
+### 📋 Detalhamento do Backlog da Sprint <a id="detalhamento"></a>
+
+| Rank | ID | Título | Estimativa | Status |
+| :--- | :--- | :--- | :---: | :---: |
+| 1 | US01 | Gestão de normas | 7 pts | Planejado |
+| 2 | US02 | Visualização de normas | 4 pts | Planejado |
+| 4 | US04 | Filtro por Categoria (Pública/Privada) | 5 pts | Extra |
+| 7 | US03 | Filtragem de normas por Código | 7 pts | Extra |
+
+---
+
+## 📋Backlog da Sprint <a id="us"></a>
+
+| Rank | Título            | Prioridade | User Stories                                                                                                                                                       | Estimativa | Sprint |
+| :--: | :---------------- | :--------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------: | :---: |
+| <span style="color:green">1 [Meta]</span> | <span style="color:green">Gestão de normas</span> | <span style="color:green">ALTA</span> | <span style="color:green">Como administrador, quero gerenciar normas no sistema para melhor organização.</span> | <span style="color:green">7</span> | <span style="color:green">1</span> |
+| 2 | Visualização de normas | ALTA | Como engenheiro, quero visualizar listas de normas para melhor interpretação. | 4 | 1 |
+| 4 | Filtragem de normas por Código | ALTA | Como engenheiro, quero filtrar normas pelo código da mesma para encontrar rapidamente as informações relevantes. | 7 | 2 |
+| 7 | Filtro de Normas por Categoria Pública ou Privada | ALTA | Como engenheiro, quero filtrar normas por categoria (pública ou privada), para melhor organização. | 5 | 2 |
+---
+
+## 🛠️ Tasks da Sprint <a id="tasks"></a>
+
+| Rank | Título | US Relacionada | Estimativa (hr) |
+| :--: | :---------------- | :--------: | :--------: |
+| 1 | Criação da Land Page |1| 4 |
+| 2 | Criar tela de login  | 1 | 2 |
+| 3 | Criar tela onde a norma será mostrada | 1 |2 |  
+| 4 | Implantar cadastro de norma | 1 | 4 | 
+| 5 | Implantar palavra-chave a norma| 1 | 4 | 
+| 6 | Implantar excluir norma | 1 | 2 | 
+| 7 | Implantar a visualização das observações da norma | 2 | 4 | 
+| 8 | Implantar a visualização da norma | 2  | 4 | 
+
+---
+## 🏃‍ DoR - Definition of Ready <a id="dor"></a>
+  <ul>
+      <li> User Stories com critérios de aceitação definidos no formato “Como [persona], quero [ação] para que [objetivo]";</li>
+      <li> Subtarefas derivadas da User Storie estão identificadas; </li>
+      <li> Compreensão do time da necessidade do cliente e do valor de negócio; </li>
+      <li> Esforço estimado pelo planning poker; </li>
+      <li> Definição dos valores do negócio; </li>
+      <li> A história pode ser implementada sem depender de outra tarefa da mesma Sprint; </li>
+      <li> Estudo de aplicação de possíveis cenários com anotação de Gherkin
+      <li> Desenho do Banco de Dados definido </li>
+      <li> Definição das Tecnologias a serem usadas no processo </li> 
+  </ul>
+
+---
+
+## 🏆 DoD - Definition of Done <a id="dod"></a>
+  <ul>
+  </ul>
+ 
+---
+
+## 📊 Critérios de Aceitação <a id="criterios"></a>
+
+- Interface gráfica via web
+- Adicionar normas ao sistema
+- Alterar normas do sistema
+- Retirar normas do sistema.
+- Visualizar normas do sistema.
+
+---
+
+## 🚀 Próximos Passos <a id="proximos"></a>
+
+- Permitir buscar normas
+- Refinamento da UI e UX da ferramenta
+
+---
+
+## 📂 Anexos / Evidências <a id="anexos"></a>
+
+- [Cenários para as User Stories da Sprint 1](../docs/sp1/gherkin_sp1.pdf)
+- [Modelo do Banco de Dados](../docs/sp1/bd_sp1.png)
+
+---
+
+## 👷 Time <a id="time"></a>
+
+|      Membro       |    Função     |                                                                        GitHub                                                                         |                                                                                    Linkedin                                                                                     |
+| :---------------: | :-----------: | :---------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|    Pedro Lucas    |   Product Owner    | <a href="https://github.com/pedrodevroot"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in/pedro-lucas-76870237b/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://meu-portifolio-astro.vercel.app/)  |
+|    Pedro Chaim    |   Scrum Master    |  <a href="https://github.com/Spockchaim"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |           <a href="https://www.linkedin.com/in/pedrochaim"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">           | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-lovat-beta-35.vercel.app/)  |
+|   Altier da Silva Romão    | Dev Team| <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)]() |
+|    Lucas Alves    | Dev Team  | <a href="https://github.com/LuccasLukaDev"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a> | <a href="https://www.linkedin.com/in/lucas-da-silva-alves-18852b2b3"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"> | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-three-iota-46.vercel.app/)  |
+|   Lucas Santos    |   Dev Team    |   <a href="https://github.com/tirolasca"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |        <a href="https://www.linkedin.com/in/lucas-santostec/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">        | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://lucastec.vercel.app/)  |
+|   Vinicius Silva   |   Dev Team    |   <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |        <a href="https://www.linkedin.com/in/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">        | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)]()  |
+|   Wagner Costa    | Dev Team| <a href="https://github.com/Costa-Wagner"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in/wagner-costa-391b0726/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-wagner-nu.vercel.app/) |
+---
