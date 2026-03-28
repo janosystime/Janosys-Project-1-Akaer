@@ -1,21 +1,25 @@
 /**
- * Login — implementação a cargo do Vini dev.
+ * Login — página de login do sistema SIGNA.
  *
  * Contrato com o restante do projeto (para integrar sem quebrar):
  * - Esta tela é montada na rota `/login` (ver App.tsx).
  * - Após autenticação com sucesso (API futura): gravar sessão com `salvarSessao` em `./session`
  *   e redirecionar, por exemplo, para `/dashboard` (ex.: `useNavigate` do react-router-dom).
- *
- * Enquanto estiver em branco: as rotas internas continuam exigindo sessão; sem login real,
- * use `salvarSessao` no console ou peça ao responsável pela tela para um fluxo temporário de teste.
  */
+import { CartaoLogin, Logotipo, Rodape } from '../components/Login';
+
 function Login() {
   return (
-    <div>
-      <h1>Login</h1>
-      <p>Tela em construção.</p>
+    <div className="pagina-login">
+      <div className="container-logotipo-wrapper">
+        <Logotipo />
+      </div>
+      <main className="conteudo-login">
+        <CartaoLogin />
+      </main>
+      <Rodape />
     </div>
-  )
+  );
 }
 
 export default Login
