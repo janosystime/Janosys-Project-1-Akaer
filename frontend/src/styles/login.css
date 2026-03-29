@@ -153,6 +153,18 @@
   border-color: #6C2139;
 }
 
+.campo-erro {
+  border-color: #dc3545;
+}
+
+.erro-login {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #dc3545;
+  margin: 0 0 8px 0;
+  width: 100%;
+}
+
 /* --- Botão de entrar --- */
 .botao-login {
   width: 200px;
