@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 10px 20px;
   box-sizing: border-box;
 }
 
@@ -29,9 +29,10 @@
   align-items: center;
 }
 
-.logo-akaer-signa {
-  height: 120px;
+.logo-jano-signa {
+  height: 170px;
   width: auto;
+  margin-bottom: 10px;
 }
 
 /* --- card de login --- */
@@ -188,7 +189,7 @@
 
 /* --- Responsividade --- */
 @media (max-width: 480px) {
-  .logo-akaer {
+  .logo-jano {
     height: 72px;
   }
 

@@ -1,11 +1,12 @@
-import logoAkaerSigna from '../../assets/AKAER.signa.texto.png';
+import logoJanoSigna from '../../assets/JanoSys.signa.nome.png';
 
 function Logotipo() {
   return (
     <div className="container-logotipo">
-      <img src={logoAkaerSigna} alt="Akaer Signa" className="logo-akaer-signa" />
+      <img src={logoJanoSigna} alt="Jano Signa" className="logo-jano-signa" />
     </div>
   );
 }
 
 export default Logotipo;
+

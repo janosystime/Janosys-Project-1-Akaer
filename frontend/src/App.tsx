@@ -16,9 +16,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { obterUsuarioAtual } from './auth/session'
 
 import Login      from './auth/Login'
-import Dashboard  from './pages/MindMap'
+import Home       from './pages/Home'
 import Normativas from './pages/Normativas'
-import Notas      from './pages/Notas'
 import Usuarios   from './pages/Usuarios'
 import Layout     from './components/Layout'
 
@@ -44,13 +43,13 @@ function RotaProtegida({ children }: { children: React.ReactNode }) {
 // ------------------------------------------------------------
 // Componente: RotaAdmin
 // Só deixa entrar se o usuário for administrador.
-// Se não for, manda para /dashboard.
+// Se não for, manda para /home.
 // ------------------------------------------------------------
 function RotaAdmin({ children }: { children: React.ReactNode }) {
   const usuario = obterUsuarioAtual()
 
   if (!usuario || usuario.perfil !== 'administrador') {
-    return <Navigate to="/dashboard" />
+    return <Navigate to="/home" />
   }
 
   return <>{children}</>
@@ -64,9 +63,8 @@ function RotaAdmin({ children }: { children: React.ReactNode }) {
 //   - /login              → fora do Layout, sem sidebar
 //   - rota pai (sem path) → Layout único compartilhado por todas as rotas internas.
 //                           O <Outlet /> dentro do Layout renderiza a rota filha ativa.
-//     - /dashboard        → protegida por RotaProtegida
+//     - /home            → protegida por RotaProtegida
 //     - /normativas       → protegida por RotaProtegida
-//     - /notas            → protegida por RotaProtegida
 //     - /usuarios         → protegida por RotaAdmin (só administrador)
 // ------------------------------------------------------------
 export default function App() {
@@ -86,9 +84,8 @@ export default function App() {
           </RotaProtegida>
         }
       >
-        <Route path="/dashboard"  element={<Dashboard />} />
+        <Route path="/home"  element={<Home />} />
         <Route path="/normativas" element={<Normativas />} />
-        <Route path="/notas"      element={<Notas />} />
 
         {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
             O Layout já está montado — só o <Outlet /> troca. */}
@@ -102,8 +99,8 @@ export default function App() {
         />
       </Route>
 
-      {/* Qualquer URL desconhecida vai para /dashboard */}
-      <Route path="*" element={<Navigate to="/dashboard" />} />
+      {/* Qualquer URL desconhecida vai para /home */}
+      <Route path="*" element={<Navigate to="/home" />} />
 
     </Routes>
   )

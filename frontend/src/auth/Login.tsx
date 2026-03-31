@@ -6,7 +6,9 @@
  * - Após autenticação com sucesso (API futura): gravar sessão com `salvarSessao` em `./session`
  *   e redirecionar, por exemplo, para `/dashboard` (ex.: `useNavigate` do react-router-dom).
  */
-import { CartaoLogin, Logotipo, Rodape } from '../components/Login';
+import CartaoLogin from '../components/Login/CardLogin';
+import Logotipo from '../components/Login/Logotipo';
+import Rodape from '../components/Login/Rodape';
 
 function Login() {
   return (
