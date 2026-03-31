@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { 
   Network, 
-  FileText, 
   Users,
   LogOut, 
   Pin, 
@@ -99,19 +98,14 @@ export default function Sidebar(props: PropsSidebar) {
         <hr className="nav-divisor" />
         <p className="nav-secao-label">Menu</p>
 
-        <NavLink to="/mindmap" className="nav-item" onClick={fecharMenuMobile}>
+        <NavLink to="/Home" className="nav-item" onClick={fecharMenuMobile}>
           <Network size={20} />
-          <span className="nav-label">Mind Map</span>
+          <span className="nav-label">Home</span>
         </NavLink>
 
         <NavLink to="/normativas" className="nav-item" onClick={fecharMenuMobile}>
           <BookOpen size={20} />
           <span className="nav-label">Normativas</span>
-        </NavLink>
-
-        <NavLink to="/notas" className="nav-item" onClick={fecharMenuMobile}>
-          <FileText size={20} />
-          <span className="nav-label">Notas</span>
         </NavLink>
 
         {isAdmin && (

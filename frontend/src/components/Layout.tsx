@@ -15,7 +15,7 @@
 import { useNavigate, Outlet } from 'react-router-dom'
 import { obterUsuarioAtual, limparSessao } from '../auth/session'
 import Sidebar from './Sidebar'
-import logoAkaer from '../assets/AKAER.signa.png';
+import logoJano from '../assets/JanoSys.signa.png';
 
 // Layout não recebe mais `children` via props.
 // O conteúdo da página ativa é injetado pelo <Outlet /> abaixo.
@@ -36,7 +36,7 @@ export default function Layout() {
       {/* ── TOPO ─────────────────────────────────────── */}
       <header className="topo">
         <div className="topo-logo">
-          <img src={logoAkaer} alt="Logo Akaer" className="logo-header" />
+          <img src={logoJano} alt="Logo Jano" className="logo-header" />
         </div>
         <p className="topo-titulo">
           Sistema Integrado de Gestão de Normativas Aeronáuticas

@@ -1,4 +1,6 @@
-import { CartaoLogin, Logotipo, Rodape } from '../components/Login';
+import CartaoLogin from '../components/Login/CardLogin';
+import Logotipo from '../components/Login/Logotipo';
+import Rodape from '../components/Login/Rodape';
 
 function PaginaLogin() {
   return (

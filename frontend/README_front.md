@@ -1,6 +1,6 @@
 # SIGNA — Sistema Integrado de Gestão de Normativas Aeronáuticas
 
-Sistema interno da Akaer para gestão e consulta de normativas aeronáuticas.
+Sistema interno da EMPRESA, para gestão e consulta de normativas aeronáuticas.
 
 ## Equipe
 

@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 10px 20px;
   box-sizing: border-box;
 }
 
@@ -29,37 +29,10 @@
   align-items: center;
 }
 
-.cabecalho-logotipo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 4px;
-}
-
-.logo-akaer {
-  height: 100px;
+.logo-jano-signa {
+  height: 170px;
   width: auto;
-}
-
-.emblema-signa {
-  background-color: #6C2139;
-  color: #FFFFFF;
-  font-family: 'Inter', sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  padding: 10px 16px;
-  border-radius: 4px;
-  margin-top: 20px;
-}
-
-.subtitulo-logotipo {
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  color: #6C2139;
-  margin: 16px 0 0 0;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  margin-bottom: 10px;
 }
 
 /* --- card de login --- */
@@ -153,6 +126,18 @@
   border-color: #6C2139;
 }
 
+.campo-erro {
+  border-color: #dc3545;
+}
+
+.erro-login {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #dc3545;
+  margin: 0 0 8px 0;
+  width: 100%;
+}
+
 /* --- Botão de entrar --- */
 .botao-login {
   width: 200px;
@@ -204,7 +189,7 @@
 
 /* --- Responsividade --- */
 @media (max-width: 480px) {
-  .logo-akaer {
+  .logo-jano {
     height: 72px;
   }
 
