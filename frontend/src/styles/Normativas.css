@@ -62,7 +62,7 @@ body {
 }
 .page {
   padding: 32px 24px;
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
   flex: 1;
@@ -203,6 +203,12 @@ body {
   cursor: pointer;
 }
 
+.form-select:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .filtros-container {
   display: flex;
   flex-direction: column;
@@ -239,6 +245,11 @@ body {
   padding-left: 12px;
   border-left: 2px solid var(--c-border);
   margin-left: 4px;
+}
+.filter-badges-row.item-row {
+  padding-left: 12px;
+  border-left: 2px solid var(--c-border);
+  margin-left: 24px;
 }
 .filter-label {
   font-size: 0.85rem;
@@ -621,7 +632,7 @@ body {
 }
 
 .norma-card.theme-cat-peça {
-  border-left-color: #e25e17;
+  border-left-color: #ea580c;
 }
 .norma-card.theme-cat-conjunto {
   border-left-color: #0f766e;
@@ -779,7 +790,7 @@ body {
   color: #ea580c;
   border-color: #fed7aa;
 }
-.theme-cat-materials {
+.theme-cat-conjunto {
   background: #f0fdfa;
   color: #0f766e;
   border-color: #99f6e4;
@@ -791,7 +802,7 @@ body {
 }
 .theme-cat-geral {
   background: #ffe3e3;
-  color: #b91818;
+  color: #dc2626;
   border-color: #fecaca;
 }
 .theme-subcategoria {
@@ -837,6 +848,7 @@ body {
   border-color: #475569;
   box-shadow: 0 2px 8px rgba(71, 85, 105, 0.2);
 }
+
 .filter-badge-status-vigente {
   background: var(--c-success-bg);
   color: var(--c-success);
@@ -1278,7 +1290,6 @@ body {
   gap: 10px;
   pointer-events: none;
 }
-
 .toast {
   display: flex;
   align-items: center;
@@ -1338,7 +1349,6 @@ body {
 .confirmacao-overlay {
   z-index: 20000;
 }
-
 .modal-confirmacao {
   max-width: 400px;
   text-align: center;
@@ -1358,21 +1368,18 @@ body {
   font-size: 1.6rem;
   color: #b45309;
 }
-
 .confirmacao-titulo {
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--c-text-1);
   margin-bottom: 10px;
 }
-
 .confirmacao-mensagem {
   font-size: 0.92rem;
   color: var(--c-text-2);
   line-height: 1.6;
   margin-bottom: 28px;
 }
-
 .confirmacao-acoes {
   display: flex;
   gap: 12px;
