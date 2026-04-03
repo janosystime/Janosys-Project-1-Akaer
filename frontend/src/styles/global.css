@@ -145,10 +145,6 @@ button {
   color: var(--cor-cinza-escuro);
 }
 
-* {
-  outline: 1px solid red;
-}
-
 @media (max-width: 768px) {
   .topo {
     padding-left: 60px; 

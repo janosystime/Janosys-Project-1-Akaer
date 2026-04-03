@@ -1,6 +1,6 @@
 export const CREDENCIAIS_MOCK = {
-  email: 'janosys@janosys.com.br',
-  senha: 'Janosys123',
+  email: '',
+  senha: '',
 };
 
 export const USUARIO_MOCK = {
