@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import "../components/Sidebar";
-import "../styles/Normativas.css";
+import "../styles/Normas.css";
 
 interface Norma {
   id: string;
@@ -32,6 +32,15 @@ interface ConfirmacaoState {
   mensagem: string;
   onConfirmar: () => void;
 }
+
+const converterParaBase64 = (arquivo: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.readAsDataURL(arquivo);
+    leitor.onload = () => resolve(leitor.result as string);
+    leitor.onerror = (erro) => reject(erro);
+  });
+};
 
 const NORMAS_BASE: Norma[] = [
   {
@@ -400,22 +409,20 @@ function NormaCardItem({
                 <i className="fas fa-cube"></i> {norma.item}
               </span>
             )}
-
             <span
               className={`badge ${norma.tipo === "Pública" ? "badge-tipo-publica" : "badge-tipo-privada"}`}
             >
               <i
                 className={`fas ${norma.tipo === "Pública" ? "fa-globe" : "fa-lock"}`}
-              ></i>
+              ></i>{" "}
               {norma.tipo}
             </span>
-
             <span className={`badge ${norma.status.toLowerCase()}`}>
               {norma.status === "Vigente" ? (
                 <i className="fas fa-check-circle"></i>
               ) : (
                 <i className="fas fa-times-circle"></i>
-              )}
+              )}{" "}
               {norma.status}
             </span>
             {(norma.nomePdf || (norma.imagens && norma.imagens.length > 0)) && (
@@ -453,7 +460,22 @@ function NormaCardItem({
 }
 
 export default function Biblioteca() {
-  const [normas, setNormas] = useState<Norma[]>(NORMAS_BASE);
+  const [normas, setNormas] = useState<Norma[]>(() => {
+    const normasSalvas = localStorage.getItem("biblioteca_normas");
+    if (normasSalvas) {
+      try {
+        return JSON.parse(normasSalvas);
+      } catch (erro) {
+        console.error("Erro ao ler normas do localStorage:", erro);
+      }
+    }
+    return NORMAS_BASE;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("biblioteca_normas", JSON.stringify(normas));
+  }, [normas]);
+
   const [showModal, setShowModal] = useState(false);
   const [stepModal, setStepModal] = useState(1);
   const [normaVisualizar, setNormaVisualizar] = useState<Norma | null>(null);
@@ -611,6 +633,7 @@ export default function Biblioteca() {
     setErroCampos({});
     setShowModal(true);
   };
+
   const fecharModal = () => {
     setShowModal(false);
     setForm(FORM_INICIAL);
@@ -634,27 +657,65 @@ export default function Biblioteca() {
     setStepModal((etapaAtual) => etapaAtual + 1);
   };
 
-  const handleSave = () => {
-    const novaNorma = {
-      ...form,
-      notas: form.notas?.filter((notaAtual) => notaAtual.trim() !== "") || [],
-      referencias:
-        form.referencias?.filter(
-          (referenciaAtual) => referenciaAtual.trim() !== "",
-        ) || [],
-      nomePdf: arquivoPdf ? arquivoPdf.name : undefined,
-      urlPdf: arquivoPdf ? URL.createObjectURL(arquivoPdf) : undefined,
-      imagens: arquivosImagens.map((arquivoImagem) =>
-        URL.createObjectURL(arquivoImagem),
-      ),
-    } as Norma;
+  const handleSave = async () => {
+    try {
+      let stringBase64Pdf: string | undefined = undefined;
 
-    setNormas([novaNorma, ...normas]);
-    fecharModal();
-    adicionarToast(
-      "sucesso",
-      `Norma "${novaNorma.id}" cadastrada com sucesso!`,
-    );
+      if (arquivoPdf) {
+        if (arquivoPdf.size > 3 * 1024 * 1024) {
+          adicionarToast(
+            "erro",
+            "O PDF é muito grande para salvar localmente (Máx 3MB).",
+          );
+          return;
+        }
+        stringBase64Pdf = await converterParaBase64(arquivoPdf);
+      }
+      const stringsBase64Imagens = await Promise.all(
+        arquivosImagens.map(async (arquivoImagem) => {
+          if (arquivoImagem.size > 2 * 1024 * 1024) {
+            throw new Error(
+              `Imagem ${arquivoImagem.name} excede o limite de 2MB.`,
+            );
+          }
+          return await converterParaBase64(arquivoImagem);
+        }),
+      );
+
+      const novaNorma = {
+        ...form,
+        notas: form.notas?.filter((notaAtual) => notaAtual.trim() !== "") || [],
+        referencias:
+          form.referencias?.filter(
+            (referenciaAtual) => referenciaAtual.trim() !== "",
+          ) || [],
+        nomePdf: arquivoPdf ? arquivoPdf.name : undefined,
+        urlPdf: stringBase64Pdf,
+        imagens: stringsBase64Imagens,
+      } as Norma;
+
+      setNormas([novaNorma, ...normas]);
+      fecharModal();
+      adicionarToast(
+        "sucesso",
+        `Norma "${novaNorma.id}" registada com sucesso!`,
+      );
+    } catch (erro: unknown) {
+      console.error(erro);
+      if (erro instanceof Error && erro.name === "QuotaExceededError") {
+        adicionarToast(
+          "erro",
+          "Limite de armazenamento excedido! Tente remover anexos antigos ou usar ficheiros menores.",
+        );
+      } else {
+        adicionarToast(
+          "erro",
+          erro instanceof Error
+            ? erro.message
+            : "Erro ao processar os ficheiros.",
+        );
+      }
+    }
   };
 
   const handleDelete = (idParaExcluir: string) => {
@@ -1241,7 +1302,7 @@ export default function Biblioteca() {
                               ? arquivoPdf.name
                               : "Anexar arquivo PDF"}
                           </span>
-                          <span className="file-hint">Máximo 20MB (.pdf)</span>
+                          <span className="file-hint">Máximo 3MB (.pdf)</span>
                         </div>
                         {arquivoPdf && (
                           <button

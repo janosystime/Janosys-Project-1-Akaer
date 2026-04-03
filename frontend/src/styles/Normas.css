@@ -1424,6 +1424,14 @@ body {
     width: 100%;
   }
 
+  .page-title {
+  font-size: 1.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  }
+
   .filtros-container {
     gap: 12px;
   }

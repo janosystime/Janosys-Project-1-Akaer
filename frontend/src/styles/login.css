@@ -37,7 +37,7 @@
 
 /* --- card de login --- */
 .cartao-login {
-  background-color: #FFFFFF;
+  background-color: #d6d0d2;
   border-radius: 16px;
   padding: 48px 56px;
   width: 420px;
@@ -74,7 +74,7 @@
 }
 
 .container-botao {
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .acesso-restrito {
@@ -82,7 +82,7 @@
   font-size: 13px;
   color: #77777B;
   text-align: center;
-  margin: 0;
+  margin: 10px;
 }
 
 /* --- Campos de Texto --- */
@@ -90,7 +90,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .rotulo-campo {
@@ -163,40 +163,44 @@
   background-color: #4a1728;
 }
 
-/* --- Rodapé do Login --- */
 .rodape-login {
-  position: fixed;
-  bottom: 24px;
-  right: 32px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.texto-rodape {
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  color: #77777B;
-  letter-spacing: 1px;
-}
-
-.logo-janosys {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
+  text-align: center;
+  padding: 10px 10px;
+  font-size: 10px;
+  color: var(--cor-inativo);
 }
 
 /* --- Responsividade --- */
 @media (max-width: 480px) {
-  .logo-jano {
-    height: 72px;
+  .pagina-login {
+    padding: 16px;
+    overflow-x: hidden;
+  }
+
+  .logo-jano-signa {
+  height: 115px;
+  width: 100%;
+  object-fit: contain;  }
+
+  .titulo-cartao-login {
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .conteudo-login {
+    flex: unset;
+    padding-top: 10px;
+    width: 100%;
+    margin: 20px;
   }
 
   .cartao-login {
-    padding: 32px 24px;
-    width: 90%;
-    max-width: 380px;
+    padding: 22px 20px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0 16px;
+    width: calc(100% - 32px);
   }
 
   .subtitulo-logotipo {
@@ -204,9 +208,17 @@
   }
 
   .rodape-login {
-    position: fixed;
-    bottom: 16px;
-    right: 50%;
-    transform: translateX(50%);
+    position: relative;
+    bottom: auto;
+    right: auto;
+    transform: none;
+    justify-content: center;
+  }
+
+  .texto-rodape {
+  font-size: 11px;
+  letter-spacing: 0;
+  white-space: normal;
+  text-align: center;
   }
 }

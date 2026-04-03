@@ -523,7 +523,7 @@ span.badge.theme-tipo-geral {
 
 @media (max-width: 768px) {
   .breadcrumbs {
-    padding: 10px 14px;
+    padding: 5px 14px;
     font-size: 0.85rem;
   }
 
@@ -533,5 +533,13 @@ span.badge.theme-tipo-geral {
 
   .pecas-lista {
     grid-template-columns: 1fr;
+  }
+
+  .pecas-header .page-title {
+  font-size: 1.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
   }
 }

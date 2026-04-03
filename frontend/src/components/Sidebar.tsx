@@ -103,9 +103,9 @@ export default function Sidebar(props: PropsSidebar) {
           <span className="nav-label">Home</span>
         </NavLink>
 
-        <NavLink to="/normativas" className="nav-item" onClick={fecharMenuMobile}>
+        <NavLink to="/normas" className="nav-item" onClick={fecharMenuMobile}>
           <BookOpen size={20} />
-          <span className="nav-label">Normativas</span>
+          <span className="nav-label">Normas</span>
         </NavLink>
 
         {isAdmin && (

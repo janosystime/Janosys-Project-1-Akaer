@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../styles/Normativas.css";
+import "../styles/Normas.css";
 import "../styles/Home.css";
 
 interface Norma {
