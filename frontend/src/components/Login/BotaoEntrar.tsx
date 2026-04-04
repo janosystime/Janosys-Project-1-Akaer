@@ -7,7 +7,7 @@ interface PropriedadesBotao {
 function Botao({ texto, aoClicar, tipo = 'button' }: PropriedadesBotao) {
   return (
     <button type={tipo} className="botao-login" onClick={aoClicar}>
-      {texto}
+      {texto} <i className="fa-solid fa-right-to-bracket"></i>
     </button>
   );
 }
