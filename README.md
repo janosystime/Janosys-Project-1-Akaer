@@ -12,13 +12,15 @@
 
 <p align="center"> 📑 ÍNDICE </p>
 <p align="center">   
-  |<a href="#desafio"> Desafio <a/> |
-  <a href="#tecnologias"> Tecnologias <a/> |
+  |<a href="#desafio"> Desafio </a> |
+  <a href="#tecnologias"> Tecnologias </a> |
   <a href="#backlog"> Backlog do Produto</a> |
   <a href="#sprints"> Registro das Sprints</a> |
   <a href="#dor"> DoR</a> |
   <a href="#dod"> DoD</a> |
-  <a href="#branch">Branchs</a> |
+  </br>
+  | <a href="#branch">Branchs</a> |
+  <a href="#instalacao">Guia de Instalação</a> |
   <a href="#time"> Time</a> |
 </p>
 
@@ -170,24 +172,47 @@ A estrutura de ramificação do repositório segue este padrão de nomenclatura:
 
 ---
 
-## 📦 Manual de Instalação
+# 🚀 Guia de Instalação e Execução Local <a id="instalacao"></a>
 
-### Pré-requisitos
+Este guia orienta o passo a passo para configurar o ambiente e executar o projeto **JanoSys** em sua máquina local.
 
-Antes de iniciar a instalação, certifique-se de que você tenha os seguintes itens instalados na sua máquina:
+## 📋 Pré-requisitos
 
-- [Git](https://git-scm.com/)
+Antes de começar, certifique-se de ter instalado:
+
+1. **Git**: Para clonar o repositório. [Download Git](https://git-scm.com/)
+2. **Node.js** (Versão 18 ou superior): Para gerenciar pacotes e rodar o frontend. [Download Node.js](https://nodejs.org/)
+3. **Gerenciador de pacotes**: O Node.js já vem com o `npm`, mas você também pode usar o `yarn` ou `pnpm`.
 
 ---
 
-### 🚀 Passo a Passo para Rodar Localmente
+## 🛠️ Passo a Passo
 
-#### 1. Clone o repositório
+### 1. Clonar o Repositório
 
-```bash
-git clone https://github.com/janosystime/Janosys-Project-1-Akaer
-cd Janosys-Project-1-Akaer
-```
+Abra o terminal e execute o comando abaixo para baixar o projeto:
+
+
+    git clone [https://github.com/janosystime/Janosys-Project-1-Akaer.git](https://github.com/janosystime/Janosys-Project-1-Akaer.git)
+    cd Janosys-Project-1-Akaer
+
+### 2. Configurar o Ambiente
+
+    # Entrar na pasta do frontend
+    cd frontend
+
+    # Instalar dependências
+    npm install
+
+### 3. Instalar Dependências
+    npm install
+
+### 3. Executar o Projeto
+
+    npm run dev
+
+### 4. Acessando o Projeto
+  Após executar o comando, o terminal exibirá um link (geralmente http://localhost:5173). Basta acessar ele.
 
 ---
 
