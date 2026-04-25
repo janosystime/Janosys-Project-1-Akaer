@@ -62,7 +62,7 @@ body {
 }
 .page {
   padding: 32px 24px;
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
   flex: 1;
@@ -203,6 +203,12 @@ body {
   cursor: pointer;
 }
 
+.form-select:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .filtros-container {
   display: flex;
   flex-direction: column;
@@ -240,6 +246,11 @@ body {
   border-left: 2px solid var(--c-border);
   margin-left: 4px;
 }
+.filter-badges-row.item-row {
+  padding-left: 12px;
+  border-left: 2px solid var(--c-border);
+  margin-left: 24px;
+}
 .filter-label {
   font-size: 0.85rem;
   font-weight: 700;
@@ -268,6 +279,10 @@ body {
 .filter-badge:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
+}
+
+.badge-secundario {
+  opacity: 0.85;
 }
 
 .results-count {
@@ -620,22 +635,6 @@ body {
   flex: 1;
 }
 
-.norma-card.theme-cat-manufacturing {
-  border-left-color: #ea580c;
-}
-.norma-card.theme-cat-materials {
-  border-left-color: #0f766e;
-}
-.norma-card.theme-cat-design {
-  border-left-color: #7c3aed;
-}
-.norma-card.theme-cat-stress {
-  border-left-color: #dc2626;
-}
-.norma-card.theme-cat-lightning {
-  border-left-color: #b45309;
-}
-
 .norma-card-main-icon {
   font-size: 1.5rem;
   width: 52px;
@@ -659,12 +658,10 @@ body {
   visibility: hidden;
   transition: all 0.2s ease-in-out;
 }
-.norma-card:hover .norma-card-actions,
-.norma-card.selecionado .norma-card-actions {
+.norma-card:hover .norma-card-actions {
   opacity: 1;
   visibility: visible;
 }
-
 .norma-info {
   flex: 1;
 }
@@ -777,30 +774,21 @@ body {
   border-color: #e8b4c0;
 }
 
-.theme-cat-manufacturing {
-  background: #fff4ee;
+.theme-cat-peça {
   color: #ea580c;
   border-color: #fed7aa;
 }
-.theme-cat-materials {
-  background: #f0fdfa;
+.theme-cat-conjunto {
   color: #0f766e;
   border-color: #99f6e4;
 }
-.theme-cat-design {
-  background: #f5f3ff;
+.theme-cat-instalação {
   color: #7c3aed;
   border-color: #ddd6fe;
 }
-.theme-cat-stress {
-  background: #fef2f2;
+.theme-cat-geral {
   color: #dc2626;
   border-color: #fecaca;
-}
-.theme-cat-lightning {
-  background: #fffbeb;
-  color: #b45309;
-  border-color: #fde68a;
 }
 .theme-subcategoria {
   background: #f8fafc;
@@ -814,35 +802,29 @@ body {
   border-color: var(--c-primary);
   box-shadow: 0 2px 8px rgba(123, 28, 58, 0.2);
 }
-.filter-badge.active.theme-cat-manufacturing {
+.filter-badge.active.theme-cat-peça {
   background: #ea580c;
   color: white;
   border-color: #ea580c;
   box-shadow: 0 2px 8px rgba(234, 88, 12, 0.2);
 }
-.filter-badge.active.theme-cat-materials {
+.filter-badge.active.theme-cat-conjunto {
   background: #0f766e;
   color: white;
   border-color: #0f766e;
   box-shadow: 0 2px 8px rgba(15, 118, 110, 0.2);
 }
-.filter-badge.active.theme-cat-design {
+.filter-badge.active.theme-cat-instalação {
   background: #7c3aed;
   color: white;
   border-color: #7c3aed;
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.2);
 }
-.filter-badge.active.theme-cat-stress {
+.filter-badge.active.theme-cat-geral {
   background: #dc2626;
   color: white;
   border-color: #dc2626;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2);
-}
-.filter-badge.active.theme-cat-lightning {
-  background: #b45309;
-  color: white;
-  border-color: #b45309;
-  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.2);
 }
 
 .filter-badge.active.theme-subcategoria {
@@ -851,6 +833,7 @@ body {
   border-color: #475569;
   box-shadow: 0 2px 8px rgba(71, 85, 105, 0.2);
 }
+
 .filter-badge-status-vigente {
   background: var(--c-success-bg);
   color: var(--c-success);
@@ -1177,9 +1160,11 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 .filtros-header .search-group {
   flex: 1;
+  min-width: 250px;
 }
 
 .search-clear {
@@ -1292,7 +1277,6 @@ body {
   gap: 10px;
   pointer-events: none;
 }
-
 .toast {
   display: flex;
   align-items: center;
@@ -1352,7 +1336,6 @@ body {
 .confirmacao-overlay {
   z-index: 20000;
 }
-
 .modal-confirmacao {
   max-width: 400px;
   text-align: center;
@@ -1372,21 +1355,18 @@ body {
   font-size: 1.6rem;
   color: #b45309;
 }
-
 .confirmacao-titulo {
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--c-text-1);
   margin-bottom: 10px;
 }
-
 .confirmacao-mensagem {
   font-size: 0.92rem;
   color: var(--c-text-2);
   line-height: 1.6;
   margin-bottom: 28px;
 }
-
 .confirmacao-acoes {
   display: flex;
   gap: 12px;
@@ -1419,6 +1399,19 @@ body {
   transform: scale(0.97);
 }
 
+.btn-warning {
+  background: #fffbeb;
+  color: #d97706;
+}
+.btn-warning:hover {
+  background: #fde68a;
+  color: #b45309;
+}
+
+.norma-card.clicavel {
+  cursor: pointer;
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 20px 16px;
@@ -1429,6 +1422,14 @@ body {
   }
   .page-header .btn {
     width: 100%;
+  }
+
+  .page-title {
+  font-size: 1.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
   }
 
   .filtros-container {
@@ -1454,7 +1455,6 @@ body {
   .norma-card {
     flex-direction: column;
     padding-right: 20px;
-    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
   .norma-card-body {

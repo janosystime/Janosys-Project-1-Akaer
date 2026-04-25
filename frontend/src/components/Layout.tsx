@@ -39,7 +39,7 @@ export default function Layout() {
           <img src={logoJano} alt="Logo Jano" className="logo-header" />
         </div>
         <p className="topo-titulo">
-          Sistema Integrado de Gestão de Normativas Aeronáuticas
+          Sistema Integrado de Gestão de Normas Aeronáuticas
         </p>
         {/* div vazia empurra o título para o centro via flex */}
         <div style={{ flex: 1 }}></div>

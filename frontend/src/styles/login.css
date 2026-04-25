@@ -1,12 +1,32 @@
+
+:root {
+  --cor-cartao: #d6d2d4;
+  --cor-primaria: #6C2139;
+  --cor-primaria-hover: #5a1c30;
+  --cor-primaria-active: #4a1728;
+  --cor-texto: #77777B;
+  --cor-texto-claro: #B0B0B3;
+  --cor-erro: #dc3545;
+  --branco: #FFFFFF;
+}
+
 /* --- Página de Login --- */
 .pagina-login {
   min-height: 100vh;
-  background-color: #EBE7E9;
+  background: linear-gradient(-45deg, #C2B8BB, #E6E1E3, #AFA0A5, #D1C9CB);
+  animation: gradienteFundo 15s ease infinite;
+  background-size: 400% 400%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 20px;
+  padding: 10px 20px;
   box-sizing: border-box;
+}
+
+@keyframes gradienteFundo {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .container-logotipo-wrapper {
@@ -29,25 +49,36 @@
   align-items: center;
 }
 
-.logo-akaer-signa {
-  height: 120px;
+.logo-jano-signa {
+  height: 170px;
   width: auto;
+  margin-bottom: 10px;
 }
 
-/* --- card de login --- */
 .cartao-login {
-  background-color: #FFFFFF;
+  background-color: var(--cor-cartao);
   border-radius: 16px;
   padding: 48px 56px;
   width: 420px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: entradaCartao 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes entradaCartao {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .titulo-cartao-login {
   font-family: 'Inter', sans-serif;
   font-size: 24px;
   font-weight: 600;
-  color: #6C2139;
+  color: var(--cor-primaria);
   text-align: center;
   margin: 0 0 32px 0;
   letter-spacing: 2px;
@@ -57,31 +88,42 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  opacity: 0;
+  transform: translateY(15px);
+  animation: entradaElementos 0.5s ease forwards;
+}
+
+.formulario-login > *:nth-child(1) { animation-delay: 0.1s; }
+.formulario-login > *:nth-child(2) { animation-delay: 0.2s; }
+.formulario-login > *:nth-child(3) { animation-delay: 0.3s; }
+.formulario-login > *:nth-child(4) { animation-delay: 0.4s; }
+.formulario-login > *:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes entradaElementos {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .link-esqueci-senha {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: #6C2139;
+  color: var(--cor-primaria);
   text-decoration: none;
   margin-bottom: 24px;
-  align-self: center;
+  align-self: flex-end; 
+  transition: color 0.2s ease;
 }
 
 .link-esqueci-senha:hover {
+  color: var(--cor-primaria-hover);
   text-decoration: underline;
-}
-
-.container-botao {
-  margin-bottom: 24px;
 }
 
 .acesso-restrito {
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  color: #77777B;
+  color: var(--cor-texto);
   text-align: center;
-  margin: 0;
+  margin: 16px 0 0 0;
 }
 
 /* --- Campos de Texto --- */
@@ -89,123 +131,177 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 16px; 
 }
 
 .rotulo-campo {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #77777B;
-  margin-bottom: 8px;
+  color: var(--cor-texto);
+  margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.container-input-icone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.icone-campo {
+  position: absolute;
+  left: 16px;
+  color: var(--cor-texto-claro);
+  transition: color 0.2s ease;
+  font-size: 16px;
 }
 
 .campo-entrada {
   width: 100%;
   height: 48px;
   padding: 0 16px;
-  border: 1px solid #EBE7E9;
-  border-radius: 4px;
-  background-color: #FFFFFF;
+  border: 2px solid transparent; 
+  border-radius: 6px;
+  background-color: var(--branco);
   font-family: 'Inter', sans-serif;
   font-size: 16px;
-  color: #77777B;
+  color: var(--cor-texto);
   box-sizing: border-box;
-  transition: border-color 0.2s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.campo-entrada.com-icone {
+  padding-left: 44px;
 }
 
 .campo-entrada::placeholder {
-  color: #B0B0B3;
+  color: var(--cor-texto-claro);
 }
 
 .campo-entrada:focus {
   outline: none;
-  border-color: #6C2139;
+  border-color: var(--cor-primaria);
+  box-shadow: 0 4px 12px rgba(108, 33, 57, 0.15); /* Sombra mais destacada no foco */
+}
+
+.campo-entrada:focus + .icone-campo, 
+.container-input-icone:focus-within .icone-campo {
+  color: var(--cor-primaria); 
 }
 
 .campo-erro {
-  border-color: #dc3545;
+  border-color: var(--cor-erro);
 }
 
 .erro-login {
   font-family: 'Inter', sans-serif;
   font-size: 14px;
-  color: #dc3545;
-  margin: 0 0 8px 0;
+  color: var(--cor-erro);
+  margin: 0 0 12px 0;
   width: 100%;
+  text-align: center;
+  background-color: rgba(220, 53, 69, 0.1);
+  padding: 8px;
+  border-radius: 4px;
 }
 
-/* --- Botão de entrar --- */
+.container-botao {
+  width: 100%;
+  margin-bottom: 14px;
+}
+
 .botao-login {
-  width: 200px;
-  height: 56px;
-  background-color: #6C2139;
+  width: 100%;
+  height: 52px;
+  background-color: var(--cor-primaria);
   border: none;
-  border-radius: 4px;
-  color: #FFFFFF;
+  border-radius: 6px;
+  color: var(--branco);
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease;
   text-transform: uppercase;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; 
+  position: relative;
+  overflow: hidden;
+}
+
+.botao-login::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-25deg);
+  transition: all 0.6s ease;
+}
+
+.botao-login:hover::after {
+  left: 150%; 
 }
 
 .botao-login:hover {
-  background-color: #5a1c30;
+  background-color: var(--cor-primaria-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(108, 33, 57, 0.2);
 }
 
 .botao-login:active {
-  background-color: #4a1728;
+  background-color: var(--cor-primaria-active);
+  transform: translateY(1px); /* Aperta o botão para baixo */
+  box-shadow: 0 2px 8px rgba(108, 33, 57, 0.2);
 }
 
-/* --- Rodapé do Login --- */
 .rodape-login {
-  position: fixed;
-  bottom: 24px;
-  right: 32px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.texto-rodape {
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  color: #77777B;
-  letter-spacing: 1px;
-}
-
-.logo-janosys {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
+  text-align: center;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--cor-texto);
 }
 
 /* --- Responsividade --- */
 @media (max-width: 480px) {
-  .logo-akaer {
-    height: 72px;
+  .pagina-login {
+    padding: 16px;
+  }
+
+  .logo-jano-signa {
+    height: 115px;
+    width: 100%;
+    object-fit: contain;  
+  }
+
+  .titulo-cartao-login {
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .conteudo-login {
+    flex: unset;
+    padding-top: 10px;
+    margin: 20px 0;
   }
 
   .cartao-login {
     padding: 32px 24px;
-    width: 90%;
-    max-width: 380px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  .subtitulo-logotipo {
-    font-size: 14px;
-  }
-
-  .rodape-login {
-    position: fixed;
-    bottom: 16px;
-    right: 50%;
-    transform: translateX(50%);
+  .link-esqueci-senha {
+    align-self: center;
   }
 }

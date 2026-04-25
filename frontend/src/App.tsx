@@ -17,7 +17,7 @@ import { obterUsuarioAtual } from './auth/session'
 
 import Login      from './auth/Login'
 import Home       from './pages/Home'
-import Normativas from './pages/Normativas'
+import Normas     from './pages/Normas'
 import Usuarios   from './pages/Usuarios'
 import Layout     from './components/Layout'
 
@@ -64,7 +64,7 @@ function RotaAdmin({ children }: { children: React.ReactNode }) {
 //   - rota pai (sem path) → Layout único compartilhado por todas as rotas internas.
 //                           O <Outlet /> dentro do Layout renderiza a rota filha ativa.
 //     - /home            → protegida por RotaProtegida
-//     - /normativas       → protegida por RotaProtegida
+//     - /normas       → protegida por RotaProtegida
 //     - /usuarios         → protegida por RotaAdmin (só administrador)
 // ------------------------------------------------------------
 export default function App() {
@@ -85,7 +85,7 @@ export default function App() {
         }
       >
         <Route path="/home"  element={<Home />} />
-        <Route path="/normativas" element={<Normativas />} />
+        <Route path="/normas" element={<Normas />} />
 
         {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
             O Layout já está montado — só o <Outlet /> troca. */}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import "../components/Sidebar";
-import "../styles/Normativas.css";
+import "../styles/Normas.css";
 
 interface Norma {
   id: string;
@@ -9,11 +9,13 @@ interface Norma {
   organizacao: string;
   categoria: string;
   subcategoria: string;
+  item: string;
   tipo: string;
   revisao: string;
   status: string;
   notas: string[];
   referencias: string[];
+  palavrasChave: string[];
   nomePdf?: string;
   urlPdf?: string;
   imagens?: string[];
@@ -32,40 +34,58 @@ interface ConfirmacaoState {
   onConfirmar: () => void;
 }
 
+const converterParaBase64 = (arquivoAtual: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.readAsDataURL(arquivoAtual);
+    leitor.onload = () => resolve(leitor.result as string);
+    leitor.onerror = (erro) => reject(erro);
+  });
+};
+
 const NORMAS_BASE: Norma[] = [
   {
     id: "RBAC 25.1309",
     codigo: "25.1309",
     titulo: "Análise de Segurança de Sistemas",
     organizacao: "ANAC",
-    categoria: "Design",
-    subcategoria: "Sistemas",
+    categoria: "Instalação",
+    subcategoria: "Geral",
+    item: "Parafuso",
     tipo: "Pública",
     revisao: "Emenda 09",
     status: "Vigente",
     notas: ["Norma principal de safety."],
     referencias: ["SAE ARP4761"],
+    palavrasChave: ["safety", "análise de risco"],
+    nomePdf: "rbac-25-1309.pdf",
+    urlPdf: "/rbac-25-1309.pdf",
   },
   {
     id: "FAR 25.571",
     codigo: "25.571",
     titulo: "Damage Tolerance and Fatigue Evaluation",
     organizacao: "FAA",
-    categoria: "Stress",
-    subcategoria: "Fadiga",
+    categoria: "Conjunto",
+    subcategoria: "União de Peças",
+    item: "Soldagem",
     tipo: "Pública",
     revisao: "Amendment 27",
     status: "Vigente",
     notas: [],
     referencias: [],
+    palavrasChave: ["fadiga", "tolerância", "dano"],
+    nomePdf: "far-25-571.pdf",
+    urlPdf: "/far-25-571.pdf",
   },
   {
     id: "ISO 9001:2015",
     codigo: "9001",
     titulo: "Quality management systems — Requirements",
     organizacao: "ISO",
-    categoria: "Manufacturing",
-    subcategoria: "Qualidade",
+    categoria: "Peça",
+    subcategoria: "Metálica",
+    item: "Usinado",
     tipo: "Pública",
     revisao: "2015",
     status: "Vigente",
@@ -73,21 +93,24 @@ const NORMAS_BASE: Norma[] = [
       "Requisitos gerais para o sistema de gestão da qualidade nas plantas de manufatura.",
     ],
     referencias: ["ISO 9000:2015"],
+    palavrasChave: ["qualidade", "gestão", "requisitos"],
   },
   {
     id: "CS-25",
     codigo: "CS-25",
     titulo: "Certification Specifications for Large Aeroplanes",
     organizacao: "EASA",
-    categoria: "Lightning",
-    subcategoria: "Proteção contra Raios",
-    tipo: "Pública",
+    categoria: "Conjunto",
+    subcategoria: "Cablagem",
+    item: "Conector",
+    tipo: "Privada",
     revisao: "Amendment 27",
     status: "Vigente",
     notas: [
       "Especificações essenciais para certificação EASA em aeronaves de grande porte.",
     ],
     referencias: ["FAR 25"],
+    palavrasChave: ["certificação", "aeronave grande", "easa"],
   },
 ];
 
@@ -101,13 +124,41 @@ const ORGANIZACOES = [
   "ISO",
   "AKAER",
 ];
-const CATEGORIAS = [
-  "Manufacturing",
-  "Materials",
-  "Design",
-  "Stress",
-  "Lightning",
-];
+const CATEGORIAS = ["Peça", "Conjunto", "Instalação", "Geral"];
+
+const SUBCATEGORIAS: Record<string, string[]> = {
+  Peça: ["Metálica", "Não Metálica"],
+  Conjunto: ["Instalação de Acessórios", "União de Peças", "Cablagem"],
+  Instalação: ["Estrutura", "Hidromecânicos", "Elétrica", "Geral", "Teste"],
+  Geral: ["Basic Notes", "Identificação"],
+};
+
+const ITENS_POR_SUBCATEGORIA: Record<string, string[]> = {
+  Metálica: [
+    "Tubo",
+    "Usinado",
+    "Chapa",
+    "Extrudado",
+    "Fundido",
+    "Tratamento Superficial",
+    "Teste",
+  ],
+  "Instalação de Acessórios": ["Tubo com Acessório"],
+  "União de Peças": ["Soldagem"],
+  Cablagem: ["Proteção", "Bota", "Conector"],
+  Geral: [
+    "Selante",
+    "Metalização",
+    "Rebite",
+    "Parafuso",
+    "Arruela",
+    "Inserto",
+    "Frenagem",
+    "Shim",
+    "Primer",
+  ],
+};
+
 const STATUS_OPCOES = ["Vigente", "Revogada"];
 
 const ORG_ORIGENS: Record<string, string> = {
@@ -122,11 +173,10 @@ const ORG_ORIGENS: Record<string, string> = {
 };
 
 const CAT_ICONES: Record<string, string> = {
-  Manufacturing: "fa-industry",
-  Materials: "fa-flask-vial",
-  Design: "fa-compass-drafting",
-  Stress: "fa-weight-hanging",
-  Lightning: "fa-bolt",
+  Peça: "fa-gear",
+  Conjunto: "fa-gears",
+  Instalação: "fa-screwdriver-wrench",
+  Geral: "fa-layer-group",
 };
 
 const FORM_INICIAL: Partial<Norma> = {
@@ -135,12 +185,14 @@ const FORM_INICIAL: Partial<Norma> = {
   titulo: "",
   organizacao: ORGANIZACOES[0],
   categoria: CATEGORIAS[0],
-  subcategoria: "",
+  subcategoria: SUBCATEGORIAS[CATEGORIAS[0]][0],
+  item: "",
   tipo: "Pública",
   revisao: "",
   status: "Vigente",
   notas: [""],
   referencias: [""],
+  palavrasChave: [""],
 };
 
 function ToastContainer({
@@ -185,7 +237,7 @@ function ModalConfirmacao({
     <div className="modal-overlay confirmacao-overlay" onClick={onCancelar}>
       <div
         className="modal modal-confirmacao"
-        onClick={(evento) => evento.stopPropagation()}
+        onClick={(eventoClique) => eventoClique.stopPropagation()}
       >
         <div className="confirmacao-icone">
           <i className="fas fa-triangle-exclamation"></i>
@@ -218,7 +270,7 @@ function PdfViewer({
     <div className="pdf-viewer-overlay" onClick={onClose}>
       <div
         className="pdf-viewer-container"
-        onClick={(evento) => evento.stopPropagation()}
+        onClick={(eventoClique) => eventoClique.stopPropagation()}
       >
         <div className="pdf-viewer-header">
           <div className="pdf-viewer-title">
@@ -273,7 +325,7 @@ function ImageLightbox({
     <div className="lightbox-overlay" onClick={onClose}>
       <div
         className="lightbox-container"
-        onClick={(evento) => evento.stopPropagation()}
+        onClick={(eventoClique) => eventoClique.stopPropagation()}
       >
         <button className="lightbox-close" onClick={onClose}>
           <i className="fas fa-xmark"></i>
@@ -313,20 +365,26 @@ function ImageLightbox({
 
 function NormaCardItem({
   norma,
+  onEdit,
   onDelete,
-  onView,
+  onShowDetails,
+  onViewPdf,
+  onViewImages,
 }: {
   norma: Norma;
+  onEdit: (normaAtual: Norma) => void;
   onDelete: (id: string) => void;
-  onView: (norma: Norma) => void;
+  onShowDetails: (normaAtual: Norma) => void;
+  onViewPdf: (url: string, nome: string) => void;
+  onViewImages: (imagens: string[]) => void;
 }) {
-  const [selecionado, setSelecionado] = useState(false);
   const classeCorTema = `theme-cat-${norma.categoria.toLowerCase()}`;
+  const possuiAnexos = norma.urlPdf || (norma.imagens && norma.imagens.length > 0);
 
   return (
     <div
-      className={`norma-card ${classeCorTema} ${selecionado ? "selecionado" : ""}`}
-      onClick={() => setSelecionado(!selecionado)}
+      className={`norma-card ${classeCorTema} clicavel`}
+      onClick={() => onShowDetails(norma)}
     >
       <div className="norma-card-body">
         <div className={`norma-card-main-icon ${classeCorTema}`}>
@@ -359,15 +417,28 @@ function NormaCardItem({
                 <i className="fas fa-layer-group"></i> {norma.subcategoria}
               </span>
             )}
+            {norma.item && (
+              <span className="badge theme-subcategoria badge-secundario">
+                <i className="fas fa-cube"></i> {norma.item}
+              </span>
+            )}
+            <span
+              className={`badge ${norma.tipo === "Pública" ? "badge-tipo-publica" : "badge-tipo-privada"}`}
+            >
+              <i
+                className={`fas ${norma.tipo === "Pública" ? "fa-globe" : "fa-lock"}`}
+              ></i>{" "}
+              {norma.tipo}
+            </span>
             <span className={`badge ${norma.status.toLowerCase()}`}>
               {norma.status === "Vigente" ? (
                 <i className="fas fa-check-circle"></i>
               ) : (
                 <i className="fas fa-times-circle"></i>
-              )}
+              )}{" "}
               {norma.status}
             </span>
-            {(norma.nomePdf || (norma.imagens && norma.imagens.length > 0)) && (
+            {possuiAnexos && (
               <span className="badge theme-subcategoria">
                 <i className="fas fa-paperclip"></i> Anexos
               </span>
@@ -376,20 +447,48 @@ function NormaCardItem({
         </div>
       </div>
       <div className="norma-card-actions">
+        {/* Botão independente para PDF */}
+        {norma.urlPdf && (
+          <button
+            className="btn btn-info btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onViewPdf(norma.urlPdf!, norma.nomePdf || "documento.pdf");
+            }}
+            title="Visualizar PDF"
+          >
+            <i className="fas fa-file-pdf"></i>
+          </button>
+        )}
+        
+        {/* Botão independente para Imagens */}
+        {norma.imagens && norma.imagens.length > 0 && (
+          <button
+            className="btn btn-info btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onViewImages(norma.imagens!);
+            }}
+            title="Visualizar Imagens"
+          >
+            <i className="fas fa-images"></i>
+          </button>
+        )}
+
         <button
-          className="btn btn-info btn-icon"
-          onClick={(evento) => {
-            evento.stopPropagation();
-            onView(norma);
+          className="btn btn-warning btn-icon"
+          onClick={(eventoClique) => {
+            eventoClique.stopPropagation();
+            onEdit(norma);
           }}
-          title="Visualizar"
+          title="Editar"
         >
-          <i className="fas fa-eye"></i>
+          <i className="fas fa-pen"></i>
         </button>
         <button
           className="btn btn-danger btn-icon"
-          onClick={(evento) => {
-            evento.stopPropagation();
+          onClick={(eventoClique) => {
+            eventoClique.stopPropagation();
             onDelete(norma.id);
           }}
           title="Excluir"
@@ -402,9 +501,25 @@ function NormaCardItem({
 }
 
 export default function Biblioteca() {
-  const [normas, setNormas] = useState<Norma[]>(NORMAS_BASE);
+  const [normas, setNormas] = useState<Norma[]>(() => {
+    const normasSalvas = localStorage.getItem("biblioteca_normas");
+    if (normasSalvas) {
+      try {
+        return JSON.parse(normasSalvas);
+      } catch (erro) {
+        console.error("Erro ao ler normas do localStorage:", erro);
+      }
+    }
+    return NORMAS_BASE;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("biblioteca_normas", JSON.stringify(normas));
+  }, [normas]);
+
   const [showModal, setShowModal] = useState(false);
   const [stepModal, setStepModal] = useState(1);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
   const [normaVisualizar, setNormaVisualizar] = useState<Norma | null>(null);
   const [erroCampos, setErroCampos] = useState<
     Partial<Record<keyof Norma, string>>
@@ -413,12 +528,14 @@ export default function Biblioteca() {
   const [termoPesquisa, setTermoPesquisa] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("Todas");
   const [filtroSubcategoria, setFiltroSubcategoria] = useState("");
+  const [filtroItem, setFiltroItem] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
   const [pdfAberto, setPdfAberto] = useState<{
     url: string;
     nome: string;
   } | null>(null);
+  const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [imagemAbertaIdx, setImagemAbertaIdx] = useState<number | null>(null);
 
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
@@ -481,25 +598,28 @@ export default function Biblioteca() {
   const [arquivoPdf, setArquivoPdf] = useState<File | null>(null);
   const [arquivosImagens, setArquivosImagens] = useState<File[]>([]);
 
-  const handlePdfChange = (evento: ChangeEvent<HTMLInputElement>) => {
-    if (evento.target.files?.[0]) setArquivoPdf(evento.target.files[0]);
+  const handlePdfChange = (eventoMudanca: ChangeEvent<HTMLInputElement>) => {
+    if (eventoMudanca.target.files?.[0]) setArquivoPdf(eventoMudanca.target.files[0]);
   };
-  const handleImgChange = (evento: ChangeEvent<HTMLInputElement>) => {
-    if (evento.target.files)
+  const handleImgChange = (eventoMudanca: ChangeEvent<HTMLInputElement>) => {
+    if (eventoMudanca.target.files)
       setArquivosImagens((imagensAnteriores) => [
         ...imagensAnteriores,
-        ...Array.from(evento.target.files!),
+        ...Array.from(eventoMudanca.target.files!),
       ]);
   };
 
-  const subcategoriasDisponiveis = Array.from(
+  const subcategoriasDisponiveis =
+    filtroCategoria !== "Todas" ? (SUBCATEGORIAS[filtroCategoria] ?? []) : [];
+
+  const itensDisponiveis = Array.from(
     new Set(
       normas
         .filter(
           (normaAtual) =>
-            normaAtual.categoria === filtroCategoria && normaAtual.subcategoria,
+            normaAtual.subcategoria === filtroSubcategoria && normaAtual.item,
         )
-        .map((normaAtual) => normaAtual.subcategoria),
+        .map((normaAtual) => normaAtual.item),
     ),
   ).sort();
 
@@ -507,42 +627,76 @@ export default function Biblioteca() {
     termoPesquisa !== "" ||
     filtroCategoria !== "Todas" ||
     filtroSubcategoria !== "" ||
+    filtroItem !== "" ||
     filtroStatus !== "Todos";
 
   const limparFiltros = () => {
     setTermoPesquisa("");
     setFiltroCategoria("Todas");
     setFiltroSubcategoria("");
+    setFiltroItem("");
     setFiltroStatus("Todos");
   };
 
   const handleMudancaCategoriaFiltro = (novaCategoria: string) => {
     setFiltroCategoria(novaCategoria);
     setFiltroSubcategoria("");
+    setFiltroItem("");
+  };
+
+  const handleMudancaSubcategoriaFiltro = (novaSubcategoria: string) => {
+    setFiltroSubcategoria(novaSubcategoria);
+    setFiltroItem("");
   };
 
   const termoMinusculo = termoPesquisa.toLowerCase();
+
   const normasFiltradas = normas.filter((normaAtual) => {
     const matchBusca =
       normaAtual.id.toLowerCase().includes(termoMinusculo) ||
       normaAtual.codigo.toLowerCase().includes(termoMinusculo) ||
-      normaAtual.titulo.toLowerCase().includes(termoMinusculo);
+      normaAtual.titulo.toLowerCase().includes(termoMinusculo) ||
+      (normaAtual.palavrasChave &&
+        normaAtual.palavrasChave.some((palavraAtual) =>
+          palavraAtual.toLowerCase().includes(termoMinusculo)
+        ));
+
     const matchCategoria =
       filtroCategoria === "Todas" || normaAtual.categoria === filtroCategoria;
     const matchSubcategoria =
       !filtroSubcategoria || normaAtual.subcategoria === filtroSubcategoria;
+    const matchItem = !filtroItem || normaAtual.item === filtroItem;
     const matchStatus =
       filtroStatus === "Todos" || normaAtual.status === filtroStatus;
-    return matchBusca && matchCategoria && matchSubcategoria && matchStatus;
+
+    return (
+      matchBusca &&
+      matchCategoria &&
+      matchSubcategoria &&
+      matchItem &&
+      matchStatus
+    );
   });
 
   const abrirModalCadastro = () => {
+    setEditandoId(null);
+    setForm(FORM_INICIAL);
     setStepModal(1);
     setErroCampos({});
     setShowModal(true);
   };
+
+  const abrirModalEdicao = (normaParaEditar: Norma) => {
+    setEditandoId(normaParaEditar.id);
+    setForm(normaParaEditar);
+    setStepModal(1);
+    setErroCampos({});
+    setShowModal(true);
+  };
+
   const fecharModal = () => {
     setShowModal(false);
+    setEditandoId(null);
     setForm(FORM_INICIAL);
     setArquivoPdf(null);
     setArquivosImagens([]);
@@ -564,27 +718,89 @@ export default function Biblioteca() {
     setStepModal((etapaAtual) => etapaAtual + 1);
   };
 
-  const handleSave = () => {
-    const novaNorma = {
-      ...form,
-      notas: form.notas?.filter((notaAtual) => notaAtual.trim() !== "") || [],
-      referencias:
-        form.referencias?.filter(
-          (referenciaAtual) => referenciaAtual.trim() !== "",
-        ) || [],
-      nomePdf: arquivoPdf ? arquivoPdf.name : undefined,
-      urlPdf: arquivoPdf ? URL.createObjectURL(arquivoPdf) : undefined,
-      imagens: arquivosImagens.map((arquivoImagem) =>
-        URL.createObjectURL(arquivoImagem),
-      ),
-    } as Norma;
+  const handleSave = async () => {
+    try {
+      let stringBase64Pdf = form.urlPdf;
+      let nomeArquivoPdf = form.nomePdf;
 
-    setNormas([novaNorma, ...normas]);
-    fecharModal();
-    adicionarToast(
-      "sucesso",
-      `Norma "${novaNorma.id}" cadastrada com sucesso!`,
-    );
+      if (arquivoPdf) {
+        if (arquivoPdf.size > 3 * 1024 * 1024) {
+          adicionarToast(
+            "erro",
+            "O PDF é muito grande para salvar localmente (Máx 3MB).",
+          );
+          return;
+        }
+        stringBase64Pdf = await converterParaBase64(arquivoPdf);
+        nomeArquivoPdf = arquivoPdf.name;
+      }
+      
+      let stringsBase64Imagens = form.imagens || [];
+      if (arquivosImagens.length > 0) {
+        const novasImagensBase64 = await Promise.all(
+          arquivosImagens.map(async (arquivoImagemAtual) => {
+            if (arquivoImagemAtual.size > 2 * 1024 * 1024) {
+              throw new Error(
+                `Imagem ${arquivoImagemAtual.name} excede o limite de 2MB.`,
+              );
+            }
+            return await converterParaBase64(arquivoImagemAtual);
+          }),
+        );
+        stringsBase64Imagens = [...stringsBase64Imagens, ...novasImagensBase64];
+      }
+
+      const normaSalva = {
+        ...form,
+        notas: form.notas?.filter((notaAtual) => notaAtual.trim() !== "") || [],
+        referencias:
+          form.referencias?.filter(
+            (referenciaAtual) => referenciaAtual.trim() !== "",
+          ) || [],
+        palavrasChave:
+          form.palavrasChave?.filter(
+            (palavraAtual) => palavraAtual.trim() !== "",
+          ) || [],
+        nomePdf: nomeArquivoPdf,
+        urlPdf: stringBase64Pdf,
+        imagens: stringsBase64Imagens,
+      } as Norma;
+
+      if (editandoId) {
+        setNormas((normasAnteriores) =>
+          normasAnteriores.map((normaAnalisada) =>
+            normaAnalisada.id === editandoId ? normaSalva : normaAnalisada
+          )
+        );
+        adicionarToast(
+          "sucesso",
+          `Norma "${normaSalva.id}" atualizada com sucesso!`,
+        );
+      } else {
+        setNormas([normaSalva, ...normas]);
+        adicionarToast(
+          "sucesso",
+          `Norma "${normaSalva.id}" registada com sucesso!`,
+        );
+      }
+      fecharModal();
+      
+    } catch (erro: unknown) {
+      console.error(erro);
+      if (erro instanceof Error && erro.name === "QuotaExceededError") {
+        adicionarToast(
+          "erro",
+          "Limite de armazenamento excedido! Tente remover anexos antigos ou usar ficheiros menores.",
+        );
+      } else {
+        adicionarToast(
+          "erro",
+          erro instanceof Error
+            ? erro.message
+            : "Erro ao processar os ficheiros.",
+        );
+      }
+    }
   };
 
   const handleDelete = (idParaExcluir: string) => {
@@ -619,14 +835,14 @@ export default function Biblioteca() {
 
         <div className="filtros-container">
           <div className="filtros-header">
-            <div className="form-group search-group">
+            <div className="form-group search-group" style={{ flex: 1 }}>
               <i className="fas fa-magnifying-glass search-icon"></i>
               <input
                 type="text"
                 className="form-input search-input"
-                placeholder="Pesquisar por ID, Código ou Título..."
+                placeholder="Pesquisar por ID, Código, Título ou Palavra-chave..."
                 value={termoPesquisa}
-                onChange={(evento) => setTermoPesquisa(evento.target.value)}
+                onChange={(eventoMudanca) => setTermoPesquisa(eventoMudanca.target.value)}
               />
               {termoPesquisa && (
                 <button
@@ -638,6 +854,7 @@ export default function Biblioteca() {
                 </button>
               )}
             </div>
+
             {filtrosAtivos && (
               <button
                 className="btn btn-limpar-filtros"
@@ -658,16 +875,16 @@ export default function Biblioteca() {
             >
               <i className="fas fa-border-all"></i> Todas
             </button>
-            {CATEGORIAS.map((nomeCategoria) => (
+            {CATEGORIAS.map((nomeCategoriaAtual) => (
               <button
-                key={nomeCategoria}
-                className={`filter-badge theme-cat-${nomeCategoria.toLowerCase()} ${filtroCategoria === nomeCategoria ? "active" : ""}`}
-                onClick={() => handleMudancaCategoriaFiltro(nomeCategoria)}
+                key={nomeCategoriaAtual}
+                className={`filter-badge theme-cat-${nomeCategoriaAtual.toLowerCase()} ${filtroCategoria === nomeCategoriaAtual ? "active" : ""}`}
+                onClick={() => handleMudancaCategoriaFiltro(nomeCategoriaAtual)}
               >
                 <i
-                  className={`fas ${CAT_ICONES[nomeCategoria] || "fa-tag"}`}
+                  className={`fas ${CAT_ICONES[nomeCategoriaAtual] || "fa-tag"}`}
                 ></i>{" "}
-                {nomeCategoria}
+                {nomeCategoriaAtual}
               </button>
             ))}
           </div>
@@ -680,21 +897,46 @@ export default function Biblioteca() {
                 </span>
                 <button
                   className={`filter-badge ${filtroSubcategoria === "" ? "active theme-all" : ""}`}
-                  onClick={() => setFiltroSubcategoria("")}
+                  onClick={() => handleMudancaSubcategoriaFiltro("")}
                 >
                   <i className="fas fa-border-all"></i> Todas
                 </button>
-                {subcategoriasDisponiveis.map((nomeSubcategoria) => (
+                {subcategoriasDisponiveis.map((nomeSubcategoriaAtual) => (
                   <button
-                    key={nomeSubcategoria}
-                    className={`filter-badge theme-subcategoria ${filtroSubcategoria === nomeSubcategoria ? "active" : ""}`}
-                    onClick={() => setFiltroSubcategoria(nomeSubcategoria)}
+                    key={nomeSubcategoriaAtual}
+                    className={`filter-badge theme-subcategoria ${filtroSubcategoria === nomeSubcategoriaAtual ? "active" : ""}`}
+                    onClick={() =>
+                      handleMudancaSubcategoriaFiltro(nomeSubcategoriaAtual)
+                    }
                   >
-                    <i className="fas fa-layer-group"></i> {nomeSubcategoria}
+                    <i className="fas fa-layer-group"></i> {nomeSubcategoriaAtual}
                   </button>
                 ))}
               </div>
             )}
+
+          {filtroSubcategoria !== "" && itensDisponiveis.length > 0 && (
+            <div className="filter-badges-row item-row">
+              <span className="filter-label">
+                <i className="fas fa-cube"></i> Item:
+              </span>
+              <button
+                className={`filter-badge ${filtroItem === "" ? "active theme-all" : ""}`}
+                onClick={() => setFiltroItem("")}
+              >
+                <i className="fas fa-border-all"></i> Todos
+              </button>
+              {itensDisponiveis.map((nomeItemAtual) => (
+                <button
+                  key={nomeItemAtual}
+                  className={`filter-badge theme-subcategoria ${filtroItem === nomeItemAtual ? "active" : ""}`}
+                  onClick={() => setFiltroItem(nomeItemAtual)}
+                >
+                  <i className="fas fa-cube"></i> {nomeItemAtual}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="filter-badges-row">
             <span className="filter-label">
@@ -706,18 +948,18 @@ export default function Biblioteca() {
             >
               <i className="fas fa-border-all"></i> Todos
             </button>
-            {STATUS_OPCOES.map((nomeStatus) => (
+            {STATUS_OPCOES.map((nomeStatusAtual) => (
               <button
-                key={nomeStatus}
-                className={`filter-badge filter-badge-status-${nomeStatus.toLowerCase()} ${filtroStatus === nomeStatus ? "active" : ""}`}
-                onClick={() => setFiltroStatus(nomeStatus)}
+                key={nomeStatusAtual}
+                className={`filter-badge filter-badge-status-${nomeStatusAtual.toLowerCase()} ${filtroStatus === nomeStatusAtual ? "active" : ""}`}
+                onClick={() => setFiltroStatus(nomeStatusAtual)}
               >
-                {nomeStatus === "Vigente" ? (
+                {nomeStatusAtual === "Vigente" ? (
                   <i className="fas fa-check-circle"></i>
                 ) : (
                   <i className="fas fa-times-circle"></i>
                 )}{" "}
-                {nomeStatus}
+                {nomeStatusAtual}
               </button>
             ))}
           </div>
@@ -729,13 +971,19 @@ export default function Biblioteca() {
             : `${normasFiltradas.length} de ${normas.length} norma${normas.length !== 1 ? "s" : ""}`}
         </p>
 
-        <div className="normas-lista">
-          {normasFiltradas.map((normaAtual, indiceNorma) => (
+      <div className="normas-lista">
+          {normasFiltradas.map((normaMapeada, indiceMapeado) => (
             <NormaCardItem
-              key={indiceNorma}
-              norma={normaAtual}
+              key={indiceMapeado}
+              norma={normaMapeada}
+              onEdit={abrirModalEdicao}
               onDelete={handleDelete}
-              onView={setNormaVisualizar}
+              onShowDetails={setNormaVisualizar}
+              onViewPdf={(url, nome) => setPdfAberto({ url, nome })}
+              onViewImages={(imagens) => {
+                setImagensAbertas(imagens);
+                setImagemAbertaIdx(0);
+              }}
             />
           ))}
           {normasFiltradas.length === 0 && (
@@ -755,12 +1003,12 @@ export default function Biblioteca() {
           <div className="modal-overlay" onClick={fecharModal}>
             <div
               className="modal modal-large"
-              onClick={(evento) => evento.stopPropagation()}
+              onClick={(eventoClique) => eventoClique.stopPropagation()}
             >
               <div className="modal-header">
                 <h2>
-                  <i className="fas fa-file-circle-plus"></i> Registar Nova
-                  Norma
+                  <i className="fas fa-file-circle-plus"></i>{" "}
+                  {editandoId ? "Editar Norma" : "Registar Nova Norma"}
                 </h2>
                 <button
                   type="button"
@@ -794,8 +1042,8 @@ export default function Biblioteca() {
               </div>
 
               <form
-                onSubmit={(evento) => {
-                  evento.preventDefault();
+                onSubmit={(eventoSubmissao) => {
+                  eventoSubmissao.preventDefault();
                   if (stepModal < 3) {
                     handleProximoPasso();
                   } else {
@@ -815,8 +1063,9 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.id}
-                        onChange={(evento) =>
-                          updateForm("id", evento.target.value)
+                        disabled={!!editandoId} // Não permitir mudar ID na edição
+                        onChange={(eventoMudanca) =>
+                          updateForm("id", eventoMudanca.target.value)
                         }
                         placeholder="Ex: RBAC 25.1309"
                       />
@@ -835,8 +1084,8 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.codigo}
-                        onChange={(evento) =>
-                          updateForm("codigo", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("codigo", eventoMudanca.target.value)
                         }
                         placeholder="Ex: 25.1309"
                       />
@@ -852,8 +1101,8 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.titulo}
-                        onChange={(evento) =>
-                          updateForm("titulo", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("titulo", eventoMudanca.target.value)
                         }
                         placeholder="Nome completo"
                       />
@@ -872,16 +1121,30 @@ export default function Biblioteca() {
                       <select
                         className="form-select"
                         value={form.organizacao}
-                        onChange={(evento) =>
-                          updateForm("organizacao", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("organizacao", eventoMudanca.target.value)
                         }
                       >
-                        {ORGANIZACOES.map((nomeOrganizacao) => (
-                          <option key={nomeOrganizacao} value={nomeOrganizacao}>
-                            {ORG_ORIGENS[nomeOrganizacao]} {nomeOrganizacao}
+                        {ORGANIZACOES.map((nomeOrganizacaoAtual) => (
+                          <option key={nomeOrganizacaoAtual} value={nomeOrganizacaoAtual}>
+                            {ORG_ORIGENS[nomeOrganizacaoAtual]} {nomeOrganizacaoAtual}
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <i className="fas fa-code-branch"></i> Revisão
+                      </label>
+                      <input
+                        className="form-input"
+                        value={form.revisao}
+                        onChange={(eventoMudanca) =>
+                          updateForm("revisao", eventoMudanca.target.value)
+                        }
+                        placeholder="Ex: Rev. A"
+                      />
                     </div>
 
                     <div className="form-group">
@@ -891,30 +1154,84 @@ export default function Biblioteca() {
                       <select
                         className="form-select"
                         value={form.categoria}
-                        onChange={(evento) =>
-                          updateForm("categoria", evento.target.value)
-                        }
+                        onChange={(eventoMudanca) => {
+                          const novaCategoria = eventoMudanca.target.value;
+                          updateForm("categoria", novaCategoria);
+
+                          const subcategoriasDaCategoria =
+                            SUBCATEGORIAS[novaCategoria] || [];
+                          const novaSubcategoria =
+                            subcategoriasDaCategoria.length > 0
+                              ? subcategoriasDaCategoria[0]
+                              : "";
+                          updateForm("subcategoria", novaSubcategoria);
+
+                          updateForm("item", "");
+                        }}
                       >
-                        {CATEGORIAS.map((nomeCategoria) => (
-                          <option key={nomeCategoria} value={nomeCategoria}>
-                            {nomeCategoria}
+                        {CATEGORIAS.map((nomeCategoriaAtual) => (
+                          <option key={nomeCategoriaAtual} value={nomeCategoriaAtual}>
+                            {nomeCategoriaAtual}
                           </option>
                         ))}
                       </select>
                     </div>
 
-                    <div className="form-group full-width">
+                    <div className="form-group">
                       <label className="form-label">
                         <i className="fas fa-layer-group"></i> Subcategoria
                       </label>
-                      <input
-                        className="form-input"
+                      <select
+                        className="form-select"
                         value={form.subcategoria}
-                        onChange={(evento) =>
-                          updateForm("subcategoria", evento.target.value)
+                        onChange={(eventoMudanca) => {
+                          const novaSubcategoria = eventoMudanca.target.value;
+                          updateForm("subcategoria", novaSubcategoria);
+                          updateForm("item", "");
+                        }}
+                      >
+                        {(SUBCATEGORIAS[form.categoria ?? ""] ?? []).map(
+                          (nomeSubcategoriaAtual) => (
+                            <option key={nomeSubcategoriaAtual} value={nomeSubcategoriaAtual}>
+                              {nomeSubcategoriaAtual}
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <i className="fas fa-cube"></i> Item
+                      </label>
+                      <select
+                        className="form-select"
+                        value={form.item}
+                        onChange={(eventoMudanca) =>
+                          updateForm("item", eventoMudanca.target.value)
                         }
-                        placeholder="Ex: Sistemas, Fadiga..."
-                      />
+                        disabled={
+                          !form.subcategoria ||
+                          !(
+                            ITENS_POR_SUBCATEGORIA[form.subcategoria]?.length >
+                            0
+                          )
+                        }
+                      >
+                        <option value="" disabled hidden>
+                          {form.subcategoria &&
+                          ITENS_POR_SUBCATEGORIA[form.subcategoria]?.length > 0
+                            ? "Selecione um item"
+                            : "Sem itens aplicáveis"}
+                        </option>
+                        {(
+                          ITENS_POR_SUBCATEGORIA[form.subcategoria ?? ""] ?? []
+                        ).map((nomeItemAtual) => (
+                          <option key={nomeItemAtual} value={nomeItemAtual}>
+                            {nomeItemAtual}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
@@ -929,8 +1246,8 @@ export default function Biblioteca() {
                         <select
                           className="form-select"
                           value={form.status}
-                          onChange={(evento) =>
-                            updateForm("status", evento.target.value)
+                          onChange={(eventoMudanca) =>
+                            updateForm("status", eventoMudanca.target.value)
                           }
                         >
                           <option value="Vigente">Vigente</option>
@@ -944,26 +1261,13 @@ export default function Biblioteca() {
                         <select
                           className="form-select"
                           value={form.tipo}
-                          onChange={(evento) =>
-                            updateForm("tipo", evento.target.value)
+                          onChange={(eventoMudanca) =>
+                            updateForm("tipo", eventoMudanca.target.value)
                           }
                         >
                           <option value="Pública">Pública</option>
                           <option value="Privada">Privada</option>
                         </select>
-                      </div>
-                      <div className="form-group full-width">
-                        <label className="form-label">
-                          <i className="fas fa-code-branch"></i> Revisão
-                        </label>
-                        <input
-                          className="form-input"
-                          value={form.revisao}
-                          onChange={(evento) =>
-                            updateForm("revisao", evento.target.value)
-                          }
-                          placeholder="Ex: Rev. A"
-                        />
                       </div>
                     </div>
 
@@ -971,17 +1275,71 @@ export default function Biblioteca() {
 
                     <div className="form-group">
                       <label className="form-label">
+                        <i className="fas fa-key"></i> Palavras-chave
+                      </label>
+                      <div className="dynamic-list">
+                        {form.palavrasChave?.map(
+                          (palavraAtual, indicePalavraAtual) => (
+                            <div key={indicePalavraAtual} className="dynamic-row">
+                              <input
+                                className="form-input"
+                                value={palavraAtual}
+                                onChange={(eventoMudanca) => {
+                                  const novasPalavras = [
+                                    ...form.palavrasChave!,
+                                  ];
+                                  novasPalavras[indicePalavraAtual] =
+                                    eventoMudanca.target.value;
+                                  updateForm("palavrasChave", novasPalavras);
+                                }}
+                                placeholder="Palavra-chave..."
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-icon"
+                                onClick={() =>
+                                  updateForm(
+                                    "palavrasChave",
+                                    form.palavrasChave!.filter(
+                                      (_, indiceAtualCopia) =>
+                                        indiceAtualCopia !== indicePalavraAtual,
+                                    ),
+                                  )
+                                }
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          ),
+                        )}
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-add-more"
+                          onClick={() =>
+                            updateForm("palavrasChave", [
+                              ...form.palavrasChave!,
+                              "",
+                            ])
+                          }
+                        >
+                          <i className="fas fa-plus"></i> Nova palavra-chave
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
                         <i className="fas fa-pen-to-square"></i> Notas Técnicas
                       </label>
                       <div className="dynamic-list">
-                        {form.notas?.map((notaAtual, indiceNota) => (
-                          <div key={indiceNota} className="dynamic-row">
+                        {form.notas?.map((notaAtual, indiceNotaAtual) => (
+                          <div key={indiceNotaAtual} className="dynamic-row">
                             <input
                               className="form-input"
                               value={notaAtual}
-                              onChange={(evento) => {
+                              onChange={(eventoMudanca) => {
                                 const novasNotas = [...form.notas!];
-                                novasNotas[indiceNota] = evento.target.value;
+                                novasNotas[indiceNotaAtual] = eventoMudanca.target.value;
                                 updateForm("notas", novasNotas);
                               }}
                               placeholder="Nota..."
@@ -993,8 +1351,8 @@ export default function Biblioteca() {
                                 updateForm(
                                   "notas",
                                   form.notas!.filter(
-                                    (_, indiceAtual) =>
-                                      indiceAtual !== indiceNota,
+                                    (_, indiceAtualCopia) =>
+                                      indiceAtualCopia !== indiceNotaAtual,
                                   ),
                                 )
                               }
@@ -1021,17 +1379,17 @@ export default function Biblioteca() {
                       </label>
                       <div className="dynamic-list">
                         {form.referencias?.map(
-                          (referenciaAtual, indiceReferencia) => (
-                            <div key={indiceReferencia} className="dynamic-row">
+                          (referenciaAtual, indiceReferenciaAtual) => (
+                            <div key={indiceReferenciaAtual} className="dynamic-row">
                               <input
                                 className="form-input"
                                 value={referenciaAtual}
-                                onChange={(evento) => {
+                                onChange={(eventoMudanca) => {
                                   const novasReferencias = [
                                     ...form.referencias!,
                                   ];
-                                  novasReferencias[indiceReferencia] =
-                                    evento.target.value;
+                                  novasReferencias[indiceReferenciaAtual] =
+                                    eventoMudanca.target.value;
                                   updateForm("referencias", novasReferencias);
                                 }}
                                 placeholder="Referência..."
@@ -1043,8 +1401,8 @@ export default function Biblioteca() {
                                   updateForm(
                                     "referencias",
                                     form.referencias!.filter(
-                                      (_, indiceAtual) =>
-                                        indiceAtual !== indiceReferencia,
+                                      (_, indiceAtualCopia) =>
+                                        indiceAtualCopia !== indiceReferenciaAtual,
                                     ),
                                   )
                                 }
@@ -1077,41 +1435,51 @@ export default function Biblioteca() {
                       <label className="form-label">
                         <i className="fas fa-file-pdf"></i> Arquivo PDF
                       </label>
-                      <label
-                        className={`file-upload-zone ${arquivoPdf ? "has-file" : ""}`}
-                      >
-                        <div className="file-icon">
-                          <i
-                            className={`fas ${arquivoPdf ? "fa-check" : "fa-upload"}`}
-                          ></i>
+                      {form.urlPdf && !arquivoPdf ? (
+                        <div className="attachment-pdf" style={{ marginBottom: 0 }}>
+                           <i className="fas fa-file-pdf"></i>
+                           <span className="attachment-pdf-name">{form.nomePdf}</span>
+                           <button type="button" className="btn-remove-file" onClick={() => { updateForm('urlPdf', undefined); updateForm('nomePdf', undefined); }}>
+                             <i className="fas fa-trash"></i>
+                           </button>
                         </div>
-                        <div className="file-info">
-                          <span className="file-name">
-                            {arquivoPdf
-                              ? arquivoPdf.name
-                              : "Anexar arquivo PDF"}
-                          </span>
-                          <span className="file-hint">Máximo 20MB (.pdf)</span>
-                        </div>
-                        {arquivoPdf && (
-                          <button
-                            type="button"
-                            className="btn-remove-file"
-                            onClick={(evento) => {
-                              evento.preventDefault();
-                              setArquivoPdf(null);
-                            }}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        )}
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden-input"
-                          onChange={handlePdfChange}
-                        />
-                      </label>
+                      ) : (
+                        <label
+                          className={`file-upload-zone ${arquivoPdf ? "has-file" : ""}`}
+                        >
+                          <div className="file-icon">
+                            <i
+                              className={`fas ${arquivoPdf ? "fa-check" : "fa-upload"}`}
+                            ></i>
+                          </div>
+                          <div className="file-info">
+                            <span className="file-name">
+                              {arquivoPdf
+                                ? arquivoPdf.name
+                                : "Anexar arquivo PDF"}
+                            </span>
+                            <span className="file-hint">Máximo 3MB (.pdf)</span>
+                          </div>
+                          {arquivoPdf && (
+                            <button
+                              type="button"
+                              className="btn-remove-file"
+                              onClick={(eventoClique) => {
+                                eventoClique.preventDefault();
+                                setArquivoPdf(null);
+                              }}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          )}
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            className="hidden-input"
+                            onChange={handlePdfChange}
+                          />
+                        </label>
+                      )}
                     </div>
 
                     <div className="file-upload-group">
@@ -1123,7 +1491,7 @@ export default function Biblioteca() {
                           <i className="fas fa-image"></i>
                         </div>
                         <div className="file-info">
-                          <span className="file-name">Anexar imagens</span>
+                          <span className="file-name">Adicionar imagens</span>
                           <span className="file-hint">JPG, PNG, WebP</span>
                         </div>
                         <input
@@ -1134,16 +1502,36 @@ export default function Biblioteca() {
                           onChange={handleImgChange}
                         />
                       </label>
+                      
+                      {/* Mostrar Imagens Existentes na Edição */}
+                      {form.imagens && form.imagens.length > 0 && (
+                        <div className="image-preview-list">
+                          {form.imagens.map((urlImagemExistente, indiceImagemExistente) => (
+                             <div key={`existente-${indiceImagemExistente}`} className="image-preview-item">
+                               <img src={urlImagemExistente} alt="Preview" />
+                               <button type="button" className="btn-remove-preview" onClick={() => {
+                                  const novasImagensFormulario = [...form.imagens!];
+                                  novasImagensFormulario.splice(indiceImagemExistente, 1);
+                                  updateForm('imagens', novasImagensFormulario);
+                               }}>
+                                 <i className="fas fa-xmark"></i>
+                               </button>
+                             </div>
+                           ))}
+                        </div>
+                      )}
+
+                      {/* Mostrar Imagens Novas */}
                       {arquivosImagens.length > 0 && (
                         <div className="image-preview-list">
                           {arquivosImagens.map(
-                            (arquivoImagem, indiceImagem) => (
+                            (arquivoImagemNovo, indiceImagemNovo) => (
                               <div
-                                key={indiceImagem}
+                                key={`nova-${indiceImagemNovo}`}
                                 className="image-preview-item"
                               >
                                 <img
-                                  src={URL.createObjectURL(arquivoImagem)}
+                                  src={URL.createObjectURL(arquivoImagemNovo)}
                                   alt="Preview"
                                 />
                                 <button
@@ -1152,8 +1540,8 @@ export default function Biblioteca() {
                                   onClick={() =>
                                     setArquivosImagens((imagensAnteriores) =>
                                       imagensAnteriores.filter(
-                                        (_, indiceAtual) =>
-                                          indiceAtual !== indiceImagem,
+                                        (_, indiceAtualParaFiltro) =>
+                                          indiceAtualParaFiltro !== indiceImagemNovo,
                                       ),
                                     )
                                   }
@@ -1215,20 +1603,37 @@ export default function Biblioteca() {
           >
             <div
               className="modal modal-large"
-              onClick={(evento) => evento.stopPropagation()}
+              onClick={(eventoClique) => eventoClique.stopPropagation()}
             >
               <div className="modal-header">
                 <h2>
                   <i className="fas fa-magnifying-glass-chart"></i> Detalhes da
                   Norma
                 </h2>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setNormaVisualizar(null)}
-                >
-                  <i className="fas fa-xmark"></i>
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      className="btn btn-warning btn-icon" 
+                      onClick={() => { setNormaVisualizar(null); abrirModalEdicao(normaVisualizar); }}
+                      title="Editar Norma"
+                    >
+                      <i className="fas fa-pen"></i>
+                    </button>
+                    <button 
+                      className="btn btn-danger btn-icon" 
+                      onClick={() => { setNormaVisualizar(null); handleDelete(normaVisualizar.id); }}
+                      title="Excluir Norma"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setNormaVisualizar(null)}
+                      title="Fechar"
+                    >
+                      <i className="fas fa-xmark"></i>
+                    </button>
+                </div>
               </div>
               <div className="view-details">
                 <div className="view-grid">
@@ -1278,6 +1683,9 @@ export default function Biblioteca() {
                       <span
                         className={`badge ${normaVisualizar.tipo === "Pública" ? "badge-tipo-publica" : "badge-tipo-privada"}`}
                       >
+                        <i
+                          className={`fas ${normaVisualizar.tipo === "Pública" ? "fa-globe" : "fa-lock"}`}
+                        ></i>
                         {normaVisualizar.tipo || "Pública"}
                       </span>
                     </span>
@@ -1330,9 +1738,32 @@ export default function Biblioteca() {
                       {normaVisualizar.subcategoria || "—"}
                     </span>
                   </div>
+                  <div className="view-item">
+                    <span className="view-label">
+                      <i className="fas fa-cube"></i> Item
+                    </span>
+                    <span className="view-value">
+                      {normaVisualizar.item || "—"}
+                    </span>
+                  </div>
                 </div>
 
                 <hr className="divider" />
+
+                {normaVisualizar.palavrasChave && normaVisualizar.palavrasChave.length > 0 && (
+                  <div className="view-item">
+                    <span className="view-label">
+                      <i className="fas fa-key"></i> Palavras-chave
+                    </span>
+                    <div className="view-badges">
+                      {normaVisualizar.palavrasChave.map((palavraMapeada, indicePalavraMapeada) => (
+                        <span key={indicePalavraMapeada} className="badge theme-subcategoria">
+                          {palavraMapeada}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {normaVisualizar.notas.length > 0 && (
                   <div className="view-item">
@@ -1340,15 +1771,16 @@ export default function Biblioteca() {
                       <i className="fas fa-pen-to-square"></i> Notas Técnicas
                     </span>
                     <ul className="view-list">
-                      {normaVisualizar.notas.map((notaAtual, indiceNota) => (
-                        <li key={indiceNota}>
+                      {normaVisualizar.notas.map((notaMapeada, indiceNotaMapeada) => (
+                        <li key={indiceNotaMapeada}>
                           <i className="fas fa-caret-right view-list-icon"></i>{" "}
-                          {notaAtual}
+                          {notaMapeada}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
+                
                 {normaVisualizar.referencias.length > 0 && (
                   <div className="view-item">
                     <span className="view-label">
@@ -1356,10 +1788,10 @@ export default function Biblioteca() {
                     </span>
                     <ul className="view-list">
                       {normaVisualizar.referencias.map(
-                        (referenciaAtual, indiceReferencia) => (
-                          <li key={indiceReferencia}>
+                        (referenciaMapeada, indiceReferenciaMapeada) => (
+                          <li key={indiceReferenciaMapeada}>
                             <i className="fas fa-caret-right view-list-icon"></i>{" "}
-                            {referenciaAtual}
+                            {referenciaMapeada}
                           </li>
                         ),
                       )}
@@ -1396,17 +1828,18 @@ export default function Biblioteca() {
                         normaVisualizar.imagens.length > 0 && (
                           <div className="attachment-image-grid">
                             {normaVisualizar.imagens.map(
-                              (urlImagem, indiceImagem) => (
+                              (urlImagemMapeada, indiceImagemMapeada) => (
                                 <div
-                                  key={indiceImagem}
+                                  key={indiceImagemMapeada}
                                   className="attachment-image-item"
-                                  onClick={() =>
-                                    setImagemAbertaIdx(indiceImagem)
-                                  }
+                                  onClick={() => {
+                                    setImagensAbertas(normaVisualizar.imagens!);
+                                    setImagemAbertaIdx(indiceImagemMapeada);
+                                  }}
                                 >
                                   <img
-                                    src={urlImagem}
-                                    alt={`Anexo ${indiceImagem + 1}`}
+                                    src={urlImagemMapeada}
+                                    alt={`Anexo ${indiceImagemMapeada + 1}`}
                                   />
                                   <div className="image-hover-overlay">
                                     <i className="fas fa-magnifying-glass-plus"></i>
@@ -1420,7 +1853,8 @@ export default function Biblioteca() {
                   </>
                 )}
 
-                {normaVisualizar.notas.length === 0 &&
+                {(!normaVisualizar.palavrasChave || normaVisualizar.palavrasChave.length === 0) &&
+                  normaVisualizar.notas.length === 0 &&
                   normaVisualizar.referencias.length === 0 &&
                   !normaVisualizar.urlPdf &&
                   (!normaVisualizar.imagens ||
@@ -1451,11 +1885,14 @@ export default function Biblioteca() {
             onClose={() => setPdfAberto(null)}
           />
         )}
-        {imagemAbertaIdx !== null && normaVisualizar?.imagens && (
+        {imagemAbertaIdx !== null && imagensAbertas && (
           <ImageLightbox
-            imagens={normaVisualizar.imagens}
+            imagens={imagensAbertas}
             indiceInicial={imagemAbertaIdx}
-            onClose={() => setImagemAbertaIdx(null)}
+            onClose={() => {
+              setImagemAbertaIdx(null);
+              setImagensAbertas(null);
+            }}
           />
         )}
       </main>

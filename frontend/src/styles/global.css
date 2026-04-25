@@ -118,7 +118,8 @@ button {
   color: var(--cor-vinho);
   font-style: italic;
   text-align: center;
-  flex: 2;
+  flex: 1;
+  transition: all 0.2s ease;
 }
 
 /* --- Botão primário (vinho) --- */
@@ -165,6 +166,10 @@ button {
     padding-bottom: 5px;
   }
 
+  body {
+  overflow-x: hidden;
+  }
+
   .logo-header {
     height: 40px; 
   }
@@ -172,6 +177,8 @@ button {
   .topo-titulo {
     font-size: 11px;
     text-align: right; 
-    line-height: 1.2;
+    line-height: 1.5;
+    flex: 10;
   }
+
 }

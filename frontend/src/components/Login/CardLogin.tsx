@@ -28,15 +28,17 @@ function CartaoLogin() {
       <h1 className="titulo-cartao-login">ACESSO AO SISTEMA</h1>
       
       <form className="formulario-login" onSubmit={aoEnviar}>
-        {erro && <p className="erro-login">{erro}</p>}
+        {erro && <div className="erro-login"><i className="fa-solid fa-circle-exclamation"></i> {erro}</div>}
+        
         <CampoEntrada
           rotulo="LOGIN"
           tipo="email"
-          placeholder="usuario@akaer.com.br"
+          placeholder="usuario@janosys.com.br"
           valor={usuario}
           aoAlterar={setUsuario}
           tamanhoMaximo={100}
           erro={!!erro}
+          icone="fa-solid fa-envelope"
         />
         
         <CampoEntrada
@@ -46,15 +48,17 @@ function CartaoLogin() {
           valor={senha}
           aoAlterar={setSenha}
           tamanhoMaximo={50}
+          erro={!!erro}
+          icone="fa-solid fa-lock"
         />
         
-        <a href="#" className="link-esqueci-senha">Esqueci minha senha.</a>
+        <a href="#" className="link-esqueci-senha">Esqueci minha senha</a>
         
         <div className="container-botao">
           <Botao texto="ENTRAR" tipo="submit" />
         </div>
         
-        <p className="acesso-restrito">Acesso restrito a colaboradores AKAER</p>
+        <p className="acesso-restrito"><i className="fa-solid fa-shield-halved"></i> Acesso restrito a pessoas autorizadas.</p>
       </form>
     </div>
   );

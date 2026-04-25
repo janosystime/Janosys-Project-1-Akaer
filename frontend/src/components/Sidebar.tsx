@@ -99,14 +99,14 @@ export default function Sidebar(props: PropsSidebar) {
         <hr className="nav-divisor" />
         <p className="nav-secao-label">Menu</p>
 
-        <NavLink to="/mindmap" className="nav-item" onClick={fecharMenuMobile}>
+        <NavLink to="/Home" className="nav-item" onClick={fecharMenuMobile}>
           <Network size={20} />
-          <span className="nav-label">Mind Map</span>
+          <span className="nav-label">Home</span>
         </NavLink>
 
-        <NavLink to="/normativas" className="nav-item" onClick={fecharMenuMobile}>
+        <NavLink to="/normas" className="nav-item" onClick={fecharMenuMobile}>
           <BookOpen size={20} />
-          <span className="nav-label">Normativas</span>
+          <span className="nav-label">Normas</span>
         </NavLink>
 
         <NavLink to="/solicitacoes" className="nav-item" onClick={fecharMenuMobile}>
