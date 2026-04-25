@@ -18,6 +18,7 @@ import { obterUsuarioAtual } from './auth/session'
 import Login      from './auth/Login'
 import Home       from './pages/Home'
 import Normas     from './pages/Normas'
+import Solicitacoes     from './pages/Solicitacoes'
 import Usuarios   from './pages/Usuarios'
 import Layout     from './components/Layout'
 
@@ -86,6 +87,7 @@ export default function App() {
       >
         <Route path="/home"  element={<Home />} />
         <Route path="/normas" element={<Normas />} />
+        <Route path="/solicitacoes"  element={<Solicitacoes />} />
 
         {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
             O Layout já está montado — só o <Outlet /> troca. */}

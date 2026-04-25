@@ -108,6 +108,11 @@ export default function Sidebar(props: PropsSidebar) {
           <span className="nav-label">Normas</span>
         </NavLink>
 
+        <NavLink to="/Solicitacoes" className="nav-item" onClick={fecharMenuMobile}>
+          <Network size={20} />
+          <span className="nav-label">Solicitações</span>
+        </NavLink>
+
         {isAdmin && (
           <>
             <hr className="nav-divisor" />
