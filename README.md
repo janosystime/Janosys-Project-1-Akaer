@@ -58,12 +58,9 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js" height="50px">
 </a>&nbsp;
-<a href="https://www.python.org" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white" alt="Python" height="50px">
+<a href="https://www.typescriptlang.org/" target="_blank" rel="noopener noreferrer">
+<img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript" height="50px">
 </a>&nbsp;
-<a href="https://flask.palletsprojects.com" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/Flask-000000?style=flat&logo=flask&logoColor=white" alt="Flask" height="50px">
-</a>
 </p>
 
 🗄️ Banco de Dados
