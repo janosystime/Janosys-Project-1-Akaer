@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/Normas.css"; 
 import "../styles/Home.css";
-import { salvarPecas } from "../helpers/pecas";
+import { salvarPecas, carregarPecas, type Peca } from "../helpers/pecas";
 
 import { 
   type Norma, 
@@ -23,13 +23,6 @@ const CATEGORIAS_DEF: Record<CategoriaRaiz, { icone: string, tema: string }> = {
   "Geral": { icone: CAT_ICONES["Geral"] || "fa-layer-group", tema: "theme-cat-geral" },
 };
 
-interface Peca {
-  nome: string;
-  categoria: string;
-  subcategoria: string;
-  normasVinculadas: string[];
-}
-
 const ESTRUTURA_PASTAS_BASE: Record<CategoriaRaiz, string[]> = {
   "Peça": ["Metálica", "Não Metálica"],
   "Conjunto": ["Instalação de Acessórios", "União de Peças", "Cablagem"],
@@ -37,29 +30,13 @@ const ESTRUTURA_PASTAS_BASE: Record<CategoriaRaiz, string[]> = {
   "Geral": ["Basic Notes", "Identificação"],
 };
 
-const PECAS_BASE: Peca[] = [
-  { nome: "Tubo", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: ["FAR 25.571"] },
-  { nome: "Usinado", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: ["ISO 9001:2015"] },
-  { nome: "Chapa", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: [] },
-  { nome: "Extrudado", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: ["FAR 25.571"] },
-  { nome: "Fundido", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: ["FAR 25.571", "ISO 9001:2015"] },
-  { nome: "Tratamento Superficial", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: ["ISO 9001:2015"] },
-  { nome: "Teste", categoria: "Peça", subcategoria: "Metálica", normasVinculadas: ["FAR 25.571"] },
-  { nome: "Material Composto", categoria: "Peça", subcategoria: "Não Metálica", normasVinculadas: ["FAR 25.571", "ISO 9001:2015"] },
-  { nome: "Tubo com Acessório", categoria: "Conjunto", subcategoria: "Instalação de Acessórios", normasVinculadas: ["RBAC 25.1309"] },
-  { nome: "Soldagem", categoria: "Conjunto", subcategoria: "União de Peças", normasVinculadas: ["ISO 9001:2015"] },
-  { nome: "Proteção", categoria: "Conjunto", subcategoria: "Cablagem", normasVinculadas: ["RBAC 25.1309"] },
-  { nome: "Bota", categoria: "Conjunto", subcategoria: "Cablagem", normasVinculadas: [] },
-  { nome: "Conector", categoria: "Conjunto", subcategoria: "Cablagem", normasVinculadas: ["ISO 9001:2015"] },
-];
-
 export default function Home() {
   const [normas] = useState<Norma[]>(() => {
     const normasSalvas = localStorage.getItem("biblioteca_normas");
     return normasSalvas ? JSON.parse(normasSalvas) : NORMAS_BASE;
   });
 
-  const [pecas, setPecas] = useState<Peca[]>(PECAS_BASE);
+  const [pecas, setPecas] = useState<Peca[]>(() => carregarPecas());
   const [estruturaPastas, setEstruturaPastas] = useState<Record<string, string[]>>(ESTRUTURA_PASTAS_BASE);
   const [pecaVisualizar, setPecaVisualizar] = useState<Peca | null>(null);
   const [normaDetalheVisualizar, setNormaDetalheVisualizar] = useState<Norma | null>(null);

@@ -548,27 +548,6 @@ export function ModalDetalhesNorma({
             <div className="view-item"><span className="view-label"><i className="fas fa-cube"></i> Item</span><span className="view-value">{norma.item || "—"}</span></div>
           </div>
 
-          <hr className="divider" />
-
-          {norma.palavrasChave && norma.palavrasChave.length > 0 && (
-            <div className="view-item">
-              <span className="view-label"><i className="fas fa-key"></i> Palavras-chave</span>
-              <div className="view-badges">
-                {norma.palavrasChave.map((palavra, i) => (
-                  <span key={i} className="badge theme-subcategoria">{palavra}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {norma.notas && norma.notas.length > 0 && (
-            <div className="view-item"><span className="view-label"><i className="fas fa-pen-to-square"></i> Notas Técnicas</span><ul className="view-list">{norma.notas.map((nota, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {nota}</li>))}</ul></div>
-          )}
-          
-          {norma.referencias && norma.referencias.length > 0 && (
-            <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{norma.referencias.map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
-          )}
-
           <div className="view-item">
             <span className="view-label">
               <i className="fas fa-cubes"></i> Peças relacionadas
@@ -595,6 +574,27 @@ export function ModalDetalhesNorma({
               </div>
             )}
           </div>
+
+          <hr className="divider" />
+
+          {norma.palavrasChave && norma.palavrasChave.length > 0 && (
+            <div className="view-item">
+              <span className="view-label"><i className="fas fa-key"></i> Palavras-chave</span>
+              <div className="view-badges">
+                {norma.palavrasChave.map((palavra, i) => (
+                  <span key={i} className="badge theme-subcategoria">{palavra}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {norma.notas && norma.notas.length > 0 && (
+            <div className="view-item"><span className="view-label"><i className="fas fa-pen-to-square"></i> Notas Técnicas</span><ul className="view-list">{norma.notas.map((nota, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {nota}</li>))}</ul></div>
+          )}
+          
+          {norma.referencias && norma.referencias.length > 0 && (
+            <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{norma.referencias.map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
+          )}
 
           {(norma.urlPdf || (norma.imagens && norma.imagens.length > 0)) && (
             <>
