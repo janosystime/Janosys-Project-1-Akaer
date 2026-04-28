@@ -1,13 +1,22 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useState, useEffect, useCallback, type ChangeEvent, useMemo } from "react";
+
+import { useState, useEffect, useCallback, useMemo, type ChangeEvent } from "react";
+
 import "../components/Sidebar";
 import "../styles/Normas.css";
+import {
+  carregarPecas,
+  listarPecasRelacionadas,
+  type Peca,
+} from "../helpers/pecas";
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
-import { carregarPecas, listarPecasRelacionadas, type Peca } from "../helpers/pecas";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
 
 export interface Norma {
   id: string;
@@ -49,6 +58,32 @@ const converterParaBase64 = (arquivoAtual: File): Promise<string> => {
     leitor.onerror = (erroAtual) => reject(erroAtual);
   });
 };
+
+function normalizarUrlPdf(urlPdf?: string): string | undefined {
+  if (!urlPdf) return urlPdf;
+  if (
+    urlPdf.startsWith("data:") ||
+    urlPdf.startsWith("blob:") ||
+    urlPdf.startsWith("http://") ||
+    urlPdf.startsWith("https://") ||
+    urlPdf.startsWith("/pdf/")
+  ) {
+    return urlPdf;
+  }
+
+  if (urlPdf.startsWith("/")) {
+    return `/pdf${urlPdf}`;
+  }
+
+  return `/pdf/${urlPdf}`;
+}
+
+function normalizarNormasSalvas(normas: Norma[]): Norma[] {
+  return normas.map((normaAtual) => ({
+    ...normaAtual,
+    urlPdf: normalizarUrlPdf(normaAtual.urlPdf),
+  }));
+}
 
 export const NORMAS_BASE: Norma[] = [
   {
@@ -422,6 +457,7 @@ export function ImageLightbox({
 // ==== AQUI: onEdit e onDelete se tornaram OPCIONAIS (?) ====
 export function ModalDetalhesNorma({
   norma,
+  pecasRelacionadas,
   onClose,
   onEdit,
   onDelete,
@@ -429,6 +465,7 @@ export function ModalDetalhesNorma({
   onViewImages
 }: {
   norma: Norma;
+  pecasRelacionadas?: Peca[];
   onClose: () => void;
   onEdit?: (normaSelecionada: Norma) => void;
   onDelete?: (id: string) => void;
@@ -531,6 +568,33 @@ export function ModalDetalhesNorma({
           {norma.referencias && norma.referencias.length > 0 && (
             <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{norma.referencias.map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
           )}
+
+          <div className="view-item">
+            <span className="view-label">
+              <i className="fas fa-cubes"></i> Peças relacionadas
+            </span>
+            {pecasRelacionadas && pecasRelacionadas.length > 0 ? (
+              <div className="pecas-relacionadas-lista">
+                {pecasRelacionadas.map((pecaRelacionada, indicePeca) => (
+                  <div
+                    key={`${pecaRelacionada.nome}-${pecaRelacionada.categoria}-${pecaRelacionada.subcategoria}-${indicePeca}`}
+                    className="peca-relacionada-card"
+                  >
+                    <span className="peca-relacionada-nome">{pecaRelacionada.nome}</span>
+                    <div className="peca-relacionada-badges">
+                      <span className="badge theme-subcategoria">{pecaRelacionada.categoria}</span>
+                      <span className="badge theme-subcategoria badge-secundario">{pecaRelacionada.subcategoria}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state compact">
+                <i className="fas fa-cube"></i>
+                <p>Nenhuma peça relacionada.</p>
+              </div>
+            )}
+          </div>
 
           {(norma.urlPdf || (norma.imagens && norma.imagens.length > 0)) && (
             <>
@@ -716,7 +780,10 @@ export default function Biblioteca() {
     const normasSalvas = localStorage.getItem("biblioteca_normas");
     if (normasSalvas) {
       try {
-        return JSON.parse(normasSalvas);
+        const parsed = JSON.parse(normasSalvas) as Norma[];
+        if (Array.isArray(parsed)) {
+          return normalizarNormasSalvas(parsed);
+        }
       } catch (erroDeLeitura) {
         console.error("Erro ao ler normas do localStorage:", erroDeLeitura);
       }
@@ -819,7 +886,6 @@ export default function Biblioteca() {
 
   const [arquivoPdf, setArquivoPdf] = useState<File | null>(null);
   const [arquivosImagens, setArquivosImagens] = useState<File[]>([]);
-
   const pecasRelacionadas = useMemo(() => {
     if (!normaVisualizar) return [];
     return listarPecasRelacionadas(pecas, normaVisualizar.id);
@@ -1820,313 +1886,19 @@ export default function Biblioteca() {
         )}
 
         {normaVisualizar && (
-          <div
-            className="modal-overlay"
-            onClick={() => setNormaVisualizar(null)}
-          >
-            <div
-              className="modal modal-large"
-              onClick={(eventoClique) => eventoClique.stopPropagation()}
-            >
-              <div className="modal-header">
-                <h2>
-                  <i className="fas fa-magnifying-glass-chart"></i> Detalhes da
-                  Norma
-                </h2>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                    <button 
-                      className="btn btn-warning btn-icon" 
-                      onClick={() => { setNormaVisualizar(null); abrirModalEdicao(normaVisualizar); }}
-                      title="Editar Norma"
-                    >
-                      <i className="fas fa-pen"></i>
-                    </button>
-                    <button 
-                      className="btn btn-danger btn-icon" 
-                      onClick={() => { setNormaVisualizar(null); handleDelete(normaVisualizar.id); }}
-                      title="Excluir Norma"
-                    >
-                      <i className="fas fa-trash"></i>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-close"
-                      onClick={() => setNormaVisualizar(null)}
-                      title="Fechar"
-                    >
-                      <i className="fas fa-xmark"></i>
-                    </button>
-                </div>
-              </div>
-              <div className="view-details">
-                <div className="view-grid">
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-id-card"></i> ID
-                    </span>
-                    <span className="view-value">{normaVisualizar.id}</span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-hashtag"></i> Código
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.codigo || "—"}
-                    </span>
-                  </div>
-                </div>
-                <div className="view-item">
-                  <span className="view-label">
-                    <i className="fas fa-heading"></i> Título
-                  </span>
-                  <span className="view-value">{normaVisualizar.titulo}</span>
-                </div>
 
-                <div className="view-grid">
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-building"></i> Órgão
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge theme-org-${normaVisualizar.organizacao.toLowerCase()}`}
-                      >
-                        <span className="badge-origin">
-                          {ORG_ORIGENS[normaVisualizar.organizacao] || "🌐"}
-                        </span>
-                        {normaVisualizar.organizacao}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-globe"></i> Tipo
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge ${normaVisualizar.tipo === "Pública" ? "badge-tipo-publica" : "badge-tipo-privada"}`}
-                      >
-                        <i
-                          className={`fas ${normaVisualizar.tipo === "Pública" ? "fa-globe" : "fa-lock"}`}
-                        ></i>
-                        {normaVisualizar.tipo || "Pública"}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-code-branch"></i> Revisão
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.revisao || "—"}
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-circle-dot"></i> Status
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge ${normaVisualizar.status.toLowerCase()}`}
-                      >
-                        {normaVisualizar.status === "Vigente" ? (
-                          <i className="fas fa-check-circle"></i>
-                        ) : (
-                          <i className="fas fa-times-circle"></i>
-                        )}
-                        {normaVisualizar.status}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-tags"></i> Categoria
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge theme-cat-${normaVisualizar.categoria.toLowerCase()}`}
-                      >
-                        <i
-                          className={`fas ${CAT_ICONES[normaVisualizar.categoria] || "fa-tag"}`}
-                        ></i>
-                        {normaVisualizar.categoria}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-layer-group"></i> Subcategoria
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.subcategoria || "—"}
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-cube"></i> Item
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.item || "—"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="view-item">
-                  <span className="view-label">
-                    <i className="fas fa-cubes"></i> Peças relacionadas
-                  </span>
-                  {pecasRelacionadas.length > 0 ? (
-                    <div className="pecas-relacionadas-lista">
-                      {pecasRelacionadas.map((pecaRelacionada, indicePeca) => (
-                        <div
-                          key={`${pecaRelacionada.nome}-${pecaRelacionada.categoria}-${pecaRelacionada.subcategoria}-${indicePeca}`}
-                          className="peca-relacionada-card"
-                        >
-                          <span className="peca-relacionada-nome">{pecaRelacionada.nome}</span>
-                          <div className="peca-relacionada-badges">
-                            <span className="badge theme-subcategoria">{pecaRelacionada.categoria}</span>
-                            <span className="badge theme-subcategoria badge-secundario">{pecaRelacionada.subcategoria}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state compact">
-                      <i className="fas fa-cube"></i>
-                      <p>Nenhuma peça relacionada.</p>
-                    </div>
-                  )}
-                </div>
-
-                <hr className="divider" />
-
-                {normaVisualizar.palavrasChave && normaVisualizar.palavrasChave.length > 0 && (
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-key"></i> Palavras-chave
-                    </span>
-                    <div className="view-badges">
-                      {normaVisualizar.palavrasChave.map((palavraMapeada, indicePalavraMapeada) => (
-                        <span key={indicePalavraMapeada} className="badge theme-subcategoria">
-                          {palavraMapeada}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {normaVisualizar.notas.length > 0 && (
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-pen-to-square"></i> Notas Técnicas
-                    </span>
-                    <ul className="view-list">
-                      {normaVisualizar.notas.map((notaMapeada, indiceNotaMapeada) => (
-                        <li key={indiceNotaMapeada}>
-                          <i className="fas fa-caret-right view-list-icon"></i>{" "}
-                          {notaMapeada}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {normaVisualizar.referencias.length > 0 && (
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-link"></i> Referências
-                    </span>
-                    <ul className="view-list">
-                      {normaVisualizar.referencias.map(
-                        (referenciaMapeada, indiceReferenciaMapeada) => (
-                          <li key={indiceReferenciaMapeada}>
-                            <i className="fas fa-caret-right view-list-icon"></i>{" "}
-                            {referenciaMapeada}
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {(normaVisualizar.urlPdf ||
-                  (normaVisualizar.imagens &&
-                    normaVisualizar.imagens.length > 0)) && (
-                  <>
-                    <hr className="divider" />
-                    <div className="view-item">
-                      <span className="view-label">
-                        <i className="fas fa-paperclip"></i> Anexos
-                      </span>
-                      {normaVisualizar.urlPdf && (
-                        <div
-                          className="attachment-pdf"
-                          onClick={() =>
-                            setPdfAberto({
-                              url: normaVisualizar.urlPdf!,
-                              nome: normaVisualizar.nomePdf!,
-                            })
-                          }
-                        >
-                          <i className="fas fa-file-pdf"></i>
-                          <span className="attachment-pdf-name">
-                            {normaVisualizar.nomePdf}
-                          </span>
-                        </div>
-                      )}
-                      {normaVisualizar.imagens &&
-                        normaVisualizar.imagens.length > 0 && (
-                          <div className="attachment-image-grid">
-                            {normaVisualizar.imagens.map(
-                              (urlImagemMapeada, indiceImagemMapeada) => (
-                                <div
-                                  key={indiceImagemMapeada}
-                                  className="attachment-image-item"
-                                  onClick={() => {
-                                    setImagensAbertas(normaVisualizar.imagens!);
-                                    setIndiceImagemAberta(indiceImagemMapeada);
-                                  }}
-                                >
-                                  <img
-                                    src={urlImagemMapeada}
-                                    alt={`Anexo ${indiceImagemMapeada + 1}`}
-                                  />
-                                  <div className="image-hover-overlay">
-                                    <i className="fas fa-magnifying-glass-plus"></i>
-                                  </div>
-                                </div>
-                              ),
-                            )}
-                          </div>
-                        )}
-                    </div>
-                  </>
-                )}
-
-                {(!normaVisualizar.palavrasChave || normaVisualizar.palavrasChave.length === 0) &&
-                  normaVisualizar.notas.length === 0 &&
-                  normaVisualizar.referencias.length === 0 &&
-                  pecasRelacionadas.length === 0 &&
-                  !normaVisualizar.urlPdf &&
-                  (!normaVisualizar.imagens ||
-                    normaVisualizar.imagens.length === 0) && (
-                    <div className="empty-state compact">
-                      <i className="fas fa-folder-open"></i>
-                      <p>Nenhuma nota ou anexo.</p>
-                    </div>
-                  )}
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setNormaVisualizar(null)}
-                >
-                  <i className="fas fa-check"></i> Concluído
-                </button>
-              </div>
-            </div>
-          </div>
+          <ModalDetalhesNorma 
+            norma={normaVisualizar} 
+            pecasRelacionadas={pecasRelacionadas}
+            onClose={() => setNormaVisualizar(null)} 
+            onEdit={abrirModalEdicao}
+            onDelete={handleDelete}
+            onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfAberto({ url: urlVisualizada, nome: nomePdfVisualizado })}
+            onViewImages={(imagensParaVisualizar, indice) => {
+              setImagensAbertas(imagensParaVisualizar);
+              setIndiceImagemAberta(indice);
+            }}
+          />
         )}
 
         {pdfAberto && (
