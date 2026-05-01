@@ -53,17 +53,17 @@ export default function Layout() {
 
         {/* Área principal: o <Outlet /> renderiza a página da rota ativa.
             Substitui o antigo {children} — funciona igual, mas vem do React Router. */}
-        <main className="conteudo-principal">
-          <Outlet />
-        </main>
+        <div className="area-principal">
 
+          <main className="conteudo-principal">
+            <Outlet />
+          </main>
+
+          <footer className="rodape">
+            Desenvolvido por: <strong>JanoSys Technologies</strong>
+          </footer>
+        </div>
       </div>
-
-      {/* ── RODAPÉ ───────────────────────────────────── */}
-      <footer className="rodape">
-        Desenvolvido por: <strong>JanoSys Technologies</strong>
-      </footer>
-
     </div>
   )
 }
