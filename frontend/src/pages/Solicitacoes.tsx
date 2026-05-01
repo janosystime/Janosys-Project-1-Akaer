@@ -268,8 +268,8 @@ const solicitacoesFiltradas = solicitacoes
         {/* Lista compacta */}
         <div className="normas-lista">
           {solicitacoesFiltradas.map((s) => (
-            <div key={s.id} className="norma-card" style={{ padding: "12px 16px" }}>
-              <div className="norma-card-body" style={{ alignItems: "center", justifyContent: "space-between" }}>
+            <div key={s.id} className="norma-card solicitacao-card">
+              <div className="norma-card-body solicitacao-body">
                 
                 {/* Lado esquerdo — status, código e título */}
                 <div className="badges-container" style={{ flex: 1 }}>
@@ -287,7 +287,7 @@ const solicitacoesFiltradas = solicitacoes
                 </div>
 
                 {/* Lado direito — solicitante e data (só admin) empilhados */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0, marginLeft: 16 }}>
+                <div className="card-info-lateral">
                   <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--c-text-muted)" }}>
                     <i className="fas fa-user" style={{ marginRight: 4 }}></i>{s.solicitante}
                   </span>
