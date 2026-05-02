@@ -6,6 +6,7 @@ interface Solicitacao {
   id: number;
   codigo: string;
   titulo: string;
+  motivo?: string;
   solicitante: string;
   data: string;
   status: "Aguardando análise" | "Em análise" | "Aceita" | "Indeferida";
@@ -154,6 +155,7 @@ export default function Solicitacoes() {
   const [codigo, setCodigo] = useState("");
   const [titulo, setTitulo] = useState("");
   const [termoPesquisa, setTermoPesquisa] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
 
@@ -176,6 +178,7 @@ export default function Solicitacoes() {
       id: Date.now(),
       codigo: codigo.trim(),
       titulo: titulo.trim(),
+      motivo: motivo.trim(),
       solicitante: usuario?.nome ?? "Usuário",
       data: new Date().toISOString().split("T")[0],
       status: "Aguardando análise",
@@ -185,6 +188,7 @@ export default function Solicitacoes() {
     setCodigo("");
     setTitulo("");
     setShowModal(false);
+    setMotivo("");
     adicionarToast("sucesso", "Solicitação enviada com sucesso!");
   };
 
@@ -349,6 +353,19 @@ const solicitacoesFiltradas = solicitacoes
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   placeholder="Nome ou descrição da norma..."
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">
+                  <i className="fas fa-comment-alt"></i> Motivo da Solicitação
+                </label>
+                <textarea
+                  className="form-input"
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Descreva o motivo da solicitação..."
+                  rows={3}
                 />
               </div>
 
