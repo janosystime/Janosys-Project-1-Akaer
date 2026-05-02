@@ -12,15 +12,14 @@
 
 <p align="center"> 📑 ÍNDICE </p>
 <p align="center">   
-  |<a href="#desafio"> Desafio </a> |
-  <a href="#tecnologias"> Tecnologias </a> |
+  |<a href="#desafio"> Desafio <a/> |
+  <a href="#tecnologias"> Tecnologias <a/> |
   <a href="#backlog"> Backlog do Produto</a> |
   <a href="#sprints"> Registro das Sprints</a> |
   <a href="#dor"> DoR</a> |
   <a href="#dod"> DoD</a> |
-  </br>
-  | <a href="#branch">Branchs</a> |
-  <a href="#instalacao">Guia de Instalação</a> |
+  <a href="#branch">Branchs</a> |
+  <a href="#instalacao">Instalação</a> | 
   <a href="#time"> Time</a> |
 </p>
 
@@ -58,9 +57,12 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js" height="50px">
 </a>&nbsp;
-<a href="https://www.typescriptlang.org/" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript" height="50px">
+<a href="https://www.python.org" target="_blank" rel="noopener noreferrer">
+<img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white" alt="Python" height="50px">
 </a>&nbsp;
+<a href="https://flask.palletsprojects.com" target="_blank" rel="noopener noreferrer">
+<img src="https://img.shields.io/badge/Flask-000000?style=flat&logo=flask&logoColor=white" alt="Flask" height="50px">
+</a>
 </p>
 
 🗄️ Banco de Dados
@@ -112,22 +114,17 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 | 7 | Filtro de Normas por Categoria Pública ou Privada | ALTA | Como engenheiro, quero filtrar normas por categoria (pública ou privada), para melhor organização. | 5 | 2 |
 | 8 | Gestão de Peças no Sistema | ALTA | Como administrador, quero gerenciar peças no sistema para melhor organização. | 8 | 2 |
 | 9 | Visualização de Peças por Normas | MÉDIA | Como engenheiro, quero visualizar peças relacionadas a uma norma. | 6 | 2 |
-| 10 | Solicitação de novas normas | ALTA | Como operador gostaria de solicitar normas para manter o sistema atualizado. | 8 | 2 |
-| 11 | Aprovação e reprovação de normas do sistema. | ALTA | como Checker gostaria de aprovar ou reprovar as sugestão de normas para manter o sistema confiável. | 8 | 2|
-| 12 | Editar normas cadastradas. | ALTA | como administrador quero editar normas cadastradas para deixar o sistema atualizado. | 8 | 2 |
-| 13 | Favoritar normas cadastradas | MÉDIA | como operador gostaria de favoritar as normas para melhor organização. | 7 | 2 |
-| 14 | Permitir modificação do sistema via código-fonte | MÉDIA | como técnico gostaria de modicar características do sistema para adptar as necessidades da empresa. | 6 | 3 |
-| 15 | Histórico de Alterações de Normas | MÉDIA | Como administrador, quero registrar alterações feitas nas normas e quem as alterou, para melhor controle das mesmas. | 7 | 3 |
-| 16 | Visualização do Histórico de Alterações | MÉDIA | Como administrador, quero visualizar o histórico de alterações de uma norma para uma melhor gestão. | 7 | 3 |
-| 17 | Controle de Acesso por Níveis de Usuário | MÉDIA | Como administrador, desejo que o sistema possua diferentes níveis de usuário que permitam visualização e alteração de normas e notas, para um melhor controle de acesso. | 5 | 3 |
-| 18 | Gestão de Usuários | MÉDIA | Como administrador, quero gerenciar usuários para acesso e controle do sistema. | 6 | 3 |
+| 10 | Histórico de Alterações de Normas | MÉDIA | Como administrador, quero registrar alterações feitas nas normas e quem as alterou, para melhor controle das mesmas. | 7 | 3 |
+| 11 | Visualização do Histórico de Alterações | MÉDIA | Como administrador, quero visualizar o histórico de alterações de uma norma para uma melhor gestão. | 7 | 3 |
+| 12 | Controle de Acesso por Níveis de Usuário | MÉDIA | Como administrador, desejo que o sistema possua diferentes níveis de usuário que permitam visualização e alteração de normas e notas, para um melhor controle de acesso. | 5 | 3 |
+| 13 | Gestão de Usuários | MÉDIA | Como administrador, quero gerenciar usuários para acesso e controle do sistema. | 6 | 3 |
 ---
 
 # Registro das Sprints <a id="sprints"></a>
 
 |      Sprint       |  Previsão  |    Status    |     Histórico     |
 | :---------------: | :--------: | :----------: | :---------------: |
-|        01         | 05/04/2026 |  Em construção  | [Sprint Backlog - MVP](MVP/sp1.md) |
+|        01         | 05/04/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp1.md) |
 |        02         | 03/05/2026 |  Em construção  | ---- |
 |        03         | 31/05/2026 |  Em construção  | ---- |
 | Feira de Soluções | 11/06/2026 |  Em construção  | ---- |
@@ -174,59 +171,65 @@ A estrutura de ramificação do repositório segue este padrão de nomenclatura:
 
 ---
 
-# 🚀 Guia de Instalação e Execução Local <a id="instalacao"></a>
+## 📦 Manual de Instalação <a id="instalacao"></a>
 
-Este guia orienta o passo a passo para configurar o ambiente e executar o projeto **JanoSys** em sua máquina local.
+### Pré-requisitos
 
-## 📋 Pré-requisitos
+  Antes de começar, certifique-se de ter instalado:
 
-Antes de começar, certifique-se de ter instalado:
 
-1. **Git**: Para clonar o repositório. [Download Git](https://git-scm.com/)
-2. **Node.js** (Versão 18 ou superior): Para gerenciar pacotes e rodar o frontend. [Download Node.js](https://nodejs.org/)
-3. **Gerenciador de pacotes**: O Node.js já vem com o `npm`, mas você também pode usar o `yarn` ou `pnpm`.
+   Git: Para clonar o repositório. Download Git (https://git-scm.com/)
+
+   Node.js (Versão 18 ou superior): Para gerenciar pacotes e rodar o frontend. Download Node.js (https://nodejs.org/)
+
+   Gerenciador de pacotes: O Node.js já vem com o npm, mas você também pode usar o yarn ou pnpm.
+
 
 ---
 
-## 🛠️ Passo a Passo
+### 🚀 Passo a Passo para Rodar Localmente
 
-### 1. Clonar o Repositório
+1. Clonar o Repositório
 
-Abra o terminal e execute o comando abaixo para baixar o projeto:
+  Abra o terminal e execute o comando abaixo para baixar o projeto:
 
 
-    git clone [https://github.com/janosystime/Janosys-Project-1-Akaer.git](https://github.com/janosystime/Janosys-Project-1-Akaer.git)
+    git clone https://github.com/janosystime/Janosys-Project-1-Akaer.git
+
     cd Janosys-Project-1-Akaer
 
-### 2. Configurar o Ambiente
+2. Configurar o Frontend
+
+  O projeto utiliza React + Vite + TypeScript. Navegue até a pasta do frontend e instale as dependências:
+
 
     # Entrar na pasta do frontend
     cd frontend
-
+    
     # Instalar dependências
     npm install
 
-### 3. Instalar Dependências
-    npm install
+3. Executar o Projeto
 
-### 3. Executar o Projeto
+  Ainda na pasta frontend, inicie o servidor de desenvolvimento:
 
-    npm run dev
+     npm run dev
 
-### 4. Acessando o Projeto
-  Após executar o comando, o terminal exibirá um link (geralmente http://localhost:5173). Basta acessar ele.
+
+  Após executar o comando, o terminal exibirá um link (geralmente http://localhost:5173). Abra-o no seu navegador.
+
 
 ---
 
 ## 👷 Time <a id="time"></a>
 |      Membro       |    Função     |                                                                        GitHub                                                                         |                                                                                    Linkedin                                                                                     |                                                                                    Portfólio                                                                                     |
 | :---------------: | :-----------: | :---------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|    Pedro Lucas dos Santos    |   Product Owner    | <a href="https://github.com/pedrodevroot"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in/pedro-lucas-76870237b/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://meu-portifolio-astro.vercel.app/)  |
+|    Pedro Lucas    |   Product Owner    | <a href="https://github.com/pedrodevroot"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in/pedro-lucas-76870237b/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://meu-portifolio-astro.vercel.app/)  |
 |    Pedro Chaim    |   Scrum Master    |  <a href="https://github.com/Spockchaim"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |           <a href="https://www.linkedin.com/in/pedrochaim"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">           | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-lovat-beta-35.vercel.app/)  |
-|   Altier Romão Cruz    | Dev Team| <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)]() |
-|    Lucas da Silva Alves     | Dev Team  | <a href="https://github.com/LuccasLukaDev"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a> | <a href="https://www.linkedin.com/in/lucas-da-silva-alves-18852b2b3"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"> | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-three-iota-46.vercel.app/)  |
-|   Lucas Pereira Banhos dos Santos     |   Dev Team    |   <a href="https://github.com/tirolasca"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |        <a href="https://www.linkedin.com/in/lucas-santostec/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">        | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://lucastec.vercel.app/)  |
-|   Vinicius Silva Moreira  |   Dev Team    |   <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |        <a href="https://www.linkedin.com/in/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">        | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)]()  |
-|   Wagner Gonçalves Costa  | Dev Team| <a href="https://github.com/Costa-Wagner"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in/wagner-costa-391b0726/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-wagner-nu.vercel.app/) |
+|   Altier da Silva Romão    | Dev Team| <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)]() |
+|    Lucas Alves    | Dev Team  | <a href="https://github.com/LuccasLukaDev"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a> | <a href="https://www.linkedin.com/in/lucas-da-silva-alves-18852b2b3"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white"> | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-three-iota-46.vercel.app/)  |
+|   Lucas Santos    |   Dev Team    |   <a href="https://github.com/tirolasca"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |        <a href="https://www.linkedin.com/in/lucas-santostec/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">        | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://lucastec.vercel.app/)  |
+|   Vinicius Silva   |   Dev Team    |   <a href="https://github.com/"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>   |        <a href="https://www.linkedin.com/in/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">        | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)]()  |
+|   Wagner Costa    | Dev Team| <a href="https://github.com/Costa-Wagner"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white"></a>  |     <a href="https://www.linkedin.com/in/wagner-costa-391b0726/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white">     | [![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge)](https://portfolio-wagner-nu.vercel.app/) |
 ---
 
