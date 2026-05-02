@@ -78,11 +78,20 @@ function normalizarUrlPdf(urlPdf?: string): string | undefined {
   return `/pdf/${urlPdf}`;
 }
 
-function normalizarNormasSalvas(normas: Norma[]): Norma[] {
-  return normas.map((normaAtual) => ({
-    ...normaAtual,
-    urlPdf: normalizarUrlPdf(normaAtual.urlPdf),
-  }));
+function normalizarNormasSalvas(normasSalvas: Norma[]): Norma[] {
+  return normasSalvas.map((normaAtual) => {
+    const normaBase = NORMAS_BASE.find(nb => nb.id === normaAtual.id);
+    return {
+      ...normaAtual,
+      urlPdf: normaAtual.urlPdf 
+        ? normalizarUrlPdf(normaAtual.urlPdf) 
+        : normaBase?.urlPdf,
+      imagens: normaAtual.imagens?.length 
+        ? normaAtual.imagens 
+        : normaBase?.imagens,
+      nomePdf: normaAtual.nomePdf || normaBase?.nomePdf,
+    };
+  });
 }
 
 export const NORMAS_BASE: Norma[] = [

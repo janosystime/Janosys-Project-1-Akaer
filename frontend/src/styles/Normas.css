@@ -1860,32 +1860,72 @@ body {
   }
 }
 
+.solicitacao-card { padding: 12px 16px; }
+
+.solicitacao-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.solicitacao-body .badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.card-info-lateral {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 20px 16px;
   }
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
   }
+
   .page-header .btn {
     width: 100%;
   }
+
   .page-title {
-    font-size: 1.4rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
+    font-size: 1.2rem;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .solicitacao-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-info-lateral {
+    align-items: flex-start;
+    margin-left: 0;
+    margin-top: 6px;
   }
 
   .filtros-container {
     gap: 12px;
   }
+
   .filtros-header {
     flex-direction: column;
     align-items: stretch;
   }
+
   .btn-limpar-filtros {
     width: 100%;
     justify-content: center;
