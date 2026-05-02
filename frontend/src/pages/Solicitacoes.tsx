@@ -500,6 +500,10 @@ const solicitacoesFiltradas = solicitacoes
                       type="button"
                       className="btn btn-danger-solid"
                       onClick={() => {
+                        if (confirmacaoInsercao) {
+                          adicionarToast("erro", "Desmarque a confirmação de inserção antes de indeferir.");
+                          return;
+                        }
                         if (!motivoRecusa.trim()) {
                           adicionarToast("erro", "Preencha o motivo da recusa antes de indeferir.");
                           return;
@@ -511,14 +515,22 @@ const solicitacoesFiltradas = solicitacoes
                     >
                       <i className="fas fa-times-circle"></i> Indeferir
                     </button>
+                    
                     <button
                       type="button"
                       className="btn btn-primary"
-                      disabled={!confirmacaoInsercao}
                       onClick={() => {
-                        atualizarStatus(solicitacaoAnalise.id, "Aceita");
-                        setSolicitacaoAnalise(null);
-                        adicionarToast("sucesso", "Solicitação aceita.");
+                        if (motivoRecusa.trim()) {
+                            adicionarToast("erro", "Limpe o motivo da recusa antes de aceitar.");
+                            return;
+                          }
+                          if (!confirmacaoInsercao) {
+                            adicionarToast("erro", "Marque a confirmação de inserção antes de aceitar.");
+                            return;
+                          }
+                          atualizarStatus(solicitacaoAnalise.id, "Aceita");
+                          setSolicitacaoAnalise(null);
+                          adicionarToast("sucesso", "Solicitação aceita.");
                       }}
                     >
                       <i className="fas fa-check-circle"></i> Aceitar
