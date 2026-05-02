@@ -6,9 +6,11 @@ interface Solicitacao {
   id: number;
   codigo: string;
   titulo: string;
+  motivo?: string;
   solicitante: string;
   data: string;
   status: "Aguardando análise" | "Em análise" | "Aceita" | "Indeferida";
+  motivoRecusa?: string;
 }
 
 const SOLICITACOES_BASE: Solicitacao[] = [
@@ -154,8 +156,14 @@ export default function Solicitacoes() {
   const [codigo, setCodigo] = useState("");
   const [titulo, setTitulo] = useState("");
   const [termoPesquisa, setTermoPesquisa] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
+
+  {/* ── States: Modal de Análise de Solicitação ── */}
+  const [solicitacaoAnalise, setSolicitacaoAnalise] = useState<Solicitacao | null>(null);
+  const [motivoRecusa, setMotivoRecusa] = useState("");
+  const [confirmacaoInsercao, setConfirmacaoInsercao] = useState(false);
 
   const adicionarToast = useCallback((tipo: ToastMsg["tipo"], mensagem: string) => {
     const id = Date.now();
@@ -170,12 +178,13 @@ export default function Solicitacoes() {
     if (!codigo.trim() && !titulo.trim()) {
       adicionarToast("erro", "Preencha ao menos um campo antes de solicitar.");
       return;
-    }
+    }  
 
     const nova: Solicitacao = {
       id: Date.now(),
       codigo: codigo.trim(),
       titulo: titulo.trim(),
+      motivo: motivo.trim(),
       solicitante: usuario?.nome ?? "Usuário",
       data: new Date().toISOString().split("T")[0],
       status: "Aguardando análise",
@@ -185,8 +194,22 @@ export default function Solicitacoes() {
     setCodigo("");
     setTitulo("");
     setShowModal(false);
+    setMotivo("");
     adicionarToast("sucesso", "Solicitação enviada com sucesso!");
   };
+
+const atualizarStatus = (id: number, novoStatus: Solicitacao["status"], extras?: Partial<Solicitacao>) => {
+  setSolicitacoes(prev => prev.map(s => s.id === id ? { ...s, status: novoStatus, ...extras } : s));
+};
+
+const abrirModalAnalise = (s: Solicitacao) => {
+  setSolicitacaoAnalise(s);
+  setMotivoRecusa("");
+  setConfirmacaoInsercao(false);
+  if (s.status === "Aguardando análise") {
+    atualizarStatus(s.id, "Em análise");
+  }
+};
 
 const termoMinusculo = termoPesquisa.toLowerCase();
 const solicitacoesFiltradas = solicitacoes
@@ -265,10 +288,10 @@ const solicitacoesFiltradas = solicitacoes
           {solicitacoesFiltradas.length === total ? totalTexto : filtradoTexto}
         </p>
 
-        {/* Lista compacta */}
+        {/* ── Lista de Solicitações ── */}
         <div className="normas-lista">
           {solicitacoesFiltradas.map((s) => (
-            <div key={s.id} className="norma-card solicitacao-card">
+            <div key={s.id} className="norma-card solicitacao-card" onClick={() => isAdmin && abrirModalAnalise(s)} style={{ cursor: isAdmin ? "pointer" : "default" }}>
               <div className="norma-card-body solicitacao-body">
                 
                 {/* Lado esquerdo — status, código e título */}
@@ -298,7 +321,6 @@ const solicitacoesFiltradas = solicitacoes
                     </span>
                   )}
                 </div>
-
               </div>
             </div>
           ))}
@@ -311,7 +333,7 @@ const solicitacoesFiltradas = solicitacoes
           )}
         </div>
 
-        {/* Modal */}
+        {/* ── Modal: Nova Solicitação ── */}
         {showModal && (
           <div className="modal-overlay" onClick={() => setShowModal(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -352,6 +374,19 @@ const solicitacoesFiltradas = solicitacoes
                 />
               </div>
 
+              <div className="form-group">
+                <label className="form-label">
+                  <i className="fas fa-comment-alt"></i> Motivo da Solicitação
+                </label>
+                <textarea
+                  className="form-input"
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Descreva o motivo da solicitação..."
+                  rows={3}
+                />
+              </div>
+
               <div className="modal-footer">
                 <div></div>
                 <div className="modal-footer-actions">
@@ -362,6 +397,134 @@ const solicitacoesFiltradas = solicitacoes
                     <i className="fas fa-paper-plane"></i> Enviar Solicitação
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: Analisar Solicitação (admin) ── */}
+        {solicitacaoAnalise && (
+          <div className="modal-overlay" onClick={() => setSolicitacaoAnalise(null)}>
+            <div className="modal modal-large modal-analisar" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2><i className="fas fa-magnifying-glass-chart"></i> Analisar Solicitação</h2>
+                <button type="button" className="btn-close" onClick={() => setSolicitacaoAnalise(null)}>
+                  <i className="fas fa-xmark"></i>
+                </button>
+              </div>
+
+              <div className="view-details">
+                <div className="view-grid">
+                  <div className="view-item">
+                    <span className="view-label"><i className="fas fa-user"></i> Solicitante</span>
+                    <span className="view-value">{solicitacaoAnalise.solicitante}</span>
+                  </div>
+                  <div className="view-item">
+                    <span className="view-label"><i className="fas fa-calendar"></i> Data</span>
+                    <span className="view-value">{new Date(solicitacaoAnalise.data + "T00:00:00").toLocaleDateString("pt-BR")}</span>
+                  </div>
+                  {solicitacaoAnalise.codigo && (
+                    <div className="view-item">
+                      <span className="view-label"><i className="fas fa-hashtag"></i> Código</span>
+                      <span className="view-value">{solicitacaoAnalise.codigo}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="view-item">
+                  <span className="view-label"><i className="fas fa-heading"></i> Título</span>
+                  <span className="view-value">{solicitacaoAnalise.titulo || "—"}</span>
+                </div>
+
+                {solicitacaoAnalise.motivo && (
+                  <div className="view-item">
+                    <span className="view-label"><i className="fas fa-comment-alt"></i> Motivo da Solicitação</span>
+                    <span className="view-value">{solicitacaoAnalise.motivo}</span>
+                  </div>
+                )}
+
+                <div className="view-item">
+                  <span className="view-label"><i className="fas fa-circle-dot"></i> Status Atual</span>
+                  <div className="view-badges">
+                    <span className={STATUS_ESTILO[solicitacaoAnalise.status]}>
+                      <i className={`fas ${STATUS_ICONE[solicitacaoAnalise.status]}`}></i> {solicitacaoAnalise.status}
+                    </span>
+                  </div>
+                </div>
+
+                {solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
+                  <>
+                    <div className="view-item">
+                      <label className={`checkbox-card ${confirmacaoInsercao ? "checked theme-cat-geral" : ""}`}>
+                        <input
+                          type="checkbox"
+                          className="custom-checkbox"
+                          checked={confirmacaoInsercao}
+                          onChange={(e) => setConfirmacaoInsercao(e.target.checked)}
+                        />
+                        <div className="checkbox-content">
+                          <span className="checkbox-title">Confirmar inserção na biblioteca</span>
+                          <span className="checkbox-desc">Confirmo que a norma foi inserida manualmente na Biblioteca de Normas.</span>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label"><i className="fas fa-times-circle"></i> Motivo da Recusa</label>
+                      <textarea
+                        className="form-input"
+                        value={motivoRecusa}
+                        onChange={(e) => setMotivoRecusa(e.target.value)}
+                        placeholder="Obrigatório para indeferir..."
+                        rows={3}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {solicitacaoAnalise.status === "Indeferida" && solicitacaoAnalise.motivoRecusa && (
+                  <div className="view-item">
+                    <span className="view-label"><i className="fas fa-times-circle"></i> Motivo da Recusa</span>
+                    <span className="view-value">{solicitacaoAnalise.motivoRecusa}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-ghost" onClick={() => setSolicitacaoAnalise(null)}>
+                  Fechar
+                </button>
+                {solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
+                  <div className="modal-footer-actions">
+                    <button
+                      type="button"
+                      className="btn btn-danger-solid"
+                      onClick={() => {
+                        if (!motivoRecusa.trim()) {
+                          adicionarToast("erro", "Preencha o motivo da recusa antes de indeferir.");
+                          return;
+                        }
+                        atualizarStatus(solicitacaoAnalise.id, "Indeferida", { motivoRecusa: motivoRecusa.trim() });
+                        setSolicitacaoAnalise(null);
+                        adicionarToast("erro", "Solicitação indeferida.");
+                      }}
+                    >
+                      <i className="fas fa-times-circle"></i> Indeferir
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={!confirmacaoInsercao}
+                      onClick={() => {
+                        atualizarStatus(solicitacaoAnalise.id, "Aceita");
+                        setSolicitacaoAnalise(null);
+                        adicionarToast("sucesso", "Solicitação aceita.");
+                      }}
+                    >
+                      <i className="fas fa-check-circle"></i> Aceitar
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
