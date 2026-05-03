@@ -41,6 +41,9 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 <a href="https://developer.mozilla.org/docs/Web/HTML" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" alt="HTML5" height="50px">
 </a>&nbsp;
+<a href="https://developer.mozilla.org/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" alt="JavaScript" height="50px">
+</a>&nbsp;
 <a href="https://developer.mozilla.org/docs/Web/CSS" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white" alt="CSS3" height="50px">
 </a>&nbsp;
@@ -51,18 +54,14 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 
 ⚙️ Back-end
 <p align="center">
-<a href="https://developer.mozilla.org/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" alt="JavaScript" height="50px">
-</a>&nbsp;
+
 <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white" alt="Node.js" height="50px">
 </a>&nbsp;
-<a href="https://www.python.org" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white" alt="Python" height="50px">
+<a href="https://www.prisma.io/" target="_blank" rel="noopener noreferrer">
+<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat&logo=prisma&logoColor=white" alt="Prisma" height="50px">
 </a>&nbsp;
-<a href="https://flask.palletsprojects.com" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/Flask-000000?style=flat&logo=flask&logoColor=white" alt="Flask" height="50px">
-</a>
+
 </p>
 
 🗄️ Banco de Dados
@@ -80,9 +79,6 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 <a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/AWS-232F3E?style=flat&logo=amazon-aws&logoColor=white" alt="AWS" height="50px">
 </a>&nbsp;
-<a href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">
-<img src="https://img.shields.io/badge/GoogleColab-F9AB00?style=flat&logo=googlecolab&logoColor=white" alt="Google Colab" height="50px">
-</a>
 </p>
 
 🛠️ Ferramentas e Design
