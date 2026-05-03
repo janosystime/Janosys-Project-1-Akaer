@@ -203,7 +203,7 @@ Isso proporcionará maior precisão na busca, organização técnica e atualiza�
 ![mvp2_print2](/docs/sp2/print-2.png)
 
 - Vídeo (MVP)<br>
-  ![mpv2](./docs/sp2/video_sp2.mp4)
+  ![mpv2](https://youtu.be/bYVjYIq_0_M)
 
 ---
 
