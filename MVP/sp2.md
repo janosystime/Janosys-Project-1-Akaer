@@ -199,11 +199,11 @@ Isso proporcionará maior precisão na busca, organização técnica e atualiza�
 ## 📂 Anexos / Evidências <a id="anexos"></a>
 
 - Prints de tela / Protótipo<br><br>    
-![mvp2_print1](./docs/sp2/print-1.png)
+![mvp2_print1](/docs/sp2/print-1.png)
 ![mvp2_print2](/docs/sp2/print-2.png)
 
 - Vídeo (MVP)<br>
-  ![mpv2](https://youtu.be/bYVjYIq_0_M)
+[Assistir no YouTube](https://youtu.be/bYVjYIq_0_M)
 
 ---
 
