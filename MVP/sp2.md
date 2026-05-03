@@ -198,6 +198,17 @@ Isso proporcionará maior precisão na busca, organização técnica e atualiza�
 
 ## 📂 Anexos / Evidências <a id="anexos"></a>
 
+- Prints de tela / Protótipo<br><br>    
+![mvp2_print1](./docs/sp2/print-1.png)
+![mvp2_print2](/docs/sp2/print-2.png)
+
+- Vídeo (MVP)<br>
+  ![mpv2](./docs/sp2/video_sp2.mp4)
+
+---
+
+## 📂 Anexos / Evidências <a id="anexos"></a>
+
 - [Cenários para as User Stories da Sprint 2](../docs/sp2/gherkin_sp2.pdf)
 - [Modelo do Banco de Dados](../docs/sp2/modelagem_bd_api_II_akaer.png)
 

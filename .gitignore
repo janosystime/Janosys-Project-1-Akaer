@@ -25,3 +25,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+#video sprint 2
+echo docs/sp2/video_sp2.mp4 >> .gitignore
+docs/sp2/video_sp2.mp4
