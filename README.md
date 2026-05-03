@@ -38,6 +38,7 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 <h4 align="center">
 🌐 Front-end (Linguagens e Frameworks)
 <p align="center">
+
 <a href="https://developer.mozilla.org/docs/Web/HTML" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" alt="HTML5" height="50px">
 </a>&nbsp;
@@ -49,7 +50,8 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 </a>&nbsp;
 <a href="https://reactjs.org/" target="_blank" rel="noopener noreferrer">
 <img src="https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB" alt="React" height="50px">
-</a>
+</a>&nbsp;
+
 </p>
 
 ⚙️ Back-end
