@@ -8,7 +8,8 @@ import {
   PinOff,
   BookOpen,
   Menu, // Ícone para abrir no mobile
-  X     // Ícone para fechar no mobile
+  X,    // Ícone para fechar no mobile
+  ClipboardList
 } from 'lucide-react'
 import type { UsuarioSessao } from '../auth/session'
 
@@ -106,6 +107,11 @@ export default function Sidebar(props: PropsSidebar) {
         <NavLink to="/normas" className="nav-item" onClick={fecharMenuMobile}>
           <BookOpen size={20} />
           <span className="nav-label">Normas</span>
+        </NavLink>
+
+        <NavLink to="/solicitacoes" className="nav-item" onClick={fecharMenuMobile}>
+          <ClipboardList size={20} />
+          <span className="nav-label">Solicitações</span>
         </NavLink>
 
         {isAdmin && (

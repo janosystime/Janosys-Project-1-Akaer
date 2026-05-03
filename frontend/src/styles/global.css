@@ -67,6 +67,13 @@ button {
   flex: 1;
 }
 
+.area-principal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
 .conteudo-principal {
   flex: 1;
   padding: 24px;
@@ -132,17 +139,22 @@ button {
   background: var(--cor-vinho-escuro);
 }
 
-/* --- Rodapé --- */
+/* --- Rodapé corrigido --- */
 .rodape {
   text-align: right;
-  padding: 3px 10px;
-  font-size: 9px;
+  padding: 6px 14px;
+  font-size: 10px;
   color: var(--cor-inativo);
   border-top: 1px solid var(--cor-cinza-linha);
+  background: #fff;
 }
 
 .rodape strong {
   color: var(--cor-cinza-escuro);
+}
+
+.sidebar.recolhida ~ .rodape {
+  margin-left: 52px;
 }
 
 @media (max-width: 768px) {

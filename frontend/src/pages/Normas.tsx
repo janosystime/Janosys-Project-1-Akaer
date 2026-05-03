@@ -1,8 +1,24 @@
-import { useState, useEffect, useCallback, type ChangeEvent } from "react";
+/* eslint-disable react-refresh/only-export-components */
+
+import { useState, useEffect, useCallback, useMemo, type ChangeEvent } from "react";
+
 import "../components/Sidebar";
 import "../styles/Normas.css";
+import {
+  carregarPecas,
+  listarPecasRelacionadas,
+  type Peca,
+} from "../helpers/pecas";
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
-interface Norma {
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).toString();
+
+export interface Norma {
   id: string;
   codigo: string;
   titulo: string;
@@ -15,6 +31,7 @@ interface Norma {
   status: string;
   notas: string[];
   referencias: string[];
+  palavrasChave: string[];
   nomePdf?: string;
   urlPdf?: string;
   imagens?: string[];
@@ -33,16 +50,51 @@ interface ConfirmacaoState {
   onConfirmar: () => void;
 }
 
-const converterParaBase64 = (arquivo: File): Promise<string> => {
+const converterParaBase64 = (arquivoAtual: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const leitor = new FileReader();
-    leitor.readAsDataURL(arquivo);
+    leitor.readAsDataURL(arquivoAtual);
     leitor.onload = () => resolve(leitor.result as string);
-    leitor.onerror = (erro) => reject(erro);
+    leitor.onerror = (erroAtual) => reject(erroAtual);
   });
 };
 
-const NORMAS_BASE: Norma[] = [
+function normalizarUrlPdf(urlPdf?: string): string | undefined {
+  if (!urlPdf) return urlPdf;
+  if (
+    urlPdf.startsWith("data:") ||
+    urlPdf.startsWith("blob:") ||
+    urlPdf.startsWith("http://") ||
+    urlPdf.startsWith("https://") ||
+    urlPdf.startsWith("/pdf/")
+  ) {
+    return urlPdf;
+  }
+
+  if (urlPdf.startsWith("/")) {
+    return `/pdf${urlPdf}`;
+  }
+
+  return `/pdf/${urlPdf}`;
+}
+
+function normalizarNormasSalvas(normasSalvas: Norma[]): Norma[] {
+  return normasSalvas.map((normaAtual) => {
+    const normaBase = NORMAS_BASE.find(nb => nb.id === normaAtual.id);
+    return {
+      ...normaAtual,
+      urlPdf: normaAtual.urlPdf 
+        ? normalizarUrlPdf(normaAtual.urlPdf) 
+        : normaBase?.urlPdf,
+      imagens: normaAtual.imagens?.length 
+        ? normaAtual.imagens 
+        : normaBase?.imagens,
+      nomePdf: normaAtual.nomePdf || normaBase?.nomePdf,
+    };
+  });
+}
+
+export const NORMAS_BASE: Norma[] = [
   {
     id: "RBAC 25.1309",
     codigo: "25.1309",
@@ -56,8 +108,10 @@ const NORMAS_BASE: Norma[] = [
     status: "Vigente",
     notas: ["Norma principal de safety."],
     referencias: ["SAE ARP4761"],
+    palavrasChave: ["safety", "análise de risco"],
     nomePdf: "rbac-25-1309.pdf",
-    urlPdf: "/rbac-25-1309.pdf",
+    urlPdf: "/pdf/rbac-25-1309.pdf",
+    imagens: ["/imagem/rbac-25-1309.jpeg"]
   },
   {
     id: "FAR 25.571",
@@ -72,8 +126,10 @@ const NORMAS_BASE: Norma[] = [
     status: "Vigente",
     notas: [],
     referencias: [],
+    palavrasChave: ["fadiga", "tolerância", "dano"],
     nomePdf: "far-25-571.pdf",
-    urlPdf: "/far-25-571.pdf",
+    urlPdf: "/pdf/far-25-571.pdf",
+    imagens: ["/imagem/far-25-571.jpeg"]
   },
   {
     id: "ISO 9001:2015",
@@ -90,6 +146,7 @@ const NORMAS_BASE: Norma[] = [
       "Requisitos gerais para o sistema de gestão da qualidade nas plantas de manufatura.",
     ],
     referencias: ["ISO 9000:2015"],
+    palavrasChave: ["qualidade", "gestão", "requisitos"],
   },
   {
     id: "CS-25",
@@ -106,6 +163,7 @@ const NORMAS_BASE: Norma[] = [
       "Especificações essenciais para certificação EASA em aeronaves de grande porte.",
     ],
     referencias: ["FAR 25"],
+    palavrasChave: ["certificação", "aeronave grande", "easa"],
   },
 ];
 
@@ -156,7 +214,7 @@ const ITENS_POR_SUBCATEGORIA: Record<string, string[]> = {
 
 const STATUS_OPCOES = ["Vigente", "Revogada"];
 
-const ORG_ORIGENS: Record<string, string> = {
+export const ORG_ORIGENS: Record<string, string> = {
   ANAC: "🇧🇷",
   FAA: "🇺🇸",
   EASA: "🇪🇺",
@@ -167,7 +225,7 @@ const ORG_ORIGENS: Record<string, string> = {
   AKAER: "🇧🇷",
 };
 
-const CAT_ICONES: Record<string, string> = {
+export const CAT_ICONES: Record<string, string> = {
   Peça: "fa-gear",
   Conjunto: "fa-gears",
   Instalação: "fa-screwdriver-wrench",
@@ -187,14 +245,15 @@ const FORM_INICIAL: Partial<Norma> = {
   status: "Vigente",
   notas: [""],
   referencias: [""],
+  palavrasChave: [""],
 };
 
-function ToastContainer({
+export function ToastContainer({
   toasts,
   onRemover,
 }: {
   toasts: ToastMsg[];
-  onRemover: (id: number) => void;
+  onRemover: (idParaRemover: number) => void;
 }) {
   return (
     <div className="toast-container">
@@ -216,7 +275,7 @@ function ToastContainer({
   );
 }
 
-function ModalConfirmacao({
+export function ModalConfirmacao({
   titulo,
   mensagem,
   onConfirmar,
@@ -231,7 +290,7 @@ function ModalConfirmacao({
     <div className="modal-overlay confirmacao-overlay" onClick={onCancelar}>
       <div
         className="modal modal-confirmacao"
-        onClick={(evento) => evento.stopPropagation()}
+        onClick={(eventoClique) => eventoClique.stopPropagation()}
       >
         <div className="confirmacao-icone">
           <i className="fas fa-triangle-exclamation"></i>
@@ -251,7 +310,7 @@ function ModalConfirmacao({
   );
 }
 
-function PdfViewer({
+export function PdfViewer({
   url,
   nome,
   onClose,
@@ -260,37 +319,79 @@ function PdfViewer({
   nome: string;
   onClose: () => void;
 }) {
+  const [totalPaginas, setTotalPaginas] = useState<number>();
+  const [paginaAtual, setPaginaAtual] = useState<number>(1);
+
+  function onDocumentLoadSuccess({ numPages: paginasEncontradas }: { numPages: number }): void {
+    setTotalPaginas(paginasEncontradas);
+  }
+
   return (
-    <div className="pdf-viewer-overlay" onClick={onClose}>
+    <div 
+      className="pdf-viewer-overlay protecao-conteudo" 
+      onClick={onClose}
+      onContextMenu={(eventoContexto) => eventoContexto.preventDefault()} 
+    >
       <div
-        className="pdf-viewer-container"
-        onClick={(evento) => evento.stopPropagation()}
+        className="pdf-viewer-container pdf-fullscreen"
+        onClick={(eventoClique) => eventoClique.stopPropagation()}
       >
         <div className="pdf-viewer-header">
           <div className="pdf-viewer-title">
-            <i className="fas fa-file-pdf"></i>
-            {nome}
+            <i className="fas fa-file-pdf icon-pdf-red"></i>
+            {nome} <span className="pdf-protected-label">(Leitura Protegida)</span>
           </div>
           <div className="pdf-viewer-actions">
-            <a href={url} download={nome} className="btn btn-ghost">
-              <i className="fas fa-download"></i> Baixar
-            </a>
-            <button className="btn btn-danger btn-icon" onClick={onClose}>
+            <button className="btn btn-danger btn-icon" onClick={onClose} title="Fechar">
               <i className="fas fa-xmark"></i>
             </button>
           </div>
         </div>
-        <iframe
-          src={url}
-          className="pdf-iframe"
-          title="Visualizador de PDF"
-        ></iframe>
+        
+        <div className="pdf-document-container">
+          <Document 
+            file={url} 
+            onLoadSuccess={onDocumentLoadSuccess}
+            renderMode="canvas" 
+            loading={<div className="pdf-loading-message">A carregar documento...</div>}
+            error={<div className="pdf-error-message">Erro ao carregar o PDF.</div>}
+          >
+            <Page 
+              pageNumber={paginaAtual} 
+              renderTextLayer={false} 
+              renderAnnotationLayer={false}
+              width={Math.min(window.innerWidth * 0.8, 800)} 
+            />
+          </Document>
+        </div>
+
+        {totalPaginas && totalPaginas > 1 && (
+          <div className="pdf-pagination">
+            <button 
+              className="btn btn-ghost btn-icon" 
+              disabled={paginaAtual <= 1}
+              onClick={() => setPaginaAtual(paginaAnterior => paginaAnterior - 1)}
+            >
+              <i className="fas fa-chevron-left"></i>
+            </button>
+            <span className="pdf-page-indicator">
+              Página {paginaAtual} de {totalPaginas}
+            </span>
+            <button 
+              className="btn btn-ghost btn-icon" 
+              disabled={paginaAtual >= totalPaginas}
+              onClick={() => setPaginaAtual(paginaAnterior => paginaAnterior + 1)}
+            >
+              <i className="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function ImageLightbox({
+export function ImageLightbox({
   imagens,
   indiceInicial,
   onClose,
@@ -316,18 +417,23 @@ function ImageLightbox({
   }, [imagens.length, onClose]);
 
   return (
-    <div className="lightbox-overlay" onClick={onClose}>
+    <div 
+      className="lightbox-overlay protecao-conteudo" 
+      onClick={onClose}
+      onContextMenu={(eventoContexto) => eventoContexto.preventDefault()} 
+    >
       <div
         className="lightbox-container"
-        onClick={(evento) => evento.stopPropagation()}
+        onClick={(eventoClique) => eventoClique.stopPropagation()}
       >
-        <button className="lightbox-close" onClick={onClose}>
+        <button className="lightbox-close" onClick={onClose} title="Fechar">
           <i className="fas fa-xmark"></i>
         </button>
         <img
           src={imagens[indiceAtual]}
           alt={`Anexo ${indiceAtual + 1}`}
-          className="lightbox-img"
+          className="lightbox-img img-protegida"
+          draggable="false" 
         />
         <div className="lightbox-counter">
           {indiceAtual + 1} / {imagens.length}
@@ -357,22 +463,213 @@ function ImageLightbox({
   );
 }
 
-function NormaCardItem({
+// ==== AQUI: onEdit e onDelete se tornaram OPCIONAIS (?) ====
+export function ModalDetalhesNorma({
   norma,
+  pecasRelacionadas,
+  onClose,
+  onEdit,
   onDelete,
-  onView,
+  onViewPdf,
+  onViewImages
 }: {
   norma: Norma;
-  onDelete: (id: string) => void;
-  onView: (norma: Norma) => void;
+  pecasRelacionadas?: Peca[];
+  onClose: () => void;
+  onEdit?: (normaSelecionada: Norma) => void;
+  onDelete?: (id: string) => void;
+  onViewPdf: (url: string, nome: string) => void;
+  onViewImages: (imagens: string[], indice: number) => void;
 }) {
-  const [selecionado, setSelecionado] = useState(false);
+  return (
+    <div className="modal-overlay modal-overlay-nested" onClick={onClose}>
+      <div className="modal modal-large" onClick={(evento) => evento.stopPropagation()}>
+        <div className="modal-header">
+          <h2><i className="fas fa-magnifying-glass-chart"></i> Detalhes da Norma</h2>
+          <div className="modal-header-actions">
+            {/* O Botão de Editar só aparece se onEdit for passado! */}
+            {onEdit && (
+              <button 
+                className="btn btn-warning btn-icon" 
+                onClick={() => { onClose(); onEdit(norma); }}
+                title="Editar Norma"
+              >
+                <i className="fas fa-pen"></i>
+              </button>
+            )}
+            {/* O Botão de Excluir só aparece se onDelete for passado! */}
+            {onDelete && (
+              <button 
+                className="btn btn-danger btn-icon" 
+                onClick={() => { onClose(); onDelete(norma.id); }}
+                title="Excluir Norma"
+              >
+                <i className="fas fa-trash"></i>
+              </button>
+            )}
+            <button type="button" className="btn-close" onClick={onClose} title="Fechar">
+              <i className="fas fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+        <div className="view-details">
+          <div className="view-grid">
+            <div className="view-item"><span className="view-label"><i className="fas fa-id-card"></i> ID</span><span className="view-value">{norma.id}</span></div>
+            <div className="view-item"><span className="view-label"><i className="fas fa-hashtag"></i> Código</span><span className="view-value">{norma.codigo || "—"}</span></div>
+          </div>
+          <div className="view-item"><span className="view-label"><i className="fas fa-heading"></i> Título</span><span className="view-value">{norma.titulo}</span></div>
+
+          <div className="view-grid">
+            <div className="view-item">
+              <span className="view-label"><i className="fas fa-building"></i> Órgão</span>
+              <span className="view-value view-badges">
+                <span className={`badge theme-org-${norma.organizacao.toLowerCase()}`}>
+                  <span className="badge-origin large">{ORG_ORIGENS[norma.organizacao] || "🌐"}</span>{norma.organizacao}
+                </span>
+              </span>
+            </div>
+            <div className="view-item">
+              <span className="view-label"><i className="fas fa-globe"></i> Tipo</span>
+              <span className="view-value view-badges">
+                <span className={`badge ${norma.tipo === "Pública" ? "badge-tipo-publica" : "badge-tipo-privada"}`}>
+                  <i className={`fas ${norma.tipo === "Pública" ? "fa-globe" : "fa-lock"} badge-icon`}></i>{norma.tipo || "Pública"}
+                </span>
+              </span>
+            </div>
+            <div className="view-item"><span className="view-label"><i className="fas fa-code-branch"></i> Revisão</span><span className="view-value">{norma.revisao || "—"}</span></div>
+            <div className="view-item">
+              <span className="view-label"><i className="fas fa-circle-dot"></i> Status</span>
+              <span className="view-value view-badges">
+                <span className={`badge ${norma.status.toLowerCase()}`}>
+                  <i className={`fas ${norma.status === "Vigente" ? "fa-check-circle" : "fa-times-circle"} badge-icon`}></i>{norma.status}
+                </span>
+              </span>
+            </div>
+            <div className="view-item">
+              <span className="view-label"><i className="fas fa-tags"></i> Categoria</span>
+              <span className="view-value view-badges">
+                <span className={`badge theme-cat-${norma.categoria.toLowerCase()}`}>
+                  <i className={`fas ${CAT_ICONES[norma.categoria] || 'fa-tag'} badge-icon`}></i>{norma.categoria}
+                </span>
+              </span>
+            </div>
+            <div className="view-item"><span className="view-label"><i className="fas fa-layer-group"></i> Subcategoria</span><span className="view-value">{norma.subcategoria || "—"}</span></div>
+            <div className="view-item"><span className="view-label"><i className="fas fa-cube"></i> Item</span><span className="view-value">{norma.item || "—"}</span></div>
+          </div>
+
+          <div className="view-item">
+            <span className="view-label">
+              <i className="fas fa-cubes"></i> Peças relacionadas
+            </span>
+            {pecasRelacionadas && pecasRelacionadas.length > 0 ? (
+              <div className="pecas-relacionadas-lista">
+                {pecasRelacionadas.map((pecaRelacionada, indicePeca) => (
+                  <div
+                    key={`${pecaRelacionada.nome}-${pecaRelacionada.categoria}-${pecaRelacionada.subcategoria}-${indicePeca}`}
+                    className="peca-relacionada-card"
+                  >
+                    <span className="peca-relacionada-nome">{pecaRelacionada.nome}</span>
+                    <div className="peca-relacionada-badges">
+                      <span className="badge theme-subcategoria">{pecaRelacionada.categoria}</span>
+                      <span className="badge theme-subcategoria badge-secundario">{pecaRelacionada.subcategoria}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state compact">
+                <i className="fas fa-cube"></i>
+                <p>Nenhuma peça relacionada.</p>
+              </div>
+            )}
+          </div>
+
+          <hr className="divider" />
+
+          {norma.palavrasChave && norma.palavrasChave.length > 0 && (
+            <div className="view-item">
+              <span className="view-label"><i className="fas fa-key"></i> Palavras-chave</span>
+              <div className="view-badges">
+                {norma.palavrasChave.map((palavra, i) => (
+                  <span key={i} className="badge theme-subcategoria">{palavra}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {norma.notas && norma.notas.length > 0 && (
+            <div className="view-item"><span className="view-label"><i className="fas fa-pen-to-square"></i> Notas Técnicas</span><ul className="view-list">{norma.notas.map((nota, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {nota}</li>))}</ul></div>
+          )}
+          
+          {norma.referencias && norma.referencias.length > 0 && (
+            <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{norma.referencias.map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
+          )}
+
+          {(norma.urlPdf || (norma.imagens && norma.imagens.length > 0)) && (
+            <>
+              <hr className="divider" />
+              <div className="view-item">
+                <span className="view-label"><i className="fas fa-paperclip"></i> Anexos</span>
+                {norma.urlPdf && (
+                  <button type="button" className="attachment-pdf attachment-link btn-pdf-view" onClick={() => onViewPdf(norma.urlPdf!, norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`)}>
+                    <i className="fas fa-file-pdf icon-pdf-red"></i><span className="attachment-pdf-name">{norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`}</span>
+                  </button>
+                )}
+                
+                {norma.imagens && norma.imagens.length > 0 && (
+                    <div className="attachment-image-grid" style={{ marginTop: '10px' }}>
+                      {norma.imagens.map((urlImg, idxImg) => (
+                          <div key={idxImg} className="attachment-image-item" onClick={() => onViewImages(norma.imagens!, idxImg)}>
+                            <img src={urlImg} alt={`Anexo ${idxImg + 1}`} />
+                            <div className="image-hover-overlay"><i className="fas fa-magnifying-glass-plus"></i></div>
+                          </div>
+                      ))}
+                    </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {(!norma.notas || norma.notas.length === 0) &&
+            (!norma.referencias || norma.referencias.length === 0) &&
+            (!norma.palavrasChave || norma.palavrasChave.length === 0) &&
+            !norma.urlPdf && (!norma.imagens || norma.imagens.length === 0) && (
+              <div className="empty-state compact">
+                <i className="fas fa-folder-open"></i>
+                <p>Nenhuma nota ou anexo.</p>
+              </div>
+            )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-primary" onClick={onClose}><i className="fas fa-arrow-left"></i> Voltar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NormaCardItem({
+  norma,
+  onEdit,
+  onDelete,
+  onShowDetails,
+  onViewPdf,
+  onViewImages,
+}: {
+  norma: Norma;
+  onEdit: (normaAtual: Norma) => void;
+  onDelete: (idParaDeletar: string) => void;
+  onShowDetails: (normaAtual: Norma) => void;
+  onViewPdf: (urlPdf: string, nomePdf: string) => void;
+  onViewImages: (listaImagens: string[]) => void;
+}) {
   const classeCorTema = `theme-cat-${norma.categoria.toLowerCase()}`;
+  const possuiAnexos = norma.urlPdf || (norma.imagens && norma.imagens.length > 0);
 
   return (
     <div
-      className={`norma-card ${classeCorTema} ${selecionado ? "selecionado" : ""}`}
-      onClick={() => setSelecionado(!selecionado)}
+      className={`norma-card ${classeCorTema} clicavel`}
+      onClick={() => onShowDetails(norma)}
     >
       <div className="norma-card-body">
         <div className={`norma-card-main-icon ${classeCorTema}`}>
@@ -406,10 +703,7 @@ function NormaCardItem({
               </span>
             )}
             {norma.item && (
-              <span
-                className="badge theme-subcategoria"
-                style={{ opacity: 0.85 }}
-              >
+              <span className="badge theme-subcategoria badge-secundario">
                 <i className="fas fa-cube"></i> {norma.item}
               </span>
             )}
@@ -429,7 +723,7 @@ function NormaCardItem({
               )}{" "}
               {norma.status}
             </span>
-            {(norma.nomePdf || (norma.imagens && norma.imagens.length > 0)) && (
+            {possuiAnexos && (
               <span className="badge theme-subcategoria">
                 <i className="fas fa-paperclip"></i> Anexos
               </span>
@@ -438,20 +732,46 @@ function NormaCardItem({
         </div>
       </div>
       <div className="norma-card-actions">
+        {norma.urlPdf && (
+          <button
+            className="btn btn-info btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onViewPdf(norma.urlPdf!, norma.nomePdf || "documento.pdf");
+            }}
+            title="Visualizar PDF"
+          >
+            <i className="fas fa-file-pdf"></i>
+          </button>
+        )}
+        
+        {norma.imagens && norma.imagens.length > 0 && (
+          <button
+            className="btn btn-info btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onViewImages(norma.imagens!);
+            }}
+            title="Visualizar Imagens"
+          >
+            <i className="fas fa-images"></i>
+          </button>
+        )}
+
         <button
-          className="btn btn-info btn-icon"
-          onClick={(evento) => {
-            evento.stopPropagation();
-            onView(norma);
+          className="btn btn-warning btn-icon"
+          onClick={(eventoClique) => {
+            eventoClique.stopPropagation();
+            onEdit(norma);
           }}
-          title="Visualizar"
+          title="Editar"
         >
-          <i className="fas fa-eye"></i>
+          <i className="fas fa-pen"></i>
         </button>
         <button
           className="btn btn-danger btn-icon"
-          onClick={(evento) => {
-            evento.stopPropagation();
+          onClick={(eventoClique) => {
+            eventoClique.stopPropagation();
             onDelete(norma.id);
           }}
           title="Excluir"
@@ -464,13 +784,17 @@ function NormaCardItem({
 }
 
 export default function Biblioteca() {
+  const [pecas] = useState<Peca[]>(() => carregarPecas());
   const [normas, setNormas] = useState<Norma[]>(() => {
     const normasSalvas = localStorage.getItem("biblioteca_normas");
     if (normasSalvas) {
       try {
-        return JSON.parse(normasSalvas);
-      } catch (erro) {
-        console.error("Erro ao ler normas do localStorage:", erro);
+        const parsed = JSON.parse(normasSalvas) as Norma[];
+        if (Array.isArray(parsed)) {
+          return normalizarNormasSalvas(parsed);
+        }
+      } catch (erroDeLeitura) {
+        console.error("Erro ao ler normas do localStorage:", erroDeLeitura);
       }
     }
     return NORMAS_BASE;
@@ -480,8 +804,20 @@ export default function Biblioteca() {
     localStorage.setItem("biblioteca_normas", JSON.stringify(normas));
   }, [normas]);
 
-  const [showModal, setShowModal] = useState(false);
-  const [stepModal, setStepModal] = useState(1);
+  useEffect(() => {
+    const bloquearAtalhos = (eventoTeclado: KeyboardEvent) => {
+      if ((eventoTeclado.ctrlKey || eventoTeclado.metaKey) && (eventoTeclado.key === 'p' || eventoTeclado.key === 's')) {
+        eventoTeclado.preventDefault();
+      }
+    };
+    
+    window.addEventListener('keydown', bloquearAtalhos);
+    return () => window.removeEventListener('keydown', bloquearAtalhos);
+  }, []);
+
+  const [modalEstaVisivel, setModalEstaVisivel] = useState(false);
+  const [etapaModal, setEtapaModal] = useState(1);
+  const [idEmEdicao, setIdEmEdicao] = useState<string | null>(null);
   const [normaVisualizar, setNormaVisualizar] = useState<Norma | null>(null);
   const [erroCampos, setErroCampos] = useState<
     Partial<Record<keyof Norma, string>>
@@ -497,20 +833,21 @@ export default function Biblioteca() {
     url: string;
     nome: string;
   } | null>(null);
-  const [imagemAbertaIdx, setImagemAbertaIdx] = useState<number | null>(null);
+  const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
+  const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
 
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const adicionarToast = useCallback(
-    (tipo: ToastMsg["tipo"], mensagem: string) => {
-      const idToast = Date.now();
+    (tipoMensagem: ToastMsg["tipo"], mensagemConteudo: string) => {
+      const identificadorToast = Date.now();
       setToasts((toastsAnteriores) => [
         ...toastsAnteriores,
-        { id: idToast, tipo, mensagem },
+        { id: identificadorToast, tipo: tipoMensagem, mensagem: mensagemConteudo },
       ]);
       setTimeout(
         () =>
           setToasts((toastsAnteriores) =>
-            toastsAnteriores.filter((toastAtual) => toastAtual.id !== idToast),
+            toastsAnteriores.filter((toastAtual) => toastAtual.id !== identificadorToast),
           ),
         4000,
       );
@@ -531,11 +868,11 @@ export default function Biblioteca() {
     onConfirmar: () => {},
   });
   const pedirConfirmacao = (
-    titulo: string,
-    mensagem: string,
-    onConfirmar: () => void,
+    tituloAviso: string,
+    mensagemAviso: string,
+    funcaoConfirmar: () => void,
   ) => {
-    setConfirmacao({ visivel: true, titulo, mensagem, onConfirmar });
+    setConfirmacao({ visivel: true, titulo: tituloAviso, mensagem: mensagemAviso, onConfirmar: funcaoConfirmar });
   };
   const fecharConfirmacao = () =>
     setConfirmacao((confirmacaoAnterior) => ({
@@ -544,29 +881,33 @@ export default function Biblioteca() {
     }));
 
   const [form, setForm] = useState<Partial<Norma>>(FORM_INICIAL);
-  const updateForm = (campo: keyof Norma, valor: unknown) => {
+  const updateForm = (campoParaAtualizar: keyof Norma, valorNovo: unknown) => {
     setForm((formularioAnterior) => ({
       ...formularioAnterior,
-      [campo]: valor,
+      [campoParaAtualizar]: valorNovo,
     }));
-    if (erroCampos[campo])
+    if (erroCampos[campoParaAtualizar])
       setErroCampos((errosAnteriores) => ({
         ...errosAnteriores,
-        [campo]: undefined,
+        [campoParaAtualizar]: undefined,
       }));
   };
 
   const [arquivoPdf, setArquivoPdf] = useState<File | null>(null);
   const [arquivosImagens, setArquivosImagens] = useState<File[]>([]);
+  const pecasRelacionadas = useMemo(() => {
+    if (!normaVisualizar) return [];
+    return listarPecasRelacionadas(pecas, normaVisualizar.id);
+  }, [normaVisualizar, pecas]);
 
-  const handlePdfChange = (evento: ChangeEvent<HTMLInputElement>) => {
-    if (evento.target.files?.[0]) setArquivoPdf(evento.target.files[0]);
+  const handlePdfChange = (eventoMudanca: ChangeEvent<HTMLInputElement>) => {
+    if (eventoMudanca.target.files?.[0]) setArquivoPdf(eventoMudanca.target.files[0]);
   };
-  const handleImgChange = (evento: ChangeEvent<HTMLInputElement>) => {
-    if (evento.target.files)
+  const handleImgChange = (eventoMudanca: ChangeEvent<HTMLInputElement>) => {
+    if (eventoMudanca.target.files)
       setArquivosImagens((imagensAnteriores) => [
         ...imagensAnteriores,
-        ...Array.from(evento.target.files!),
+        ...Array.from(eventoMudanca.target.files!),
       ]);
   };
 
@@ -599,23 +940,29 @@ export default function Biblioteca() {
     setFiltroStatus("Todos");
   };
 
-  const handleMudancaCategoriaFiltro = (novaCategoria: string) => {
-    setFiltroCategoria(novaCategoria);
+  const handleMudancaCategoriaFiltro = (novaCategoriaSelecionada: string) => {
+    setFiltroCategoria(novaCategoriaSelecionada);
     setFiltroSubcategoria("");
     setFiltroItem("");
   };
 
-  const handleMudancaSubcategoriaFiltro = (novaSubcategoria: string) => {
-    setFiltroSubcategoria(novaSubcategoria);
+  const handleMudancaSubcategoriaFiltro = (novaSubcategoriaSelecionada: string) => {
+    setFiltroSubcategoria(novaSubcategoriaSelecionada);
     setFiltroItem("");
   };
 
   const termoMinusculo = termoPesquisa.toLowerCase();
+
   const normasFiltradas = normas.filter((normaAtual) => {
     const matchBusca =
       normaAtual.id.toLowerCase().includes(termoMinusculo) ||
       normaAtual.codigo.toLowerCase().includes(termoMinusculo) ||
-      normaAtual.titulo.toLowerCase().includes(termoMinusculo);
+      normaAtual.titulo.toLowerCase().includes(termoMinusculo) ||
+      (normaAtual.palavrasChave &&
+        normaAtual.palavrasChave.some((palavraAtual) =>
+          palavraAtual.toLowerCase().includes(termoMinusculo)
+        ));
+
     const matchCategoria =
       filtroCategoria === "Todas" || normaAtual.categoria === filtroCategoria;
     const matchSubcategoria =
@@ -623,6 +970,7 @@ export default function Biblioteca() {
     const matchItem = !filtroItem || normaAtual.item === filtroItem;
     const matchStatus =
       filtroStatus === "Todos" || normaAtual.status === filtroStatus;
+
     return (
       matchBusca &&
       matchCategoria &&
@@ -633,13 +981,24 @@ export default function Biblioteca() {
   });
 
   const abrirModalCadastro = () => {
-    setStepModal(1);
+    setIdEmEdicao(null);
+    setForm(FORM_INICIAL);
+    setEtapaModal(1);
     setErroCampos({});
-    setShowModal(true);
+    setModalEstaVisivel(true);
+  };
+
+  const abrirModalEdicao = (normaParaEditar: Norma) => {
+    setIdEmEdicao(normaParaEditar.id);
+    setForm(normaParaEditar);
+    setEtapaModal(1);
+    setErroCampos({});
+    setModalEstaVisivel(true);
   };
 
   const fecharModal = () => {
-    setShowModal(false);
+    setModalEstaVisivel(false);
+    setIdEmEdicao(null);
     setForm(FORM_INICIAL);
     setArquivoPdf(null);
     setArquivosImagens([]);
@@ -647,23 +1006,24 @@ export default function Biblioteca() {
   };
 
   const handleProximoPasso = () => {
-    const erros: typeof erroCampos = {};
-    if (!form.id?.trim()) erros.id = "Campo obrigatório";
-    if (!form.titulo?.trim()) erros.titulo = "Campo obrigatório";
-    if (Object.keys(erros).length > 0) {
-      setErroCampos(erros);
+    const errosEncontrados: typeof erroCampos = {};
+    if (!form.id?.trim()) errosEncontrados.id = "Campo obrigatório";
+    if (!form.titulo?.trim()) errosEncontrados.titulo = "Campo obrigatório";
+    if (Object.keys(errosEncontrados).length > 0) {
+      setErroCampos(errosEncontrados);
       adicionarToast(
         "erro",
         "Preencha os campos obrigatórios antes de avançar.",
       );
       return;
     }
-    setStepModal((etapaAtual) => etapaAtual + 1);
+    setEtapaModal((etapaAnterior) => etapaAnterior + 1);
   };
 
   const handleSave = async () => {
     try {
-      let stringBase64Pdf: string | undefined = undefined;
+      let stringBase64Pdf = form.urlPdf;
+      let nomeArquivoPdf = form.nomePdf;
 
       if (arquivoPdf) {
         if (arquivoPdf.size > 3 * 1024 * 1024) {
@@ -674,39 +1034,60 @@ export default function Biblioteca() {
           return;
         }
         stringBase64Pdf = await converterParaBase64(arquivoPdf);
+        nomeArquivoPdf = arquivoPdf.name;
       }
-      const stringsBase64Imagens = await Promise.all(
-        arquivosImagens.map(async (arquivoImagem) => {
-          if (arquivoImagem.size > 2 * 1024 * 1024) {
-            throw new Error(
-              `Imagem ${arquivoImagem.name} excede o limite de 2MB.`,
-            );
-          }
-          return await converterParaBase64(arquivoImagem);
-        }),
-      );
+      
+      let stringsBase64Imagens = form.imagens || [];
+      if (arquivosImagens.length > 0) {
+        const novasImagensBase64 = await Promise.all(
+          arquivosImagens.map(async (arquivoImagemAtual) => {
+            if (arquivoImagemAtual.size > 2 * 1024 * 1024) {
+              throw new Error(
+                `Imagem ${arquivoImagemAtual.name} excede o limite de 2MB.`,
+              );
+            }
+            return await converterParaBase64(arquivoImagemAtual);
+          }),
+        );
+        stringsBase64Imagens = [...stringsBase64Imagens, ...novasImagensBase64];
+      }
 
-      const novaNorma = {
+      const normaSalva = {
         ...form,
-        notas: form.notas?.filter((notaAtual) => notaAtual.trim() !== "") || [],
-        referencias:
-          form.referencias?.filter(
+        notas: (form.notas || []).filter((notaAtual) => notaAtual.trim() !== ""),
+        referencias: (form.referencias || []).filter(
             (referenciaAtual) => referenciaAtual.trim() !== "",
-          ) || [],
-        nomePdf: arquivoPdf ? arquivoPdf.name : undefined,
+          ),
+        palavrasChave: (form.palavrasChave || []).filter(
+            (palavraAtual) => palavraAtual.trim() !== "",
+          ),
+        nomePdf: nomeArquivoPdf,
         urlPdf: stringBase64Pdf,
         imagens: stringsBase64Imagens,
       } as Norma;
 
-      setNormas([novaNorma, ...normas]);
+      if (idEmEdicao) {
+        setNormas((normasAnteriores) =>
+          normasAnteriores.map((normaAnalisada) =>
+            normaAnalisada.id === idEmEdicao ? normaSalva : normaAnalisada
+          )
+        );
+        adicionarToast(
+          "sucesso",
+          `Norma "${normaSalva.id}" atualizada com sucesso!`,
+        );
+      } else {
+        setNormas([normaSalva, ...normas]);
+        adicionarToast(
+          "sucesso",
+          `Norma "${normaSalva.id}" registada com sucesso!`,
+        );
+      }
       fecharModal();
-      adicionarToast(
-        "sucesso",
-        `Norma "${novaNorma.id}" registada com sucesso!`,
-      );
-    } catch (erro: unknown) {
-      console.error(erro);
-      if (erro instanceof Error && erro.name === "QuotaExceededError") {
+      
+    } catch (erroDeProcessamento: unknown) {
+      console.error(erroDeProcessamento);
+      if (erroDeProcessamento instanceof Error && erroDeProcessamento.name === "QuotaExceededError") {
         adicionarToast(
           "erro",
           "Limite de armazenamento excedido! Tente remover anexos antigos ou usar ficheiros menores.",
@@ -714,8 +1095,8 @@ export default function Biblioteca() {
       } else {
         adicionarToast(
           "erro",
-          erro instanceof Error
-            ? erro.message
+          erroDeProcessamento instanceof Error
+            ? erroDeProcessamento.message
             : "Erro ao processar os ficheiros.",
         );
       }
@@ -759,9 +1140,9 @@ export default function Biblioteca() {
               <input
                 type="text"
                 className="form-input search-input"
-                placeholder="Pesquisar por ID, Código ou Título..."
+                placeholder="Pesquisar por ID, Código, Título ou Palavra-chave..."
                 value={termoPesquisa}
-                onChange={(evento) => setTermoPesquisa(evento.target.value)}
+                onChange={(eventoMudanca) => setTermoPesquisa(eventoMudanca.target.value)}
               />
               {termoPesquisa && (
                 <button
@@ -773,6 +1154,7 @@ export default function Biblioteca() {
                 </button>
               )}
             </div>
+
             {filtrosAtivos && (
               <button
                 className="btn btn-limpar-filtros"
@@ -793,16 +1175,16 @@ export default function Biblioteca() {
             >
               <i className="fas fa-border-all"></i> Todas
             </button>
-            {CATEGORIAS.map((nomeCategoria) => (
+            {CATEGORIAS.map((nomeCategoriaAtual) => (
               <button
-                key={nomeCategoria}
-                className={`filter-badge theme-cat-${nomeCategoria.toLowerCase()} ${filtroCategoria === nomeCategoria ? "active" : ""}`}
-                onClick={() => handleMudancaCategoriaFiltro(nomeCategoria)}
+                key={nomeCategoriaAtual}
+                className={`filter-badge theme-cat-${nomeCategoriaAtual.toLowerCase()} ${filtroCategoria === nomeCategoriaAtual ? "active" : ""}`}
+                onClick={() => handleMudancaCategoriaFiltro(nomeCategoriaAtual)}
               >
                 <i
-                  className={`fas ${CAT_ICONES[nomeCategoria] || "fa-tag"}`}
+                  className={`fas ${CAT_ICONES[nomeCategoriaAtual] || "fa-tag"}`}
                 ></i>{" "}
-                {nomeCategoria}
+                {nomeCategoriaAtual}
               </button>
             ))}
           </div>
@@ -819,15 +1201,15 @@ export default function Biblioteca() {
                 >
                   <i className="fas fa-border-all"></i> Todas
                 </button>
-                {subcategoriasDisponiveis.map((nomeSubcategoria) => (
+                {subcategoriasDisponiveis.map((nomeSubcategoriaAtual) => (
                   <button
-                    key={nomeSubcategoria}
-                    className={`filter-badge theme-subcategoria ${filtroSubcategoria === nomeSubcategoria ? "active" : ""}`}
+                    key={nomeSubcategoriaAtual}
+                    className={`filter-badge theme-subcategoria ${filtroSubcategoria === nomeSubcategoriaAtual ? "active" : ""}`}
                     onClick={() =>
-                      handleMudancaSubcategoriaFiltro(nomeSubcategoria)
+                      handleMudancaSubcategoriaFiltro(nomeSubcategoriaAtual)
                     }
                   >
-                    <i className="fas fa-layer-group"></i> {nomeSubcategoria}
+                    <i className="fas fa-layer-group"></i> {nomeSubcategoriaAtual}
                   </button>
                 ))}
               </div>
@@ -844,13 +1226,13 @@ export default function Biblioteca() {
               >
                 <i className="fas fa-border-all"></i> Todos
               </button>
-              {itensDisponiveis.map((nomeItem) => (
+              {itensDisponiveis.map((nomeItemAtual) => (
                 <button
-                  key={nomeItem}
-                  className={`filter-badge theme-subcategoria ${filtroItem === nomeItem ? "active" : ""}`}
-                  onClick={() => setFiltroItem(nomeItem)}
+                  key={nomeItemAtual}
+                  className={`filter-badge theme-subcategoria ${filtroItem === nomeItemAtual ? "active" : ""}`}
+                  onClick={() => setFiltroItem(nomeItemAtual)}
                 >
-                  <i className="fas fa-cube"></i> {nomeItem}
+                  <i className="fas fa-cube"></i> {nomeItemAtual}
                 </button>
               ))}
             </div>
@@ -866,18 +1248,18 @@ export default function Biblioteca() {
             >
               <i className="fas fa-border-all"></i> Todos
             </button>
-            {STATUS_OPCOES.map((nomeStatus) => (
+            {STATUS_OPCOES.map((nomeStatusAtual) => (
               <button
-                key={nomeStatus}
-                className={`filter-badge filter-badge-status-${nomeStatus.toLowerCase()} ${filtroStatus === nomeStatus ? "active" : ""}`}
-                onClick={() => setFiltroStatus(nomeStatus)}
+                key={nomeStatusAtual}
+                className={`filter-badge filter-badge-status-${nomeStatusAtual.toLowerCase()} ${filtroStatus === nomeStatusAtual ? "active" : ""}`}
+                onClick={() => setFiltroStatus(nomeStatusAtual)}
               >
-                {nomeStatus === "Vigente" ? (
+                {nomeStatusAtual === "Vigente" ? (
                   <i className="fas fa-check-circle"></i>
                 ) : (
                   <i className="fas fa-times-circle"></i>
                 )}{" "}
-                {nomeStatus}
+                {nomeStatusAtual}
               </button>
             ))}
           </div>
@@ -889,13 +1271,19 @@ export default function Biblioteca() {
             : `${normasFiltradas.length} de ${normas.length} norma${normas.length !== 1 ? "s" : ""}`}
         </p>
 
-        <div className="normas-lista">
-          {normasFiltradas.map((normaAtual, indiceNorma) => (
+      <div className="normas-lista">
+          {normasFiltradas.map((normaMapeada, indiceMapeado) => (
             <NormaCardItem
-              key={indiceNorma}
-              norma={normaAtual}
+              key={indiceMapeado}
+              norma={normaMapeada}
+              onEdit={abrirModalEdicao}
               onDelete={handleDelete}
-              onView={setNormaVisualizar}
+              onShowDetails={setNormaVisualizar}
+              onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfAberto({ url: urlVisualizada, nome: nomePdfVisualizado })}
+              onViewImages={(imagensParaVisualizar) => {
+                setImagensAbertas(imagensParaVisualizar);
+                setIndiceImagemAberta(0);
+              }}
             />
           ))}
           {normasFiltradas.length === 0 && (
@@ -911,16 +1299,16 @@ export default function Biblioteca() {
           )}
         </div>
 
-        {showModal && (
+        {modalEstaVisivel && (
           <div className="modal-overlay" onClick={fecharModal}>
             <div
               className="modal modal-large"
-              onClick={(evento) => evento.stopPropagation()}
+              onClick={(eventoClique) => eventoClique.stopPropagation()}
             >
               <div className="modal-header">
                 <h2>
-                  <i className="fas fa-file-circle-plus"></i> Registar Nova
-                  Norma
+                  <i className="fas fa-file-circle-plus"></i>{" "}
+                  {idEmEdicao ? "Editar Norma" : "Registar Nova Norma"}
                 </h2>
                 <button
                   type="button"
@@ -939,10 +1327,10 @@ export default function Biblioteca() {
                 ].map(({ label, step }) => (
                   <div
                     key={step}
-                    className={`stepper-step ${stepModal >= step ? "active" : ""} ${stepModal > step ? "completed" : ""}`}
+                    className={`stepper-step ${etapaModal >= step ? "active" : ""} ${etapaModal > step ? "completed" : ""}`}
                   >
                     <span className="stepper-number">
-                      {stepModal > step ? (
+                      {etapaModal > step ? (
                         <i className="fas fa-check"></i>
                       ) : (
                         step
@@ -954,16 +1342,16 @@ export default function Biblioteca() {
               </div>
 
               <form
-                onSubmit={(evento) => {
-                  evento.preventDefault();
-                  if (stepModal < 3) {
+                onSubmit={(eventoSubmissao) => {
+                  eventoSubmissao.preventDefault();
+                  if (etapaModal < 3) {
                     handleProximoPasso();
                   } else {
                     handleSave();
                   }
                 }}
               >
-                {stepModal === 1 && (
+                {etapaModal === 1 && (
                   <div className="form-grid">
                     <div
                       className={`form-group ${erroCampos.id ? "has-error" : ""}`}
@@ -975,8 +1363,9 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.id}
-                        onChange={(evento) =>
-                          updateForm("id", evento.target.value)
+                        disabled={!!idEmEdicao}
+                        onChange={(eventoMudanca) =>
+                          updateForm("id", eventoMudanca.target.value)
                         }
                         placeholder="Ex: RBAC 25.1309"
                       />
@@ -995,8 +1384,8 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.codigo}
-                        onChange={(evento) =>
-                          updateForm("codigo", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("codigo", eventoMudanca.target.value)
                         }
                         placeholder="Ex: 25.1309"
                       />
@@ -1012,8 +1401,8 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.titulo}
-                        onChange={(evento) =>
-                          updateForm("titulo", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("titulo", eventoMudanca.target.value)
                         }
                         placeholder="Nome completo"
                       />
@@ -1032,13 +1421,13 @@ export default function Biblioteca() {
                       <select
                         className="form-select"
                         value={form.organizacao}
-                        onChange={(evento) =>
-                          updateForm("organizacao", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("organizacao", eventoMudanca.target.value)
                         }
                       >
-                        {ORGANIZACOES.map((nomeOrganizacao) => (
-                          <option key={nomeOrganizacao} value={nomeOrganizacao}>
-                            {ORG_ORIGENS[nomeOrganizacao]} {nomeOrganizacao}
+                        {ORGANIZACOES.map((nomeOrganizacaoAtual) => (
+                          <option key={nomeOrganizacaoAtual} value={nomeOrganizacaoAtual}>
+                            {ORG_ORIGENS[nomeOrganizacaoAtual]} {nomeOrganizacaoAtual}
                           </option>
                         ))}
                       </select>
@@ -1051,8 +1440,8 @@ export default function Biblioteca() {
                       <input
                         className="form-input"
                         value={form.revisao}
-                        onChange={(evento) =>
-                          updateForm("revisao", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("revisao", eventoMudanca.target.value)
                         }
                         placeholder="Ex: Rev. A"
                       />
@@ -1065,8 +1454,8 @@ export default function Biblioteca() {
                       <select
                         className="form-select"
                         value={form.categoria}
-                        onChange={(evento) => {
-                          const novaCategoria = evento.target.value;
+                        onChange={(eventoMudanca) => {
+                          const novaCategoria = eventoMudanca.target.value;
                           updateForm("categoria", novaCategoria);
 
                           const subcategoriasDaCategoria =
@@ -1080,9 +1469,9 @@ export default function Biblioteca() {
                           updateForm("item", "");
                         }}
                       >
-                        {CATEGORIAS.map((nomeCategoria) => (
-                          <option key={nomeCategoria} value={nomeCategoria}>
-                            {nomeCategoria}
+                        {CATEGORIAS.map((nomeCategoriaAtual) => (
+                          <option key={nomeCategoriaAtual} value={nomeCategoriaAtual}>
+                            {nomeCategoriaAtual}
                           </option>
                         ))}
                       </select>
@@ -1095,16 +1484,16 @@ export default function Biblioteca() {
                       <select
                         className="form-select"
                         value={form.subcategoria}
-                        onChange={(evento) => {
-                          const novaSubcategoria = evento.target.value;
+                        onChange={(eventoMudanca) => {
+                          const novaSubcategoria = eventoMudanca.target.value;
                           updateForm("subcategoria", novaSubcategoria);
                           updateForm("item", "");
                         }}
                       >
                         {(SUBCATEGORIAS[form.categoria ?? ""] ?? []).map(
-                          (nomeSub) => (
-                            <option key={nomeSub} value={nomeSub}>
-                              {nomeSub}
+                          (nomeSubcategoriaAtual) => (
+                            <option key={nomeSubcategoriaAtual} value={nomeSubcategoriaAtual}>
+                              {nomeSubcategoriaAtual}
                             </option>
                           ),
                         )}
@@ -1118,8 +1507,8 @@ export default function Biblioteca() {
                       <select
                         className="form-select"
                         value={form.item}
-                        onChange={(evento) =>
-                          updateForm("item", evento.target.value)
+                        onChange={(eventoMudanca) =>
+                          updateForm("item", eventoMudanca.target.value)
                         }
                         disabled={
                           !form.subcategoria ||
@@ -1137,9 +1526,9 @@ export default function Biblioteca() {
                         </option>
                         {(
                           ITENS_POR_SUBCATEGORIA[form.subcategoria ?? ""] ?? []
-                        ).map((nomeItem) => (
-                          <option key={nomeItem} value={nomeItem}>
-                            {nomeItem}
+                        ).map((nomeItemAtual) => (
+                          <option key={nomeItemAtual} value={nomeItemAtual}>
+                            {nomeItemAtual}
                           </option>
                         ))}
                       </select>
@@ -1147,7 +1536,7 @@ export default function Biblioteca() {
                   </div>
                 )}
 
-                {stepModal === 2 && (
+                {etapaModal === 2 && (
                   <>
                     <div className="form-grid">
                       <div className="form-group">
@@ -1157,8 +1546,8 @@ export default function Biblioteca() {
                         <select
                           className="form-select"
                           value={form.status}
-                          onChange={(evento) =>
-                            updateForm("status", evento.target.value)
+                          onChange={(eventoMudanca) =>
+                            updateForm("status", eventoMudanca.target.value)
                           }
                         >
                           <option value="Vigente">Vigente</option>
@@ -1172,8 +1561,8 @@ export default function Biblioteca() {
                         <select
                           className="form-select"
                           value={form.tipo}
-                          onChange={(evento) =>
-                            updateForm("tipo", evento.target.value)
+                          onChange={(eventoMudanca) =>
+                            updateForm("tipo", eventoMudanca.target.value)
                           }
                         >
                           <option value="Pública">Pública</option>
@@ -1186,17 +1575,71 @@ export default function Biblioteca() {
 
                     <div className="form-group">
                       <label className="form-label">
+                        <i className="fas fa-key"></i> Palavras-chave
+                      </label>
+                      <div className="dynamic-list">
+                        {(form.palavrasChave || []).map(
+                          (palavraAtual, indicePalavraAtual) => (
+                            <div key={indicePalavraAtual} className="dynamic-row">
+                              <input
+                                className="form-input"
+                                value={palavraAtual}
+                                onChange={(eventoMudanca) => {
+                                  const novasPalavras = [
+                                    ...(form.palavrasChave || []),
+                                  ];
+                                  novasPalavras[indicePalavraAtual] =
+                                    eventoMudanca.target.value;
+                                  updateForm("palavrasChave", novasPalavras);
+                                }}
+                                placeholder="Palavra-chave..."
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-icon"
+                                onClick={() =>
+                                  updateForm(
+                                    "palavrasChave",
+                                    (form.palavrasChave || []).filter(
+                                      (_palavraIgnorada, indiceAtualCopia) =>
+                                        indiceAtualCopia !== indicePalavraAtual,
+                                    ),
+                                  )
+                                }
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          ),
+                        )}
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-add-more"
+                          onClick={() =>
+                            updateForm("palavrasChave", [
+                              ...(form.palavrasChave || []),
+                              "",
+                            ])
+                          }
+                        >
+                          <i className="fas fa-plus"></i> Nova palavra-chave
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
                         <i className="fas fa-pen-to-square"></i> Notas Técnicas
                       </label>
                       <div className="dynamic-list">
-                        {form.notas?.map((notaAtual, indiceNota) => (
-                          <div key={indiceNota} className="dynamic-row">
+                        {(form.notas || []).map((notaAtual, indiceNotaAtual) => (
+                          <div key={indiceNotaAtual} className="dynamic-row">
                             <input
                               className="form-input"
                               value={notaAtual}
-                              onChange={(evento) => {
-                                const novasNotas = [...form.notas!];
-                                novasNotas[indiceNota] = evento.target.value;
+                              onChange={(eventoMudanca) => {
+                                const novasNotas = [...(form.notas || [])];
+                                novasNotas[indiceNotaAtual] = eventoMudanca.target.value;
                                 updateForm("notas", novasNotas);
                               }}
                               placeholder="Nota..."
@@ -1207,9 +1650,9 @@ export default function Biblioteca() {
                               onClick={() =>
                                 updateForm(
                                   "notas",
-                                  form.notas!.filter(
-                                    (_, indiceAtual) =>
-                                      indiceAtual !== indiceNota,
+                                  (form.notas || []).filter(
+                                    (_notaIgnorada, indiceAtualCopia) =>
+                                      indiceAtualCopia !== indiceNotaAtual,
                                   ),
                                 )
                               }
@@ -1222,7 +1665,7 @@ export default function Biblioteca() {
                           type="button"
                           className="btn btn-ghost btn-add-more"
                           onClick={() =>
-                            updateForm("notas", [...form.notas!, ""])
+                            updateForm("notas", [...(form.notas || []), ""])
                           }
                         >
                           <i className="fas fa-plus"></i> Nova nota
@@ -1235,18 +1678,18 @@ export default function Biblioteca() {
                         <i className="fas fa-link"></i> Referências
                       </label>
                       <div className="dynamic-list">
-                        {form.referencias?.map(
-                          (referenciaAtual, indiceReferencia) => (
-                            <div key={indiceReferencia} className="dynamic-row">
+                        {(form.referencias || []).map(
+                          (referenciaAtual, indiceReferenciaAtual) => (
+                            <div key={indiceReferenciaAtual} className="dynamic-row">
                               <input
                                 className="form-input"
                                 value={referenciaAtual}
-                                onChange={(evento) => {
+                                onChange={(eventoMudanca) => {
                                   const novasReferencias = [
-                                    ...form.referencias!,
+                                    ...(form.referencias || []),
                                   ];
-                                  novasReferencias[indiceReferencia] =
-                                    evento.target.value;
+                                  novasReferencias[indiceReferenciaAtual] =
+                                    eventoMudanca.target.value;
                                   updateForm("referencias", novasReferencias);
                                 }}
                                 placeholder="Referência..."
@@ -1257,9 +1700,9 @@ export default function Biblioteca() {
                                 onClick={() =>
                                   updateForm(
                                     "referencias",
-                                    form.referencias!.filter(
-                                      (_, indiceAtual) =>
-                                        indiceAtual !== indiceReferencia,
+                                    (form.referencias || []).filter(
+                                      (_referenciaIgnorada, indiceAtualCopia) =>
+                                        indiceAtualCopia !== indiceReferenciaAtual,
                                     ),
                                   )
                                 }
@@ -1274,7 +1717,7 @@ export default function Biblioteca() {
                           className="btn btn-ghost btn-add-more"
                           onClick={() =>
                             updateForm("referencias", [
-                              ...form.referencias!,
+                              ...(form.referencias || []),
                               "",
                             ])
                           }
@@ -1286,47 +1729,57 @@ export default function Biblioteca() {
                   </>
                 )}
 
-                {stepModal === 3 && (
+                {etapaModal === 3 && (
                   <div className="form-grid">
                     <div className="file-upload-group">
                       <label className="form-label">
                         <i className="fas fa-file-pdf"></i> Arquivo PDF
                       </label>
-                      <label
-                        className={`file-upload-zone ${arquivoPdf ? "has-file" : ""}`}
-                      >
-                        <div className="file-icon">
-                          <i
-                            className={`fas ${arquivoPdf ? "fa-check" : "fa-upload"}`}
-                          ></i>
+                      {form.urlPdf && !arquivoPdf ? (
+                        <div className="attachment-pdf">
+                           <i className="fas fa-file-pdf"></i>
+                           <span className="attachment-pdf-name">{form.nomePdf}</span>
+                           <button type="button" className="btn-remove-file" onClick={() => { updateForm('urlPdf', undefined); updateForm('nomePdf', undefined); }}>
+                             <i className="fas fa-trash"></i>
+                           </button>
                         </div>
-                        <div className="file-info">
-                          <span className="file-name">
-                            {arquivoPdf
-                              ? arquivoPdf.name
-                              : "Anexar arquivo PDF"}
-                          </span>
-                          <span className="file-hint">Máximo 3MB (.pdf)</span>
-                        </div>
-                        {arquivoPdf && (
-                          <button
-                            type="button"
-                            className="btn-remove-file"
-                            onClick={(evento) => {
-                              evento.preventDefault();
-                              setArquivoPdf(null);
-                            }}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        )}
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden-input"
-                          onChange={handlePdfChange}
-                        />
-                      </label>
+                      ) : (
+                        <label
+                          className={`file-upload-zone ${arquivoPdf ? "has-file" : ""}`}
+                        >
+                          <div className="file-icon">
+                            <i
+                              className={`fas ${arquivoPdf ? "fa-check" : "fa-upload"}`}
+                            ></i>
+                          </div>
+                          <div className="file-info">
+                            <span className="file-name">
+                              {arquivoPdf
+                                ? arquivoPdf.name
+                                : "Anexar arquivo PDF"}
+                            </span>
+                            <span className="file-hint">Máximo 3MB (.pdf)</span>
+                          </div>
+                          {arquivoPdf && (
+                            <button
+                              type="button"
+                              className="btn-remove-file"
+                              onClick={(eventoClique) => {
+                                eventoClique.preventDefault();
+                                setArquivoPdf(null);
+                              }}
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          )}
+                          <input
+                            type="file"
+                            accept="application/pdf"
+                            className="hidden-input"
+                            onChange={handlePdfChange}
+                          />
+                        </label>
+                      )}
                     </div>
 
                     <div className="file-upload-group">
@@ -1338,7 +1791,7 @@ export default function Biblioteca() {
                           <i className="fas fa-image"></i>
                         </div>
                         <div className="file-info">
-                          <span className="file-name">Anexar imagens</span>
+                          <span className="file-name">Adicionar imagens</span>
                           <span className="file-hint">JPG, PNG, WebP</span>
                         </div>
                         <input
@@ -1349,16 +1802,34 @@ export default function Biblioteca() {
                           onChange={handleImgChange}
                         />
                       </label>
+                      
+                      {form.imagens && form.imagens.length > 0 && (
+                        <div className="image-preview-list">
+                          {form.imagens.map((urlImagemExistente, indiceImagemExistente) => (
+                             <div key={`existente-${indiceImagemExistente}`} className="image-preview-item">
+                               <img src={urlImagemExistente} alt="Preview" />
+                               <button type="button" className="btn-remove-preview" onClick={() => {
+                                  const novasImagensFormulario = [...form.imagens!];
+                                  novasImagensFormulario.splice(indiceImagemExistente, 1);
+                                  updateForm('imagens', novasImagensFormulario);
+                               }}>
+                                 <i className="fas fa-xmark"></i>
+                               </button>
+                             </div>
+                           ))}
+                        </div>
+                      )}
+
                       {arquivosImagens.length > 0 && (
                         <div className="image-preview-list">
                           {arquivosImagens.map(
-                            (arquivoImagem, indiceImagem) => (
+                            (arquivoImagemNovo, indiceImagemNovo) => (
                               <div
-                                key={indiceImagem}
+                                key={`nova-${indiceImagemNovo}`}
                                 className="image-preview-item"
                               >
                                 <img
-                                  src={URL.createObjectURL(arquivoImagem)}
+                                  src={URL.createObjectURL(arquivoImagemNovo)}
                                   alt="Preview"
                                 />
                                 <button
@@ -1367,8 +1838,8 @@ export default function Biblioteca() {
                                   onClick={() =>
                                     setArquivosImagens((imagensAnteriores) =>
                                       imagensAnteriores.filter(
-                                        (_, indiceAtual) =>
-                                          indiceAtual !== indiceImagem,
+                                        (_imagemIgnorada, indiceAtualParaFiltro) =>
+                                          indiceAtualParaFiltro !== indiceImagemNovo,
                                       ),
                                     )
                                   }
@@ -1386,12 +1857,12 @@ export default function Biblioteca() {
 
                 <div className="modal-footer">
                   <div>
-                    {stepModal > 1 && (
+                    {etapaModal > 1 && (
                       <button
                         type="button"
                         className="btn btn-ghost"
                         onClick={() =>
-                          setStepModal((etapaAtual) => etapaAtual - 1)
+                          setEtapaModal((etapaAnterior) => etapaAnterior - 1)
                         }
                       >
                         Voltar
@@ -1406,7 +1877,7 @@ export default function Biblioteca() {
                     >
                       Cancelar
                     </button>
-                    {stepModal < 3 ? (
+                    {etapaModal < 3 ? (
                       <button type="submit" className="btn btn-primary">
                         Avançar{" "}
                         <i className="fas fa-arrow-right icon-right"></i>
@@ -1424,250 +1895,19 @@ export default function Biblioteca() {
         )}
 
         {normaVisualizar && (
-          <div
-            className="modal-overlay"
-            onClick={() => setNormaVisualizar(null)}
-          >
-            <div
-              className="modal modal-large"
-              onClick={(evento) => evento.stopPropagation()}
-            >
-              <div className="modal-header">
-                <h2>
-                  <i className="fas fa-magnifying-glass-chart"></i> Detalhes da
-                  Norma
-                </h2>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setNormaVisualizar(null)}
-                >
-                  <i className="fas fa-xmark"></i>
-                </button>
-              </div>
-              <div className="view-details">
-                <div className="view-grid">
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-id-card"></i> ID
-                    </span>
-                    <span className="view-value">{normaVisualizar.id}</span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-hashtag"></i> Código
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.codigo || "—"}
-                    </span>
-                  </div>
-                </div>
-                <div className="view-item">
-                  <span className="view-label">
-                    <i className="fas fa-heading"></i> Título
-                  </span>
-                  <span className="view-value">{normaVisualizar.titulo}</span>
-                </div>
 
-                <div className="view-grid">
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-building"></i> Órgão
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge theme-org-${normaVisualizar.organizacao.toLowerCase()}`}
-                      >
-                        <span className="badge-origin">
-                          {ORG_ORIGENS[normaVisualizar.organizacao] || "🌐"}
-                        </span>
-                        {normaVisualizar.organizacao}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-globe"></i> Tipo
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge ${normaVisualizar.tipo === "Pública" ? "badge-tipo-publica" : "badge-tipo-privada"}`}
-                      >
-                        <i
-                          className={`fas ${normaVisualizar.tipo === "Pública" ? "fa-globe" : "fa-lock"}`}
-                        ></i>
-                        {normaVisualizar.tipo || "Pública"}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-code-branch"></i> Revisão
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.revisao || "—"}
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-circle-dot"></i> Status
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge ${normaVisualizar.status.toLowerCase()}`}
-                      >
-                        {normaVisualizar.status === "Vigente" ? (
-                          <i className="fas fa-check-circle"></i>
-                        ) : (
-                          <i className="fas fa-times-circle"></i>
-                        )}
-                        {normaVisualizar.status}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-tags"></i> Categoria
-                    </span>
-                    <span className="view-value view-badges">
-                      <span
-                        className={`badge theme-cat-${normaVisualizar.categoria.toLowerCase()}`}
-                      >
-                        <i
-                          className={`fas ${CAT_ICONES[normaVisualizar.categoria] || "fa-tag"}`}
-                        ></i>
-                        {normaVisualizar.categoria}
-                      </span>
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-layer-group"></i> Subcategoria
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.subcategoria || "—"}
-                    </span>
-                  </div>
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-cube"></i> Item
-                    </span>
-                    <span className="view-value">
-                      {normaVisualizar.item || "—"}
-                    </span>
-                  </div>
-                </div>
-
-                <hr className="divider" />
-
-                {normaVisualizar.notas.length > 0 && (
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-pen-to-square"></i> Notas Técnicas
-                    </span>
-                    <ul className="view-list">
-                      {normaVisualizar.notas.map((notaAtual, indiceNota) => (
-                        <li key={indiceNota}>
-                          <i className="fas fa-caret-right view-list-icon"></i>{" "}
-                          {notaAtual}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {normaVisualizar.referencias.length > 0 && (
-                  <div className="view-item">
-                    <span className="view-label">
-                      <i className="fas fa-link"></i> Referências
-                    </span>
-                    <ul className="view-list">
-                      {normaVisualizar.referencias.map(
-                        (referenciaAtual, indiceReferencia) => (
-                          <li key={indiceReferencia}>
-                            <i className="fas fa-caret-right view-list-icon"></i>{" "}
-                            {referenciaAtual}
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {(normaVisualizar.urlPdf ||
-                  (normaVisualizar.imagens &&
-                    normaVisualizar.imagens.length > 0)) && (
-                  <>
-                    <hr className="divider" />
-                    <div className="view-item">
-                      <span className="view-label">
-                        <i className="fas fa-paperclip"></i> Anexos
-                      </span>
-                      {normaVisualizar.urlPdf && (
-                        <div
-                          className="attachment-pdf"
-                          onClick={() =>
-                            setPdfAberto({
-                              url: normaVisualizar.urlPdf!,
-                              nome: normaVisualizar.nomePdf!,
-                            })
-                          }
-                        >
-                          <i className="fas fa-file-pdf"></i>
-                          <span className="attachment-pdf-name">
-                            {normaVisualizar.nomePdf}
-                          </span>
-                        </div>
-                      )}
-                      {normaVisualizar.imagens &&
-                        normaVisualizar.imagens.length > 0 && (
-                          <div className="attachment-image-grid">
-                            {normaVisualizar.imagens.map(
-                              (urlImagem, indiceImagem) => (
-                                <div
-                                  key={indiceImagem}
-                                  className="attachment-image-item"
-                                  onClick={() =>
-                                    setImagemAbertaIdx(indiceImagem)
-                                  }
-                                >
-                                  <img
-                                    src={urlImagem}
-                                    alt={`Anexo ${indiceImagem + 1}`}
-                                  />
-                                  <div className="image-hover-overlay">
-                                    <i className="fas fa-magnifying-glass-plus"></i>
-                                  </div>
-                                </div>
-                              ),
-                            )}
-                          </div>
-                        )}
-                    </div>
-                  </>
-                )}
-
-                {normaVisualizar.notas.length === 0 &&
-                  normaVisualizar.referencias.length === 0 &&
-                  !normaVisualizar.urlPdf &&
-                  (!normaVisualizar.imagens ||
-                    normaVisualizar.imagens.length === 0) && (
-                    <div className="empty-state compact">
-                      <i className="fas fa-folder-open"></i>
-                      <p>Nenhuma nota ou anexo.</p>
-                    </div>
-                  )}
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setNormaVisualizar(null)}
-                >
-                  <i className="fas fa-check"></i> Concluído
-                </button>
-              </div>
-            </div>
-          </div>
+          <ModalDetalhesNorma 
+            norma={normaVisualizar} 
+            pecasRelacionadas={pecasRelacionadas}
+            onClose={() => setNormaVisualizar(null)} 
+            onEdit={abrirModalEdicao}
+            onDelete={handleDelete}
+            onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfAberto({ url: urlVisualizada, nome: nomePdfVisualizado })}
+            onViewImages={(imagensParaVisualizar, indice) => {
+              setImagensAbertas(imagensParaVisualizar);
+              setIndiceImagemAberta(indice);
+            }}
+          />
         )}
 
         {pdfAberto && (
@@ -1677,11 +1917,14 @@ export default function Biblioteca() {
             onClose={() => setPdfAberto(null)}
           />
         )}
-        {imagemAbertaIdx !== null && normaVisualizar?.imagens && (
+        {indiceImagemAberta !== null && imagensAbertas && (
           <ImageLightbox
-            imagens={normaVisualizar.imagens}
-            indiceInicial={imagemAbertaIdx}
-            onClose={() => setImagemAbertaIdx(null)}
+            imagens={imagensAbertas}
+            indiceInicial={indiceImagemAberta}
+            onClose={() => {
+              setIndiceImagemAberta(null);
+              setImagensAbertas(null);
+            }}
           />
         )}
       </main>
