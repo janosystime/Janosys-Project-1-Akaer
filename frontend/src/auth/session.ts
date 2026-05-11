@@ -6,7 +6,7 @@
  */
 const SESSION_KEY = 'signa_usuario'
 
-export type Perfil = 'administrador' | 'usuario'
+export type Perfil = 'administrador' | 'usuario' | 'operador'
 
 export interface UsuarioSessao {
   nome: string
