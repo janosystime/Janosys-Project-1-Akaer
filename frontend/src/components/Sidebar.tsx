@@ -109,10 +109,12 @@ export default function Sidebar(props: PropsSidebar) {
           <span className="nav-label">Normas</span>
         </NavLink>
 
+        {usuario.perfil !== 'operador' && (
         <NavLink to="/solicitacoes" className="nav-item" onClick={fecharMenuMobile}>
           <ClipboardList size={20} />
           <span className="nav-label">Solicitações</span>
         </NavLink>
+        )}
 
         {isAdmin && (
           <>

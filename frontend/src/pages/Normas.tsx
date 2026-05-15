@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { useState, useEffect, useCallback, useMemo, type ChangeEvent } from "react";
+import { obterUsuarioAtual } from '../auth/session'
 
 import "../components/Sidebar";
 import "../styles/Normas.css";
@@ -83,11 +84,11 @@ function normalizarNormasSalvas(normasSalvas: Norma[]): Norma[] {
     const normaBase = NORMAS_BASE.find(nb => nb.id === normaAtual.id);
     return {
       ...normaAtual,
-      urlPdf: normaAtual.urlPdf 
-        ? normalizarUrlPdf(normaAtual.urlPdf) 
+      urlPdf: normaAtual.urlPdf
+        ? normalizarUrlPdf(normaAtual.urlPdf)
         : normaBase?.urlPdf,
-      imagens: normaAtual.imagens?.length 
-        ? normaAtual.imagens 
+      imagens: normaAtual.imagens?.length
+        ? normaAtual.imagens
         : normaBase?.imagens,
       nomePdf: normaAtual.nomePdf || normaBase?.nomePdf,
     };
@@ -327,10 +328,10 @@ export function PdfViewer({
   }
 
   return (
-    <div 
-      className="pdf-viewer-overlay protecao-conteudo" 
+    <div
+      className="pdf-viewer-overlay protecao-conteudo"
       onClick={onClose}
-      onContextMenu={(eventoContexto) => eventoContexto.preventDefault()} 
+      onContextMenu={(eventoContexto) => eventoContexto.preventDefault()}
     >
       <div
         className="pdf-viewer-container pdf-fullscreen"
@@ -347,28 +348,28 @@ export function PdfViewer({
             </button>
           </div>
         </div>
-        
+
         <div className="pdf-document-container">
-          <Document 
-            file={url} 
+          <Document
+            file={url}
             onLoadSuccess={onDocumentLoadSuccess}
-            renderMode="canvas" 
+            renderMode="canvas"
             loading={<div className="pdf-loading-message">A carregar documento...</div>}
             error={<div className="pdf-error-message">Erro ao carregar o PDF.</div>}
           >
-            <Page 
-              pageNumber={paginaAtual} 
-              renderTextLayer={false} 
+            <Page
+              pageNumber={paginaAtual}
+              renderTextLayer={false}
               renderAnnotationLayer={false}
-              width={Math.min(window.innerWidth * 0.8, 800)} 
+              width={Math.min(window.innerWidth * 0.8, 800)}
             />
           </Document>
         </div>
 
         {totalPaginas && totalPaginas > 1 && (
           <div className="pdf-pagination">
-            <button 
-              className="btn btn-ghost btn-icon" 
+            <button
+              className="btn btn-ghost btn-icon"
               disabled={paginaAtual <= 1}
               onClick={() => setPaginaAtual(paginaAnterior => paginaAnterior - 1)}
             >
@@ -377,8 +378,8 @@ export function PdfViewer({
             <span className="pdf-page-indicator">
               Página {paginaAtual} de {totalPaginas}
             </span>
-            <button 
-              className="btn btn-ghost btn-icon" 
+            <button
+              className="btn btn-ghost btn-icon"
               disabled={paginaAtual >= totalPaginas}
               onClick={() => setPaginaAtual(paginaAnterior => paginaAnterior + 1)}
             >
@@ -417,10 +418,10 @@ export function ImageLightbox({
   }, [imagens.length, onClose]);
 
   return (
-    <div 
-      className="lightbox-overlay protecao-conteudo" 
+    <div
+      className="lightbox-overlay protecao-conteudo"
       onClick={onClose}
-      onContextMenu={(eventoContexto) => eventoContexto.preventDefault()} 
+      onContextMenu={(eventoContexto) => eventoContexto.preventDefault()}
     >
       <div
         className="lightbox-container"
@@ -433,7 +434,7 @@ export function ImageLightbox({
           src={imagens[indiceAtual]}
           alt={`Anexo ${indiceAtual + 1}`}
           className="lightbox-img img-protegida"
-          draggable="false" 
+          draggable="false"
         />
         <div className="lightbox-counter">
           {indiceAtual + 1} / {imagens.length}
@@ -489,20 +490,20 @@ export function ModalDetalhesNorma({
           <div className="modal-header-actions">
             {/* O Botão de Editar só aparece se onEdit for passado! */}
             {onEdit && (
-              <button 
-                className="btn btn-warning btn-icon" 
-                onClick={() => { onClose(); onEdit(norma); }}
-                title="Editar Norma"
+              <button
+                className="btn btn-warning btn-icon"
+                onClick={() => onEdit(norma)}
+                title="Editar"
               >
                 <i className="fas fa-pen"></i>
               </button>
             )}
             {/* O Botão de Excluir só aparece se onDelete for passado! */}
             {onDelete && (
-              <button 
-                className="btn btn-danger btn-icon" 
-                onClick={() => { onClose(); onDelete(norma.id); }}
-                title="Excluir Norma"
+              <button
+                className="btn btn-danger btn-icon"
+                onClick={() => onDelete(norma.id)}
+                title="Excluir"
               >
                 <i className="fas fa-trash"></i>
               </button>
@@ -600,7 +601,7 @@ export function ModalDetalhesNorma({
           {norma.notas && norma.notas.length > 0 && (
             <div className="view-item"><span className="view-label"><i className="fas fa-pen-to-square"></i> Notas Técnicas</span><ul className="view-list">{norma.notas.map((nota, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {nota}</li>))}</ul></div>
           )}
-          
+
           {norma.referencias && norma.referencias.length > 0 && (
             <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{norma.referencias.map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
           )}
@@ -615,16 +616,16 @@ export function ModalDetalhesNorma({
                     <i className="fas fa-file-pdf icon-pdf-red"></i><span className="attachment-pdf-name">{norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`}</span>
                   </button>
                 )}
-                
+
                 {norma.imagens && norma.imagens.length > 0 && (
-                    <div className="attachment-image-grid" style={{ marginTop: '10px' }}>
-                      {norma.imagens.map((urlImg, idxImg) => (
-                          <div key={idxImg} className="attachment-image-item" onClick={() => onViewImages(norma.imagens!, idxImg)}>
-                            <img src={urlImg} alt={`Anexo ${idxImg + 1}`} />
-                            <div className="image-hover-overlay"><i className="fas fa-magnifying-glass-plus"></i></div>
-                          </div>
-                      ))}
-                    </div>
+                  <div className="attachment-image-grid" style={{ marginTop: '10px' }}>
+                    {norma.imagens.map((urlImg, idxImg) => (
+                      <div key={idxImg} className="attachment-image-item" onClick={() => onViewImages(norma.imagens!, idxImg)}>
+                        <img src={urlImg} alt={`Anexo ${idxImg + 1}`} />
+                        <div className="image-hover-overlay"><i className="fas fa-magnifying-glass-plus"></i></div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </>
@@ -657,8 +658,8 @@ function NormaCardItem({
   onViewImages,
 }: {
   norma: Norma;
-  onEdit: (normaAtual: Norma) => void;
-  onDelete: (idParaDeletar: string) => void;
+  onEdit?: (normaAtual: Norma) => void;
+  onDelete?: (idParaDeletar: string) => void;
   onShowDetails: (normaAtual: Norma) => void;
   onViewPdf: (urlPdf: string, nomePdf: string) => void;
   onViewImages: (listaImagens: string[]) => void;
@@ -744,7 +745,7 @@ function NormaCardItem({
             <i className="fas fa-file-pdf"></i>
           </button>
         )}
-        
+
         {norma.imagens && norma.imagens.length > 0 && (
           <button
             className="btn btn-info btn-icon"
@@ -758,26 +759,31 @@ function NormaCardItem({
           </button>
         )}
 
-        <button
-          className="btn btn-warning btn-icon"
-          onClick={(eventoClique) => {
-            eventoClique.stopPropagation();
-            onEdit(norma);
-          }}
-          title="Editar"
-        >
-          <i className="fas fa-pen"></i>
-        </button>
-        <button
-          className="btn btn-danger btn-icon"
-          onClick={(eventoClique) => {
-            eventoClique.stopPropagation();
-            onDelete(norma.id);
-          }}
-          title="Excluir"
-        >
-          <i className="fas fa-trash"></i>
-        </button>
+        {onEdit && (
+          <button
+            className="btn btn-warning btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onEdit(norma);
+            }}
+            title="Editar"
+          >
+            <i className="fas fa-pen"></i>
+          </button>
+        )}
+        {onDelete && (
+          <button
+            className="btn btn-danger btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onDelete(norma.id);
+            }}
+            title="Excluir"
+          >
+            <i className="fas fa-trash"></i>
+          </button>
+        )}
+
       </div>
     </div>
   );
@@ -800,6 +806,9 @@ export default function Biblioteca() {
     return NORMAS_BASE;
   });
 
+  const usuario = obterUsuarioAtual()
+  const podeEditar = usuario?.perfil === 'administrador'
+
   useEffect(() => {
     localStorage.setItem("biblioteca_normas", JSON.stringify(normas));
   }, [normas]);
@@ -810,7 +819,7 @@ export default function Biblioteca() {
         eventoTeclado.preventDefault();
       }
     };
-    
+
     window.addEventListener('keydown', bloquearAtalhos);
     return () => window.removeEventListener('keydown', bloquearAtalhos);
   }, []);
@@ -865,7 +874,7 @@ export default function Biblioteca() {
     visivel: false,
     titulo: "",
     mensagem: "",
-    onConfirmar: () => {},
+    onConfirmar: () => { },
   });
   const pedirConfirmacao = (
     tituloAviso: string,
@@ -1036,7 +1045,7 @@ export default function Biblioteca() {
         stringBase64Pdf = await converterParaBase64(arquivoPdf);
         nomeArquivoPdf = arquivoPdf.name;
       }
-      
+
       let stringsBase64Imagens = form.imagens || [];
       if (arquivosImagens.length > 0) {
         const novasImagensBase64 = await Promise.all(
@@ -1056,11 +1065,11 @@ export default function Biblioteca() {
         ...form,
         notas: (form.notas || []).filter((notaAtual) => notaAtual.trim() !== ""),
         referencias: (form.referencias || []).filter(
-            (referenciaAtual) => referenciaAtual.trim() !== "",
-          ),
+          (referenciaAtual) => referenciaAtual.trim() !== "",
+        ),
         palavrasChave: (form.palavrasChave || []).filter(
-            (palavraAtual) => palavraAtual.trim() !== "",
-          ),
+          (palavraAtual) => palavraAtual.trim() !== "",
+        ),
         nomePdf: nomeArquivoPdf,
         urlPdf: stringBase64Pdf,
         imagens: stringsBase64Imagens,
@@ -1084,7 +1093,7 @@ export default function Biblioteca() {
         );
       }
       fecharModal();
-      
+
     } catch (erroDeProcessamento: unknown) {
       console.error(erroDeProcessamento);
       if (erroDeProcessamento instanceof Error && erroDeProcessamento.name === "QuotaExceededError") {
@@ -1128,9 +1137,11 @@ export default function Biblioteca() {
           <h1 className="page-title">
             <i className="fas fa-book-open"></i> Biblioteca de Normas
           </h1>
-          <button className="btn btn-primary" onClick={abrirModalCadastro}>
-            <i className="fas fa-circle-plus"></i> Nova Norma
-          </button>
+          {podeEditar && (
+            <button className="btn btn-primary" onClick={abrirModalCadastro}>
+              <i className="fas fa-circle-plus"></i> Nova Norma
+            </button>
+          )}
         </div>
 
         <div className="filtros-container">
@@ -1271,13 +1282,13 @@ export default function Biblioteca() {
             : `${normasFiltradas.length} de ${normas.length} norma${normas.length !== 1 ? "s" : ""}`}
         </p>
 
-      <div className="normas-lista">
+        <div className="normas-lista">
           {normasFiltradas.map((normaMapeada, indiceMapeado) => (
             <NormaCardItem
               key={indiceMapeado}
               norma={normaMapeada}
-              onEdit={abrirModalEdicao}
-              onDelete={handleDelete}
+              onEdit={podeEditar ? abrirModalEdicao : undefined}
+              onDelete={podeEditar ? handleDelete : undefined}
               onShowDetails={setNormaVisualizar}
               onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfAberto({ url: urlVisualizada, nome: nomePdfVisualizado })}
               onViewImages={(imagensParaVisualizar) => {
@@ -1285,6 +1296,7 @@ export default function Biblioteca() {
                 setIndiceImagemAberta(0);
               }}
             />
+
           ))}
           {normasFiltradas.length === 0 && (
             <div className="empty-state">
@@ -1520,7 +1532,7 @@ export default function Biblioteca() {
                       >
                         <option value="" disabled hidden>
                           {form.subcategoria &&
-                          ITENS_POR_SUBCATEGORIA[form.subcategoria]?.length > 0
+                            ITENS_POR_SUBCATEGORIA[form.subcategoria]?.length > 0
                             ? "Selecione um item"
                             : "Sem itens aplicáveis"}
                         </option>
@@ -1737,11 +1749,11 @@ export default function Biblioteca() {
                       </label>
                       {form.urlPdf && !arquivoPdf ? (
                         <div className="attachment-pdf">
-                           <i className="fas fa-file-pdf"></i>
-                           <span className="attachment-pdf-name">{form.nomePdf}</span>
-                           <button type="button" className="btn-remove-file" onClick={() => { updateForm('urlPdf', undefined); updateForm('nomePdf', undefined); }}>
-                             <i className="fas fa-trash"></i>
-                           </button>
+                          <i className="fas fa-file-pdf"></i>
+                          <span className="attachment-pdf-name">{form.nomePdf}</span>
+                          <button type="button" className="btn-remove-file" onClick={() => { updateForm('urlPdf', undefined); updateForm('nomePdf', undefined); }}>
+                            <i className="fas fa-trash"></i>
+                          </button>
                         </div>
                       ) : (
                         <label
@@ -1802,21 +1814,21 @@ export default function Biblioteca() {
                           onChange={handleImgChange}
                         />
                       </label>
-                      
+
                       {form.imagens && form.imagens.length > 0 && (
                         <div className="image-preview-list">
                           {form.imagens.map((urlImagemExistente, indiceImagemExistente) => (
-                             <div key={`existente-${indiceImagemExistente}`} className="image-preview-item">
-                               <img src={urlImagemExistente} alt="Preview" />
-                               <button type="button" className="btn-remove-preview" onClick={() => {
-                                  const novasImagensFormulario = [...form.imagens!];
-                                  novasImagensFormulario.splice(indiceImagemExistente, 1);
-                                  updateForm('imagens', novasImagensFormulario);
-                               }}>
-                                 <i className="fas fa-xmark"></i>
-                               </button>
-                             </div>
-                           ))}
+                            <div key={`existente-${indiceImagemExistente}`} className="image-preview-item">
+                              <img src={urlImagemExistente} alt="Preview" />
+                              <button type="button" className="btn-remove-preview" onClick={() => {
+                                const novasImagensFormulario = [...form.imagens!];
+                                novasImagensFormulario.splice(indiceImagemExistente, 1);
+                                updateForm('imagens', novasImagensFormulario);
+                              }}>
+                                <i className="fas fa-xmark"></i>
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       )}
 
@@ -1896,12 +1908,12 @@ export default function Biblioteca() {
 
         {normaVisualizar && (
 
-          <ModalDetalhesNorma 
-            norma={normaVisualizar} 
+          <ModalDetalhesNorma
+            norma={normaVisualizar}
             pecasRelacionadas={pecasRelacionadas}
-            onClose={() => setNormaVisualizar(null)} 
-            onEdit={abrirModalEdicao}
-            onDelete={handleDelete}
+            onClose={() => setNormaVisualizar(null)}
+            onEdit={podeEditar ? abrirModalEdicao : undefined}
+            onDelete={podeEditar ? handleDelete : undefined}
             onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfAberto({ url: urlVisualizada, nome: nomePdfVisualizado })}
             onViewImages={(imagensParaVisualizar, indice) => {
               setImagensAbertas(imagensParaVisualizar);

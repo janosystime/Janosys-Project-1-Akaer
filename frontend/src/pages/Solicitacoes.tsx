@@ -202,11 +202,12 @@ const atualizarStatus = (id: number, novoStatus: Solicitacao["status"], extras?:
   setSolicitacoes(prev => prev.map(s => s.id === id ? { ...s, status: novoStatus, ...extras } : s));
 };
 
+/* Atualiza status do card */
 const abrirModalAnalise = (s: Solicitacao) => {
   setSolicitacaoAnalise(s);
   setMotivoRecusa("");
   setConfirmacaoInsercao(false);
-  if (s.status === "Aguardando análise") {
+  if (isAdmin && s.status === "Aguardando análise") {
     atualizarStatus(s.id, "Em análise");
   }
 };
@@ -291,7 +292,9 @@ const solicitacoesFiltradas = solicitacoes
         {/* ── Lista de Solicitações ── */}
         <div className="normas-lista">
           {solicitacoesFiltradas.map((s) => (
-            <div key={s.id} className="norma-card solicitacao-card" onClick={() => isAdmin && abrirModalAnalise(s)} style={{ cursor: isAdmin ? "pointer" : "default" }}>
+            <div key={s.id} className="norma-card solicitacao-card"
+              onClick={() => (isAdmin || usuario?.perfil === 'engenheiro') && abrirModalAnalise(s)}
+              style={{ cursor: (isAdmin || usuario?.perfil === 'engenheiro') ? "pointer" : "default" }}>
               <div className="norma-card-body solicitacao-body">
                 
                 {/* Lado esquerdo — status, código e título */}
@@ -452,7 +455,7 @@ const solicitacoesFiltradas = solicitacoes
                   </div>
                 </div>
 
-                {solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
+                {isAdmin && solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
                   <>
                     <div className="view-item">
                       <label className={`checkbox-card ${confirmacaoInsercao ? "checked theme-cat-geral" : ""}`}>
@@ -494,7 +497,7 @@ const solicitacoesFiltradas = solicitacoes
                 <button type="button" className="btn btn-ghost" onClick={() => setSolicitacaoAnalise(null)}>
                   Fechar
                 </button>
-                {solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
+                {isAdmin && solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
                   <div className="modal-footer-actions">
                     <button
                       type="button"
