@@ -144,7 +144,7 @@ button.nav-item {
 .sidebar-usuario {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 17px;
   white-space: nowrap;
 }
@@ -171,9 +171,9 @@ button.nav-item {
 }
 
 .sidebar-avatar {
-  width: 26px;
+  width: 30px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
