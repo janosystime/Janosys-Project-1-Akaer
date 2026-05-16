@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import CampoEntrada from './CamposDeTexto';
 import Botao from './BotaoEntrar';
 import { salvarSessao } from '../../auth/session';
-import { CREDENCIAIS_MOCK, USUARIO_MOCK } from './Mocks';
+import { USUARIOS_MOCK } from './Mocks';
 
 function CartaoLogin() {
   const [usuario, setUsuario] = useState('');
@@ -11,17 +11,22 @@ function CartaoLogin() {
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
 
-  const aoEnviar = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErro('');
+const aoEnviar = (e: React.FormEvent) => {
+  e.preventDefault();
+  setErro('');
 
-    if (usuario === CREDENCIAIS_MOCK.email && senha === CREDENCIAIS_MOCK.senha) {
-      salvarSessao(USUARIO_MOCK);
-      navigate('/dashboard');
-    } else {
-      setErro('E-mail ou senha inválidos.');
-    }
-  };
+  const encontrado = USUARIOS_MOCK.find(
+    (u) => u.email === usuario && u.senha === senha
+  );
+
+  if (encontrado) {
+    salvarSessao({ nome: encontrado.nome, perfil: encontrado.perfil });
+    navigate('/home');
+  } else {
+    setErro('Login ou senha inválidos.');
+  }
+};
+
 
   return (
     <div className="cartao-login">
@@ -32,8 +37,8 @@ function CartaoLogin() {
         
         <CampoEntrada
           rotulo="LOGIN"
-          tipo="email"
-          placeholder="usuario@janosys.com.br"
+          tipo="text"
+          placeholder="admin, engenheiro ou operador"
           valor={usuario}
           aoAlterar={setUsuario}
           tamanhoMaximo={100}
