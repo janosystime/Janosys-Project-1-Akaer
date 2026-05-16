@@ -68,6 +68,14 @@ function RotaAdmin({ children }: { children: React.ReactNode }) {
 //     - /normas       → protegida por RotaProtegida
 //     - /usuarios         → protegida por RotaAdmin (só administrador)
 // ------------------------------------------------------------
+function RotaEngenheiro({ children }: { children: React.ReactNode }) {
+  const usuario = obterUsuarioAtual()
+  if (!usuario || usuario.perfil === 'operador') {
+    return <Navigate to="/home" />
+  }
+  return <>{children}</>
+}
+
 export default function App() {
   return (
     <Routes>
@@ -78,27 +86,14 @@ export default function App() {
       {/* Rota pai: Layout único compartilhado por todas as páginas internas.
           RotaProtegida garante que qualquer acesso exige login.
           O Layout monta uma única vez — o estado da Sidebar persiste entre rotas. */}
-      <Route
-        element={
-          <RotaProtegida>
-            <Layout />
-          </RotaProtegida>
-        }
-      >
+      <Route element={ <RotaProtegida> <Layout /> </RotaProtegida> } >
         <Route path="/home"  element={<Home />} />
         <Route path="/normas" element={<Normas />} />
-        <Route path="/solicitacoes"  element={<Solicitacoes />} />
+        <Route path="/solicitacoes"  element={<RotaEngenheiro> <Solicitacoes /> </RotaEngenheiro> }/>
 
         {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
             O Layout já está montado — só o <Outlet /> troca. */}
-        <Route
-          path="/usuarios"
-          element={
-            <RotaAdmin>
-              <Usuarios />
-            </RotaAdmin>
-          }
-        />
+        <Route path="/usuarios" element={ <RotaAdmin> <Usuarios /> </RotaAdmin> } />
       </Route>
 
       {/* Qualquer URL desconhecida vai para /home */}
