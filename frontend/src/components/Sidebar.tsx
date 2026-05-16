@@ -49,7 +49,7 @@ export default function Sidebar(props: PropsSidebar) {
   }
 
   const isAdmin = usuario.perfil === 'administrador'
-  const sigla   = isAdmin ? 'AD' : 'US'
+  const sigla = usuario.perfil === 'administrador' ? 'ADM' : usuario.perfil === 'engenheiro' ? 'ENG' : 'OPE'
 
   return (
     <>
