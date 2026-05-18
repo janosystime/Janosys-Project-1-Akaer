@@ -61,6 +61,7 @@ const SOLICITACOES_BASE: Solicitacao[] = [
     solicitante: "Ricardo Souza",
     data: "2026-03-18",
     status: "Indeferida",
+    motivoRecusa: "Norma já contemplada pela ISO 9227, disponível na biblioteca.",
   },
   {
     id: 7,
