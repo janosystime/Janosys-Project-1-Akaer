@@ -111,8 +111,9 @@
 
 .usuario-card-body {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.5rem;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.75rem;
+  align-items: center
 }
 
 .usuario-card-label {
