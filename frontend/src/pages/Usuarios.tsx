@@ -340,14 +340,11 @@ export default function Usuarios() {
             {usuariosFiltrados.map((u) => (
               <div key={u.id} className="usuario-card">
                 <div className="usuario-card-header">
-                  <div className="usuario-avatar-mini">{PERFIL_SIGLA[u.perfil]}</div>
-                  <div>
                     <div className="usuario-card-nome">{u.nome}</div>
                     <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
                       <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
                       {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
                     </span>
-                  </div>
                   <div className="td-acoes" style={{ marginLeft: "auto" }}>
                     <button className="btn btn-warning btn-icon" onClick={() => abrirModalEdicao(u)} title="Editar">
                       <i className="fas fa-pen"></i>
@@ -359,10 +356,10 @@ export default function Usuarios() {
                 </div>
                 <div className="usuario-card-body">
                   <span className="usuario-card-label"><i className="fas fa-at"></i> Login</span>
-                  <span className="usuario-card-label"><i className="fas fa-building"></i> Depto</span>
-                  <span className="usuario-card-label"><i className="fas fa-phone"></i> Tel</span>
                   <span className="usuario-card-value td-mono">{u.login}</span>
+                  <span className="usuario-card-label"><i className="fas fa-building"></i> Departamento</span>
                   <span className="usuario-card-value">{u.departamento || "—"}</span>
+                  <span className="usuario-card-label"><i className="fas fa-phone"></i> Telefone</span>
                   <span className="usuario-card-value">{u.telefone || "—"}</span>
                 </div>
               </div>
