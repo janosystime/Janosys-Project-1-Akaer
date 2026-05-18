@@ -66,6 +66,16 @@
   gap: 0.4rem;
 }
 
+.usuario-detalhe-card {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .usuario-avatar-mini {
   width: 40px;
   height: 30px;
@@ -78,6 +88,56 @@
   justify-content: center;
   font-size: 0.7rem;
   font-weight: 700;
+}
+
+/* ── Cards Mobile ── */
+.usuarios-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.usuario-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.usuario-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.usuario-card-nome {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--c-text-1);
+}
+
+.usuario-card-body {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.75rem;
+  align-items: center
+}
+
+.usuario-card-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.usuario-card-value {
+  font-size: 0.85rem;
+  color: var(--c-text-1);
+  margin-top: 2px;
 }
 
 .btn-sort {
@@ -98,6 +158,23 @@
 
 .btn-sort:hover {
   color: var(--c-primary);
+}
+
+.btn-sort-mobile {
+  align-self: flex-end;
+  font-size: 0.78rem;
+  color: var(--c-text-2);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  gap: 0.4rem;
+}
+
+.btn-sort-mobile:hover {
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary);
 }
 
 .view-grid-exclusao {

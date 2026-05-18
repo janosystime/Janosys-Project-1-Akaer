@@ -140,6 +140,7 @@ export default function Usuarios() {
   const [filtroPerfil, setFiltroPerfil] = useState("Todos");
   const [filtroDepartamento, setFiltroDepartamento] = useState("Todos");
   const [ordemAsc, setOrdemAsc] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   // Modal de cadastro/edição
   const [modalAberto, setModalAberto] = useState(false);
@@ -154,6 +155,12 @@ export default function Usuarios() {
   useEffect(() => {
     salvarUsuarios(usuarios);
   }, [usuarios]);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   // ── Toast ──
   const adicionarToast = useCallback((tipo: ToastMsg["tipo"], mensagem: string) => {
@@ -323,77 +330,113 @@ export default function Usuarios() {
             : `${usuariosFiltrados.length} de ${usuarios.length} usuários`}
         </p>
 
-        {/* ── Tabela ── */}
-        <div className="tabela-container">
-          <table className="tabela-usuarios">
-            <thead>
-              <tr>
-                {/* Reordena nome por ordem/inverso */}
-                <th>
-                  <button className="btn-sort" onClick={() => setOrdemAsc((v) => !v)} title="Ordenar por nome">
-                    <i className="fas fa-user"></i> Nome
-                    <i className="fas fa-right-left" style={{ marginLeft: 6, fontSize: "0.8rem", transform: "rotate(90deg)" }}></i>
-                  </button>
-                </th>                
-                <th><i className="fas fa-at"></i> Login</th>
-                <th><i className="fas fa-shield-halved"></i> Perfil</th>
-                <th><i className="fas fa-building"></i> Departamento</th>
-                <th><i className="fas fa-phone"></i> Telefone</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuariosFiltrados.map((u) => (
-                <tr key={u.id}>
-                  <td>
-                    <div className="td-nome">
-                      <div className="usuario-avatar-mini">{PERFIL_SIGLA[u.perfil]}</div>
-                      {u.nome}
-                    </div>
-                  </td>
-                  <td className="td-mono">{u.login}</td>
-                  <td>
-                    <span className={PERFIL_ESTILO[u.perfil]}>
+        {/* ── Tabela / Cards ── */}
+        {isMobile ? (
+          <div className="usuarios-cards">
+            <button className="btn-sort btn-sort-mobile" onClick={() => setOrdemAsc((v) => !v)}>
+              <i className="fas fa-right-left" style={{ transform: "rotate(90deg)" }}></i>
+              {ordemAsc ? "A → Z" : "Z → A"}
+            </button>
+            {usuariosFiltrados.map((u) => (
+              <div key={u.id} className="usuario-card">
+                <div className="usuario-card-header">
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                    <div className="usuario-card-nome">{u.nome}</div>
+                    <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
                       <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
                       {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
                     </span>
-                  </td>
-                  <td>{u.departamento || "—"}</td>
-                  <td>{u.telefone || "—"}</td>
-                  <td>
-                    <div className="td-acoes">
-                      <button
-                        className="btn btn-warning btn-icon"
-                        onClick={() => abrirModalEdicao(u)}
-                        title="Editar"
-                      >
+                  </div>
+                </div>
+                <div className="usuario-card-body">
+                  <span className="usuario-card-label"><i className="fas fa-at"></i> Login</span>
+                  <span className="usuario-card-value td-mono">{u.login}</span>
+                  <span className="usuario-card-label"><i className="fas fa-building"></i> Departamento</span>
+                  <span className="usuario-card-value">{u.departamento || "—"}</span>
+                  <span className="usuario-card-label"><i className="fas fa-phone"></i> Telefone</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span className="usuario-card-value">{u.telefone || "—"}</span>
+                    <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <button className="btn btn-warning btn-icon" onClick={() => abrirModalEdicao(u)} title="Editar">
                         <i className="fas fa-pen"></i>
                       </button>
-                      <button
-                        className="btn btn-danger btn-icon"
-                        onClick={() => setUsuarioExcluindo(u)}
-                        title="Excluir"
-                      >
+                      <button className="btn btn-danger btn-icon" onClick={() => setUsuarioExcluindo(u)} title="Excluir">
                         <i className="fas fa-trash"></i>
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-
-              {usuariosFiltrados.length === 0 && (
+                  </div>
+                </div>
+              </div>
+            ))}
+            {usuariosFiltrados.length === 0 && (
+              <div className="empty-state compact">
+                <i className="fas fa-users-slash"></i>
+                <p>Nenhum usuário encontrado.</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="tabela-container">
+            <table className="tabela-usuarios">
+              <thead>
                 <tr>
-                  <td colSpan={6}>
-                    <div className="empty-state compact">
-                      <i className="fas fa-users-slash"></i>
-                      <p>Nenhum usuário encontrado.</p>
-                    </div>
-                  </td>
+                  <th>
+                    <button className="btn-sort" onClick={() => setOrdemAsc((v) => !v)} title="Ordenar por nome">
+                      <i className="fas fa-user"></i> Nome
+                      <i className="fas fa-right-left" style={{ marginLeft: 6, fontSize: "0.8rem", transform: "rotate(90deg)" }}></i>
+                    </button>
+                  </th>
+                  <th><i className="fas fa-at"></i> Login</th>
+                  <th><i className="fas fa-shield-halved"></i> Perfil</th>
+                  <th><i className="fas fa-building"></i> Departamento</th>
+                  <th><i className="fas fa-phone"></i> Telefone</th>
+                  <th>Ações</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {usuariosFiltrados.map((u) => (
+                  <tr key={u.id}>
+                    <td>
+                      <div className="td-nome">
+                        <div className="usuario-avatar-mini">{PERFIL_SIGLA[u.perfil]}</div>
+                        {u.nome}
+                      </div>
+                    </td>
+                    <td className="td-mono">{u.login}</td>
+                    <td>
+                      <span className={PERFIL_ESTILO[u.perfil]}>
+                        <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
+                        {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
+                      </span>
+                    </td>
+                    <td>{u.departamento || "—"}</td>
+                    <td>{u.telefone || "—"}</td>
+                    <td>
+                      <div className="td-acoes">
+                        <button className="btn btn-warning btn-icon" onClick={() => abrirModalEdicao(u)} title="Editar">
+                          <i className="fas fa-pen"></i>
+                        </button>
+                        <button className="btn btn-danger btn-icon" onClick={() => setUsuarioExcluindo(u)} title="Excluir">
+                          <i className="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {usuariosFiltrados.length === 0 && (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="empty-state compact">
+                        <i className="fas fa-users-slash"></i>
+                        <p>Nenhum usuário encontrado.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* ── Modal: Cadastro / Edição ── */}
         {modalAberto && (
