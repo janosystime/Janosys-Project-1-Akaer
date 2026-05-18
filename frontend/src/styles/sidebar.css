@@ -144,7 +144,7 @@ button.nav-item {
 .sidebar-usuario {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 17px;
   white-space: nowrap;
 }
@@ -171,9 +171,9 @@ button.nav-item {
 }
 
 .sidebar-avatar {
-  width: 26px;
+  width: 30px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
@@ -251,7 +251,7 @@ button.nav-item {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 260px !important; 
+    width: 260px; 
     transform: translateX(-100%); 
     transition: transform 0.3s ease-in-out;
     z-index: 999;
@@ -273,26 +273,26 @@ button.nav-item {
   }
 
   .sidebar-toggle {
-    justify-content: flex-end !important;
-    padding: 15px 17px !important;
+    justify-content: flex-end;
+    padding: 15px 17px;
   }
 
   .sidebar .nav-label,
   .sidebar .nav-secao-label,
   .sidebar .sidebar-usuario-nome {
-    opacity: 1 !important;
-    width: auto !important;
-    overflow: visible !important;
+    opacity: 1;
+    width: auto;
+    overflow: visible;
   }
 
   .sidebar .nav-item {
-    justify-content: flex-start !important;
-    padding: 13px 17px !important;
-    gap: 12px !important;
+    justify-content: flex-start;
+    padding: 13px 17px;
+    gap: 12px;
   }
 
   .sidebar .sidebar-usuario {
-    justify-content: flex-start !important;
-    padding: 8px 17px !important;
+    justify-content: flex-start;
+    padding: 8px 17px;
   }
 }
