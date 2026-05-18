@@ -339,7 +339,7 @@ export default function Usuarios() {
             </button>
             {usuariosFiltrados.map((u) => (
               <div key={u.id} className="usuario-card">
-                <div className="usuario-card-header">
+                <div className="usuario-card-header">                  
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                     <div className="usuario-card-nome">{u.nome}</div>
                     <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
