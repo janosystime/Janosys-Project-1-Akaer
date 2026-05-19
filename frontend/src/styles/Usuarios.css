@@ -66,6 +66,16 @@
   gap: 0.4rem;
 }
 
+.usuario-detalhe-card {
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
 .usuario-avatar-mini {
   width: 40px;
   height: 30px;

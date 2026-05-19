@@ -339,19 +339,13 @@ export default function Usuarios() {
             </button>
             {usuariosFiltrados.map((u) => (
               <div key={u.id} className="usuario-card">
-                <div className="usuario-card-header">
+                <div className="usuario-card-header">                  
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                     <div className="usuario-card-nome">{u.nome}</div>
                     <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
                       <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
                       {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
                     </span>
-                  <div className="td-acoes" style={{ marginLeft: "auto" }}>
-                    <button className="btn btn-warning btn-icon" onClick={() => abrirModalEdicao(u)} title="Editar">
-                      <i className="fas fa-pen"></i>
-                    </button>
-                    <button className="btn btn-danger btn-icon" onClick={() => setUsuarioExcluindo(u)} title="Excluir">
-                      <i className="fas fa-trash"></i>
-                    </button>
                   </div>
                 </div>
                 <div className="usuario-card-body">
@@ -360,7 +354,17 @@ export default function Usuarios() {
                   <span className="usuario-card-label"><i className="fas fa-building"></i> Departamento</span>
                   <span className="usuario-card-value">{u.departamento || "—"}</span>
                   <span className="usuario-card-label"><i className="fas fa-phone"></i> Telefone</span>
-                  <span className="usuario-card-value">{u.telefone || "—"}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span className="usuario-card-value">{u.telefone || "—"}</span>
+                    <div style={{ display: "flex", gap: "0.4rem" }}>
+                      <button className="btn btn-warning btn-icon" onClick={() => abrirModalEdicao(u)} title="Editar">
+                        <i className="fas fa-pen"></i>
+                      </button>
+                      <button className="btn btn-danger btn-icon" onClick={() => setUsuarioExcluindo(u)} title="Excluir">
+                        <i className="fas fa-trash"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
