@@ -118,6 +118,12 @@ const PERFIL_SIGLA: Record<PerfilUsuario, string> = {
   operador: "OPE",
 };
 
+const PERFIL_LABEL: Record<PerfilUsuario, string> = {
+  administrador: "ADM",
+  engenheiro: "ENG",
+  operador: "OPE",
+};
+
 // ============================================
 // SIGNA — Formulário vazio
 // ============================================
@@ -344,7 +350,7 @@ export default function Usuarios() {
                   <div className="usuario-card-nome">{u.nome}</div>
                   <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
                     <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
-                    {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
+                    {PERFIL_LABEL[u.perfil]}
                   </span>
                 </div>
                 <div className="usuario-card-body">
@@ -603,12 +609,14 @@ export default function Usuarios() {
         {usuarioSelecionado && (
           <div className="modal-overlay" onClick={() => setUsuarioSelecionado(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <i className="fas fa-user"></i>
-                  <span style={{ fontWeight: 700 }}>{usuarioSelecionado.nome}</span>
+              <div className="modal-header" style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0, flex: 1 }}>
+                  <i className="fas fa-user" style={{ flexShrink: 0 }}></i>
+                  <span style={{ fontWeight: 700, fontSize: "0.9rem"}}>
+                    {usuarioSelecionado.nome}
+                  </span>
                 </div>
-                <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexShrink: 0 }}>
                   <button className="btn btn-warning btn-icon" onClick={() => { abrirModalEdicao(usuarioSelecionado); setUsuarioSelecionado(null); }} title="Editar">
                     <i className="fas fa-pen"></i>
                   </button>
@@ -626,11 +634,11 @@ export default function Usuarios() {
                     <span className="view-label"><i className="fas fa-at"></i> Login</span>
                     <span className="view-value td-mono">{usuarioSelecionado.login}</span>
                   </div>
-                  <div className="usuario-detalhe-card">
+                  <div className="usuario-detalhe-card" style={{ alignItems: "flex-start" }}>
                     <span className="view-label"><i className="fas fa-shield-halved"></i> Perfil</span>
-                    <span className={PERFIL_ESTILO[usuarioSelecionado.perfil]} style={{ fontSize: "0.75rem", marginTop: "4px" }}>
+                    <span className={PERFIL_ESTILO[usuarioSelecionado.perfil]} style={{ fontSize: "0.75rem", marginTop: "4px", alignSelf: "flex-start" }}>
                       <i className={`fas ${PERFIL_ICONE[usuarioSelecionado.perfil]} badge-icon`}></i>
-                      {usuarioSelecionado.perfil.charAt(0).toUpperCase() + usuarioSelecionado.perfil.slice(1)}
+                      {PERFIL_LABEL[usuarioSelecionado.perfil]}
                     </span>
                   </div>
                   <div className="usuario-detalhe-card">
