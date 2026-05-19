@@ -60,7 +60,17 @@ export default function Layout() {
           </main>
 
           <footer className="rodape">
-            Desenvolvido por: <strong>JanoSys Technologies</strong>
+            Desenvolvido por:{" "}
+            <strong>
+              <a
+                href="https://github.com/janosystime"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "inherit", textDecoration: "none", cursor: "pointer" }}
+              >
+                JanoSys Technologies
+              </a>
+            </strong>
           </footer>
         </div>
       </div>
