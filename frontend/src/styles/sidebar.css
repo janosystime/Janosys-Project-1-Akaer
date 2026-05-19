@@ -250,11 +250,12 @@ button.nav-item {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
-    width: 260px !important; 
+    width: 260px; 
     transform: translateX(-100%); 
     transition: transform 0.3s ease-in-out;
     z-index: 999;
+    height: 100svh !important;
+    padding-bottom: env(safe-area-inset-bottom, 20px)
   }
 
   .sidebar.mobile-aberto {
@@ -273,26 +274,31 @@ button.nav-item {
   }
 
   .sidebar-toggle {
-    justify-content: flex-end !important;
-    padding: 15px 17px !important;
+    justify-content: flex-end;
+    padding: 15px 17px;
   }
 
   .sidebar .nav-label,
   .sidebar .nav-secao-label,
   .sidebar .sidebar-usuario-nome {
-    opacity: 1 !important;
-    width: auto !important;
-    overflow: visible !important;
+    opacity: 1;
+    width: auto;
+    overflow: visible;
   }
 
   .sidebar .nav-item {
-    justify-content: flex-start !important;
-    padding: 13px 17px !important;
-    gap: 12px !important;
+    justify-content: flex-start;
+    padding: 13px 17px;
+    gap: 12px;
   }
 
   .sidebar .sidebar-usuario {
-    justify-content: flex-start !important;
-    padding: 8px 17px !important;
+    justify-content: flex-start;
+    padding: 8px 17px;
+  }
+
+  .sidebar-rodape {
+    flex: 0 0 auto;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
 }
