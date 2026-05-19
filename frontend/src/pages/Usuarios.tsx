@@ -141,6 +141,7 @@ export default function Usuarios() {
   const [filtroDepartamento, setFiltroDepartamento] = useState("Todos");
   const [ordemAsc, setOrdemAsc] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<Usuario | null>(null);
 
   // Modal de cadastro/edição
   const [modalAberto, setModalAberto] = useState(false);
@@ -338,15 +339,13 @@ export default function Usuarios() {
               {ordemAsc ? "A → Z" : "Z → A"}
             </button>
             {usuariosFiltrados.map((u) => (
-              <div key={u.id} className="usuario-card">
-                <div className="usuario-card-header">
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                    <div className="usuario-card-nome">{u.nome}</div>
-                    <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
-                      <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
-                      {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
-                    </span>
-                  </div>
+              <div key={u.id} className="usuario-card" onClick={() => setUsuarioSelecionado(u)} style={{ cursor: "pointer" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div className="usuario-card-nome">{u.nome}</div>
+                  <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
+                    <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
+                    {u.perfil.charAt(0).toUpperCase() + u.perfil.slice(1)}
+                  </span>
                 </div>
                 <div className="usuario-card-body">
                   <span className="usuario-card-label"><i className="fas fa-at"></i> Login</span>
@@ -354,17 +353,7 @@ export default function Usuarios() {
                   <span className="usuario-card-label"><i className="fas fa-building"></i> Departamento</span>
                   <span className="usuario-card-value">{u.departamento || "—"}</span>
                   <span className="usuario-card-label"><i className="fas fa-phone"></i> Telefone</span>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span className="usuario-card-value">{u.telefone || "—"}</span>
-                    <div style={{ display: "flex", gap: "0.4rem" }}>
-                      <button className="btn btn-warning btn-icon" onClick={() => abrirModalEdicao(u)} title="Editar">
-                        <i className="fas fa-pen"></i>
-                      </button>
-                      <button className="btn btn-danger btn-icon" onClick={() => setUsuarioExcluindo(u)} title="Excluir">
-                        <i className="fas fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
+                  <span className="usuario-card-value">{u.telefone || "—"}</span>
                 </div>
               </div>
             ))}
@@ -604,6 +593,60 @@ export default function Usuarios() {
                 </button>
                 <button type="button" className="btn btn-danger-solid" onClick={handleExcluir}>
                   <i className="fas fa-trash"></i> Confirmar Exclusão
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Modal: Detalhes Mobile ── */}
+        {usuarioSelecionado && (
+          <div className="modal-overlay" onClick={() => setUsuarioSelecionado(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <i className="fas fa-user"></i>
+                  <span style={{ fontWeight: 700 }}>{usuarioSelecionado.nome}</span>
+                </div>
+                <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                  <button className="btn btn-warning btn-icon" onClick={() => { abrirModalEdicao(usuarioSelecionado); setUsuarioSelecionado(null); }} title="Editar">
+                    <i className="fas fa-pen"></i>
+                  </button>
+                  <button className="btn btn-danger btn-icon" onClick={() => { setUsuarioExcluindo(usuarioSelecionado); setUsuarioSelecionado(null); }} title="Excluir">
+                    <i className="fas fa-trash"></i>
+                  </button>
+                  <button type="button" className="btn-close" onClick={() => setUsuarioSelecionado(null)}>
+                    <i className="fas fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="view-details">
+                <div className="view-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                  <div className="usuario-detalhe-card">
+                    <span className="view-label"><i className="fas fa-at"></i> Login</span>
+                    <span className="view-value td-mono">{usuarioSelecionado.login}</span>
+                  </div>
+                  <div className="usuario-detalhe-card">
+                    <span className="view-label"><i className="fas fa-shield-halved"></i> Perfil</span>
+                    <span className={PERFIL_ESTILO[usuarioSelecionado.perfil]} style={{ fontSize: "0.75rem", marginTop: "4px" }}>
+                      <i className={`fas ${PERFIL_ICONE[usuarioSelecionado.perfil]} badge-icon`}></i>
+                      {usuarioSelecionado.perfil.charAt(0).toUpperCase() + usuarioSelecionado.perfil.slice(1)}
+                    </span>
+                  </div>
+                  <div className="usuario-detalhe-card">
+                    <span className="view-label"><i className="fas fa-building"></i> Departamento</span>
+                    <span className="view-value">{usuarioSelecionado.departamento || "—"}</span>
+                  </div>
+                  <div className="usuario-detalhe-card">
+                    <span className="view-label"><i className="fas fa-phone"></i> Telefone</span>
+                    <span className="view-value">{usuarioSelecionado.telefone || "—"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <div></div>
+                <button type="button" className="btn btn-ghost" onClick={() => setUsuarioSelecionado(null)}>
+                  Fechar
                 </button>
               </div>
             </div>
