@@ -1,3 +1,11 @@
+// - componentes/UI foi pro src/components/Normas/
+// - dados mockados foi pra src/components/Normas/mocks.ts
+// - estruturas de dados/enum foi pra src/components/Normas/NormasViewModel.ts
+// - lógica de estado foi pra src/hooks/useNormas.ts
+// - funções auxiliares foram pra src/utils/NormasUtils.tsx
+//
+// ** agora a página apenas exibe componentes e classes já prontos **
+// ** não construa nada nem guarde lógica nesse arquivo (componentes, lógica de estado ou funçoes auxiliares), ele apenas deve apenas organizar e exibir coisas já prontas para o usuário final **
 
 import "../components/Sidebar";
 import "../styles/Normas.css";
