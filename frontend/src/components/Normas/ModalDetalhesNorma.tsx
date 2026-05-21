@@ -1,4 +1,4 @@
-import type { Peca } from "../../helpers/pecas";
+import type { Peca } from "../../utils/pecas";
 import type { Norma } from "./NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "./NormasViewModel";
 

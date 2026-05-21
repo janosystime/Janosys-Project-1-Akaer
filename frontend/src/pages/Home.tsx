@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "../styles/Normas.css";
 import "../styles/Home.css";
-import { salvarPecas, carregarPecas, type Peca } from "../helpers/pecas";
+import { salvarPecas, carregarPecas, type Peca } from "../utils/pecas";
 import { obterUsuarioAtual } from '../auth/session'
 
 import type { Norma } from "../components/Normas/NormasViewModel";
