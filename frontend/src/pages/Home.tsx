@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from "react";
 import "../styles/Normas.css";
 import "../styles/Home.css";
-import { salvarPecas, carregarPecas, type Peca } from "../helpers/pecas";
+import { salvarPecas, carregarPecas, type Peca } from "../utils/pecas";
 import { obterUsuarioAtual } from '../auth/session'
 
-import {
-  type Norma,
-  NORMAS_BASE,
-  ORG_ORIGENS,
-  CAT_ICONES,
-  PdfViewer,
-  ModalConfirmacao,
-  ImageLightbox,
-  ModalDetalhesNorma
-} from "./Normas";
+import type { Norma } from "../components/Normas/NormasViewModel";
+import { CAT_ICONES, ORG_ORIGENS } from "../components/Normas/NormasViewModel";
+import { NORMAS_BASE } from "../components/Normas/mocks";
+import VisualizadorPdf from "../components/Normas/VisualizadorPdf";
+import ModalConfirmacao from "../components/Normas/ModalConfirmacao";
+import LightboxImagens from "../components/Normas/LightboxImagens";
+import ModalDetalhesNorma from "../components/Normas/ModalDetalhesNorma";
 
 type CategoriaRaiz = "Peça" | "Conjunto" | "Instalação" | "Geral";
 
@@ -254,10 +251,10 @@ export default function Home() {
           )}
         </div>
 
-        {pdfVisualizar && <PdfViewer url={pdfVisualizar.url} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
+        {pdfVisualizar && <VisualizadorPdf url={pdfVisualizar.url} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
 
         {indiceImagemAberta !== null && imagensAbertas && (
-          <ImageLightbox imagens={imagensAbertas} indiceInicial={indiceImagemAberta} onClose={() => { setIndiceImagemAberta(null); setImagensAbertas(null); }} />
+          <LightboxImagens imagens={imagensAbertas} indiceInicial={indiceImagemAberta} onClose={() => { setIndiceImagemAberta(null); setImagensAbertas(null); }} />
         )}
 
         {subcategoriaExcluindo && (
