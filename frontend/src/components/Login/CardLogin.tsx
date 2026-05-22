@@ -38,7 +38,7 @@ const aoEnviar = (e: React.FormEvent) => {
         <CampoEntrada
           rotulo="LOGIN"
           tipo="text"
-          placeholder="admin, engenheiro ou operador"
+          placeholder="admin, checker ou usuario"
           valor={usuario}
           aoAlterar={setUsuario}
           tamanhoMaximo={100}

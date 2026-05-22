@@ -10,7 +10,7 @@ import "../styles/Usuarios.css";
 // ============================================
 // SIGNA — Tipos e Interface de Usuário
 // ============================================
-export type PerfilUsuario = "administrador" | "engenheiro" | "operador";
+export type PerfilUsuario = "administrador" | "usuario" | "checker";
 
 export interface Usuario {
   id: number;
@@ -43,20 +43,20 @@ const USUARIOS_INICIAIS: Usuario[] = [
   },
   {
     id: 2,
-    nome: "Engenheiro Janosys",
-    login: "engenheiro",
+    nome: "Usuario Janosys",
+    login: "usuario",
     senha: "123",
-    perfil: "engenheiro",
+    perfil: "usuario",
     telefone: "(12) 99999-0002",
     departamento: "Engenharia",
     dataCriacao: "2026-01-02",
   },
   {
     id: 3,
-    nome: "Operador Janosys",
-    login: "operador",
+    nome: "Checker Janosys",
+    login: "checker",
     senha: "123",
-    perfil: "operador",
+    perfil: "checker",
     telefone: "(12) 99999-0003",
     departamento: "Operações",
     dataCriacao: "2026-01-03",
@@ -102,26 +102,26 @@ function ToastContainer({ toasts, onRemover }: { toasts: ToastMsg[]; onRemover: 
 // ============================================
 const PERFIL_ESTILO: Record<PerfilUsuario, string> = {
   administrador: "badge theme-cat-instalação",
-  engenheiro:    "badge theme-cat-conjunto",
-  operador:      "badge theme-subcategoria",
+  usuario:    "badge theme-cat-conjunto",
+  checker:      "badge theme-subcategoria",
 };
 
 const PERFIL_ICONE: Record<PerfilUsuario, string> = {
   administrador: "fa-shield-halved",
-  engenheiro:    "fa-helmet-safety",
-  operador:      "fa-user",
+  usuario:    "fa-helmet-safety",
+  checker:      "fa-user",
 };
 
 const PERFIL_SIGLA: Record<PerfilUsuario, string> = {
   administrador: "ADM",
-  engenheiro: "ENG",
-  operador: "OPE",
+  usuario: "USU",
+  checker: "CHK",
 };
 
 const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   administrador: "ADM",
-  engenheiro: "ENG",
-  operador: "OPE",
+  usuario: "USU",
+  checker: "CHK",
 };
 
 // ============================================
@@ -131,7 +131,7 @@ const FORM_VAZIO = {
   nome: "",
   login: "",
   senha: "",
-  perfil: "engenheiro" as PerfilUsuario,
+  perfil: "usuario" as PerfilUsuario,
   telefone: "",
   departamento: "",
 };
@@ -306,7 +306,7 @@ export default function Usuarios() {
           </div>
           <div className="filter-badges-row">
             <span className="filter-label"><i className="fas fa-shield-halved"></i> Perfil:</span>
-            {["Todos", "administrador", "engenheiro", "operador"].map((p) => (
+            {["Todos", "administrador", "usuario", "checker"].map((p) => (
               <button
                 key={p}
                 className={`filter-badge ${filtroPerfil === p ? "active theme-all" : ""}`}
@@ -515,8 +515,8 @@ export default function Usuarios() {
                       onChange={(e) => setForm((f) => ({ ...f, perfil: e.target.value as PerfilUsuario }))}
                     >
                       <option value="administrador">Administrador</option>
-                      <option value="engenheiro">Engenheiro</option>
-                      <option value="operador">Operador</option>
+                      <option value="usuario">Usuario</option>
+                      <option value="checker">Checker</option>
                     </select>
                   </div>
                 </div>
