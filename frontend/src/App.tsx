@@ -68,10 +68,10 @@ function RotaAdmin({ children }: { children: React.ReactNode }) {
 //     - /normas       → protegida por RotaProtegida
 //     - /usuarios         → protegida por RotaAdmin (só administrador)
 // ------------------------------------------------------------
-function RotaEngenheiro({ children }: { children: React.ReactNode }) {
+function RotaUsuario({ children }: { children: React.ReactNode }) {
   const usuario = obterUsuarioAtual()
-  if (!usuario || usuario.perfil === 'operador') {
-    return <Navigate to="/home" />
+  if (!usuario ) {
+    return <Navigate to="/login" />
   }
   return <>{children}</>
 }
@@ -89,7 +89,7 @@ export default function App() {
       <Route element={ <RotaProtegida> <Layout /> </RotaProtegida> } >
         <Route path="/home"  element={<Home />} />
         <Route path="/normas" element={<Normas />} />
-        <Route path="/solicitacoes"  element={<RotaEngenheiro> <Solicitacoes /> </RotaEngenheiro> }/>
+        <Route path="/solicitacoes"  element={<RotaUsuario> <Solicitacoes /> </RotaUsuario> }/>
 
         {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
             O Layout já está montado — só o <Outlet /> troca. */}

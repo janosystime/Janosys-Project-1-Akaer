@@ -807,7 +807,7 @@ export default function Biblioteca() {
   });
 
   const usuario = obterUsuarioAtual()
-  const podeEditar = usuario?.perfil === 'administrador'
+  const podeEditar = usuario?.perfil === 'administrador' || usuario?.perfil === 'checker'
 
   useEffect(() => {
     localStorage.setItem("biblioteca_normas", JSON.stringify(normas));
