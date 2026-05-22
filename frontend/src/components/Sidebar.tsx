@@ -49,7 +49,7 @@ export default function Sidebar(props: PropsSidebar) {
   }
 
   const isAdmin = usuario.perfil === 'administrador'
-  const sigla = usuario.perfil === 'administrador' ? 'ADM' : usuario.perfil === 'engenheiro' ? 'ENG' : 'OPE'
+  const sigla = usuario.perfil === 'administrador' ? 'ADM' : usuario.perfil === 'checker' ? 'CHK' : 'USR'
 
   return (
     <>
@@ -110,12 +110,10 @@ export default function Sidebar(props: PropsSidebar) {
             <span className="nav-label">Normas</span>
           </NavLink>
 
-          {usuario.perfil !== 'operador' && (
           <NavLink to="/solicitacoes" className="nav-item" onClick={fecharMenuMobile}>
             <ClipboardList size={20} />
             <span className="nav-label">Solicitações</span>
           </NavLink>
-          )}
 
           {isAdmin && (
             <>
