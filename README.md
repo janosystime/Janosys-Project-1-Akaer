@@ -114,10 +114,18 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 | 7 | Filtro de Normas por Categoria Pública ou Privada | ALTA | Como engenheiro, quero filtrar normas por categoria (pública ou privada), para melhor organização. | 5 | 2 |
 | 8 | Gestão de Peças no Sistema | ALTA | Como administrador, quero gerenciar peças no sistema para melhor organização. | 8 | 2 |
 | 9 | Visualização de Peças por Normas | MÉDIA | Como engenheiro, quero visualizar peças relacionadas a uma norma. | 6 | 2 |
-| 10 | Histórico de Alterações de Normas | MÉDIA | Como administrador, quero registrar alterações feitas nas normas e quem as alterou, para melhor controle das mesmas. | 7 | 3 |
-| 11 | Visualização do Histórico de Alterações | MÉDIA | Como administrador, quero visualizar o histórico de alterações de uma norma para uma melhor gestão. | 7 | 3 |
-| 12 | Controle de Acesso por Níveis de Usuário | MÉDIA | Como administrador, desejo que o sistema possua diferentes níveis de usuário que permitam visualização e alteração de normas e notas, para um melhor controle de acesso. | 5 | 3 |
-| 13 | Gestão de Usuários | MÉDIA | Como administrador, quero gerenciar usuários para acesso e controle do sistema. | 6 | 3 |
+| 10 | Solicitação de Novas Normas | ALTA | Como operador, quero solicitar novas normas para manter o sistema atualizado. | 8 | 2 |
+| 11 | Aprovação e Reprovação de Normas | ALTA | Como Checker, quero aprovar ou reprovar sugestões de normas para manter o sistema confiável. | 8 | 2 |
+| 12 | Edição de Normas Cadastradas | ALTA | Como administrador, quero editar normas cadastradas para manter o sistema atualizado. | 8 | 2 |
+| 13 | Controle de Acesso por Níveis de Usuário | ALTA | Como administrador, quero definir níveis de acesso para garantir segurança e permissões adequadas a cada perfil. | 8 | 3 |
+| 14 | Autenticação Reforçada por Perfil | ALTA | Como administrador, quero uma autenticação mais robusta para proteger o acesso conforme a responsabilidade. | 7 | 3 |
+| 15 | Favoritar Normas Cadastradas | MÉDIA | Como engenheiro, quero favoritar normas para acessar rapidamente os conteúdos que utilizo com frequência. | 7 | 3 |
+| 16 | Registro de Histórico de Alterações | ALTA | Como administrador, quero registrar as alterações feitas nas normas e quem as alterou, para manter a rastreabilidade do sistema. | 8 | 3 |
+| 17 | Visualização do Histórico de Alterações | MÉDIA | Como Checker, quero visualizar o histórico de alterações de uma norma para auditar modificações com transparência. | 6 | 3 |
+| 18 | Gestão de Permissões por Administrador | ALTA | Como administrador, quero gerenciar as permissões dos usuários para controlar o que cada perfil pode acessar. | 8 | 3 |
+| 19 | Auditoria de Modificações por Checker | ALTA | Como Checker, quero auditar as modificações realizadas para garantir a confiabilidade das informações. | 8 | 3 |
+| 20 | Configuração de Acesso Rápido (Favoritos) | ALTA | Como engenheiro, quero organizar meus favoritos para otimizar o acesso individual às normas. | 8 | 3 |
+| 21 | Gestão de Usuários | MÉDIA | Como administrador, quero gerenciar usuários para acesso e controle do sistema. | 6 | 3 |
 ---
 
 # Registro das Sprints <a id="sprints"></a>
@@ -125,8 +133,8 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 |      Sprint       |  Previsão  |    Status    |     Histórico     |
 | :---------------: | :--------: | :----------: | :---------------: |
 |        01         | 05/04/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp1.md) |
-|        02         | 03/05/2026 |  Em construção  | [Sprint Backlog - MVP](MVP/sp2.md) |
-|        03         | 31/05/2026 |  Em construção  | ---- |
+|        02         | 03/05/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp2.md) |
+|        03         | 31/05/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp3.md) |
 | Feira de Soluções | 11/06/2026 |  Em construção  | ---- |
 
 ---
