@@ -29,6 +29,8 @@ const adapter = new PrismaMariaDb({
   password,
   database,
   connectionLimit: 10,
+}, {
+  useTextProtocol: true
 });
 
 const prisma = new PrismaClient({ adapter });
