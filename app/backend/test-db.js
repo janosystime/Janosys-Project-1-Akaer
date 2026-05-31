@@ -35,12 +35,10 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Testing query...');
   try {
-    const normas = await prisma.norma.findMany({
-      include: { pecas: true }
-    });
-    console.log('Normas query success:', normas);
+    const solicitacoes = await prisma.solicitacao.findMany();
+    console.log('Solicitacoes in DB:', solicitacoes.map(s => ({ id: s.id, status: s.status, avaliador: s.avaliador })));
   } catch (error) {
-    console.error('Normas query error:', error);
+    console.error('Solicitacoes query error:', error);
   }
 }
 

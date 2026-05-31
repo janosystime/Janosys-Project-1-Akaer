@@ -43,7 +43,8 @@ export class NormasController {
             palavrasChave: palavrasChave || null,
             nomePdf: nomePdf || null,
             urlPdf: urlPdf || null,
-            imagens: imagens || null
+            imagens: imagens || null,
+            criadoPor: usuarioNome
           }
         });
       });
@@ -103,7 +104,8 @@ export class NormasController {
             palavrasChave: palavrasChave !== undefined ? palavrasChave : normaExistente.palavrasChave,
             nomePdf: nomePdf !== undefined ? nomePdf : normaExistente.nomePdf,
             urlPdf: urlPdf !== undefined ? urlPdf : normaExistente.urlPdf,
-            imagens: imagens !== undefined ? imagens : normaExistente.imagens
+            imagens: imagens !== undefined ? imagens : normaExistente.imagens,
+            criadoPor: normaExistente.criadoPor
           }
         });
       });

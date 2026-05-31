@@ -31,7 +31,8 @@ export class SolicitacoesController {
         solicitante: s.solicitante,
         data: s.data.toISOString().split('T')[0],
         status: statusMapToFrontend[s.status],
-        motivoRecusa: s.motivoRecusa || ''
+        motivoRecusa: s.motivoRecusa || '',
+        avaliador: s.avaliador || ''
       }));
 
       return res.json(solicitacoes);
@@ -67,7 +68,8 @@ export class SolicitacoesController {
         solicitante: solicitacao.solicitante,
         data: solicitacao.data.toISOString().split('T')[0],
         status: statusMapToFrontend[solicitacao.status],
-        motivoRecusa: ''
+        motivoRecusa: '',
+        avaliador: ''
       });
 
     } catch (error) {
@@ -79,7 +81,7 @@ export class SolicitacoesController {
   async update(req: Request, res: Response) {
     try {
       const id = req.params.id as string;
-      const { status, motivoRecusa } = req.body;
+      const { status, motivoRecusa, avaliador } = req.body;
 
       const solicitacaoExistente = await prisma.solicitacao.findUnique({
         where: { id: Number(id) }
@@ -98,7 +100,8 @@ export class SolicitacoesController {
         where: { id: Number(id) },
         data: {
           status: dbStatus,
-          motivoRecusa: dbStatus === 'INDEFERIDA' ? (motivoRecusa || null) : null
+          motivoRecusa: dbStatus === 'INDEFERIDA' ? (motivoRecusa || null) : null,
+          avaliador: dbStatus === 'AGUARDANDO' ? null : (avaliador !== undefined ? (avaliador || null) : solicitacaoExistente.avaliador)
         }
       });
 
@@ -110,7 +113,8 @@ export class SolicitacoesController {
         solicitante: solicitacao.solicitante,
         data: solicitacao.data.toISOString().split('T')[0],
         status: statusMapToFrontend[solicitacao.status],
-        motivoRecusa: solicitacao.motivoRecusa || ''
+        motivoRecusa: solicitacao.motivoRecusa || '',
+        avaliador: solicitacao.avaliador || ''
       });
 
     } catch (error) {

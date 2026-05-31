@@ -49,6 +49,7 @@ model Norma {
   nomePdf       String?
   urlPdf        String?      @db.MediumText
   imagens       Json?
+  criadoPor     String?
   dataCriacao   DateTime @default(now())
   dataAlteracao DateTime @updatedAt
 
@@ -78,6 +79,7 @@ model Solicitacao {
   data         DateTime          @default(now())
   status       StatusSolicitacao @default(AGUARDANDO)
   motivoRecusa String?           @db.Text
+  avaliador    String?
 
   @@map("solicitacoes")
 }

@@ -89,12 +89,13 @@ async function main() {
           tipo: "Pública",
           revisao: "Emenda 09",
           status: "Vigente",
-          notas: JSON.stringify(["Norma principal de safety."]),
-          referencias: JSON.stringify(["SAE ARP4761"]),
-          palavrasChave: JSON.stringify(["safety", "análise de risco"]),
+          notas: ["Norma principal de safety."],
+          referencias: ["SAE ARP4761"],
+          palavrasChave: ["safety", "análise de risco"],
           nomePdf: "rbac-25-1309.pdf",
           urlPdf: "/pdf/rbac-25-1309.pdf",
-          imagens: JSON.stringify(["/imagem/rbac-25-1309.jpeg"])
+          imagens: ["/imagem/rbac-25-1309.jpeg"],
+          criadoPor: "Administrador Janosys"
         },
         {
           id: "FAR 25.571",
@@ -107,12 +108,13 @@ async function main() {
           tipo: "Pública",
           revisao: "Amendment 27",
           status: "Vigente",
-          notas: JSON.stringify([]),
-          referencias: JSON.stringify([]),
-          palavrasChave: JSON.stringify(["fadiga", "tolerância", "dano"]),
+          notas: [],
+          referencias: [],
+          palavrasChave: ["fadiga", "tolerância", "dano"],
           nomePdf: "far-25-571.pdf",
           urlPdf: "/pdf/far-25-571.pdf",
-          imagens: JSON.stringify(["/imagem/far-25-571.jpeg"])
+          imagens: ["/imagem/far-25-571.jpeg"],
+          criadoPor: "Administrador Janosys"
         },
         {
           id: "ISO 9001:2015",
@@ -125,9 +127,10 @@ async function main() {
           tipo: "Pública",
           revisao: "2015",
           status: "Vigente",
-          notas: JSON.stringify(["Requisitos gerais para o sistema de gestão da qualidade nas plantas de manufatura."]),
-          referencias: JSON.stringify(["ISO 9000:2015"]),
-          palavrasChave: JSON.stringify(["qualidade", "gestão", "requisitos"])
+          notas: ["Requisitos gerais para o sistema de gestão da qualidade nas plantas de manufatura."],
+          referencias: ["ISO 9000:2015"],
+          palavrasChave: ["qualidade", "gestão", "requisitos"],
+          criadoPor: "Administrador Janosys"
         },
         {
           id: "CS-25",
@@ -140,9 +143,10 @@ async function main() {
           tipo: "Privada",
           revisao: "Amendment 27",
           status: "Vigente",
-          notas: JSON.stringify(["Especificações essenciais para certificação EASA em aeronaves de grande porte."]),
-          referencias: JSON.stringify(["FAR 25"]),
-          palavrasChave: JSON.stringify(["certificação", "aeronave grande", "easa"])
+          notas: ["Especificações essenciais para certificação EASA em aeronaves de grande porte."],
+          referencias: ["FAR 25"],
+          palavrasChave: ["certificação", "aeronave grande", "easa"],
+          criadoPor: "Administrador Janosys"
         }
       ]
     });
@@ -161,14 +165,16 @@ async function main() {
           titulo: "Quality Management Systems - Requirements for Aviation",
           solicitante: "Ana Silva",
           data: new Date("2026-03-01"),
-          status: "ACEITA"
+          status: "ACEITA",
+          avaliador: "Checker Janosys"
         },
         {
           codigo: "MIL-STD-810",
           titulo: "Environmental Engineering Considerations and Laboratory Tests",
           solicitante: "Carlos Mendes",
           data: new Date("2026-03-05"),
-          status: "ANALISE"
+          status: "ANALISE",
+          avaliador: "Checker Janosys"
         },
         {
           codigo: "RTCA DO-160",
@@ -189,7 +195,8 @@ async function main() {
           titulo: "Digital Time Division Command/Response Multiplex Data Bus",
           solicitante: "Julia Ferreira",
           data: new Date("2026-03-15"),
-          status: "ANALISE"
+          status: "ANALISE",
+          avaliador: "Checker Janosys"
         },
         {
           codigo: "ASTM B117",
@@ -197,7 +204,8 @@ async function main() {
           solicitante: "Ricardo Souza",
           data: new Date("2026-03-18"),
           status: "INDEFERIDA",
-          motivoRecusa: "Norma já contemplada pela ISO 9227, disponível na biblioteca."
+          motivoRecusa: "Norma já contemplada pela ISO 9227, disponível na biblioteca.",
+          avaliador: "Checker Janosys"
         },
         {
           codigo: "",
@@ -211,7 +219,8 @@ async function main() {
           titulo: "Quality Management - Guidelines for Configuration Management",
           solicitante: "Eduardo Costa",
           data: new Date("2026-03-22"),
-          status: "ACEITA"
+          status: "ACEITA",
+          avaliador: "Checker Janosys"
         },
         {
           codigo: "RTCA DO-178C",
@@ -225,7 +234,8 @@ async function main() {
           titulo: "Aircraft Lightning Environment and Related Test Waveforms",
           solicitante: "Thiago Alves",
           data: new Date("2026-04-10"),
-          status: "ANALISE"
+          status: "ANALISE",
+          avaliador: "Checker Janosys"
         }
       ]
     });
