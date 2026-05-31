@@ -212,9 +212,10 @@ O backend do projeto utiliza **Node.js**, **Express** e **Prisma ORM (Prisma 7)*
    ```
    *(Substitua `USUARIO` e `SENHA` pelas suas credenciais locais do MySQL).*
 
-4. **Sincronizar e Sincronizar o Banco com o Prisma**:
-   Execute o comando abaixo para gerar o Prisma Client e criar as tabelas automaticamente no seu MySQL:
+4. **Gerar o Prisma Client e Sincronizar o Banco**:
+   Execute os comandos abaixo para gerar os tipos do Prisma Client e criar/sincronizar as tabelas automaticamente no seu MySQL:
    ```bash
+   npx prisma generate
    npx prisma db push
    ```
 
