@@ -1,0 +1,49 @@
+# Funcionamento do arquivo Normas.tsx
+
+O arquivo `Normas.tsx` é um componente central que gerencia a "Biblioteca de Normas" da aplicação. Ele é responsável por listar, filtrar, visualizar detalhes, criar, editar e excluir normas técnicas.
+
+## Principais Funcionalidades
+
+1.  **Gestão de Estado:** Utiliza hooks do React (`useState`, `useEffect`, `useMemo`, `useCallback`) para controlar o fluxo de dados, filtros aplicados, estados de modais e persistência local.
+2.  **Persistência de Dados:** As normas são armazenadas no `localStorage` do navegador sob a chave `biblioteca_normas`. Caso não existam dados salvos, ele carrega uma lista base (`NORMAS_BASE`).
+3.  **Filtragem Avançada:** Sistema dinâmico de busca por texto (ID, Código, Título, Palavras-chave) e filtros categorizados (Órgão, Categoria, Subcategoria, Item e Status).
+4.  **Operações CRUD:**
+    *   **Create/Update:** Modal com "stepper" (3 etapas: Identificação, Classificação, Anexos) para cadastro e edição.
+    *   **Delete:** Exclusão com confirmação de segurança.
+5.  **Manipulação de Arquivos:** Suporte para upload de PDFs e Imagens, convertendo-os para Base64 para armazenamento local (respeitando limites de tamanho).
+6.  **Visualização Protegida:**
+    *   **PDF:** Visualizador integrado usando `react-pdf` com proteção contra impressão e seleção de texto.
+    *   **Imagens:** Lightbox para navegação entre imagens anexadas.
+7.  **Controle de Acesso:** Verifica o perfil do usuário (admin) para habilitar ou desabilitar botões de edição e exclusão.
+
+---
+
+## Módulos que poderiam ou deveriam ser separados
+
+O arquivo atual possui mais de 1000 linhas, o que dificulta a manutenção. Recomenda-se a separação nos seguintes módulos:
+
+### 1. Tipos e Interfaces (`/types/norma.ts`)
+*   `Norma`, `ToastMsg`, `ConfirmacaoState`.
+*   Mover para um arquivo de definições global ou específico do módulo.
+
+### 2. Constantes e Dados Iniciais (`/constants/normas.ts`)
+*   `NORMAS_BASE`, `ORGANIZACOES`, `CATEGORIAS`, `SUBCATEGORIAS`, `ITENS_POR_SUBCATEGORIA`, `STATUS_OPCOES`.
+*   `ORG_ORIGENS`, `CAT_ICONES`, `FORM_INICIAL`.
+
+### 3. Funções Utilitárias (`/utils/normasHelper.ts` ou `/helpers/normas.ts`)
+*   `converterParaBase64`: Função genérica de conversão de arquivos.
+*   `normalizarUrlPdf`: Lógica de tratamento de caminhos de arquivos.
+*   `normalizarNormasSalvas`: Lógica de migração/ajuste de dados do localStorage.
+
+### 4. Componentes de UI (Pasta `/components/Normas/`)
+Cada um destes deveria estar em seu próprio arquivo para facilitar testes e reutilização:
+*   `ToastContainer.tsx`: Sistema de notificações.
+*   `ModalConfirmacao.tsx`: Diálogo de confirmação genérico.
+*   `PdfViewer.tsx`: Visualizador de documentos.
+*   `ImageLightbox.tsx`: Galeria de imagens.
+*   `ModalDetalhesNorma.tsx`: Visualização detalhada de uma norma.
+*   `NormaCardItem.tsx`: O card individual da lista.
+*   `NormaFormModal.tsx`: O modal de cadastro/edição (atualmente embutido no componente principal).
+
+### 5. Hook Customizado (`/hooks/useNormas.ts`)
+*   Toda a lógica de `useState` de normas, filtros, persistência no `localStorage` e funções de manipulação (`handleSave`, `handleDelete`) poderia ser encapsulada em um hook para limpar o componente de visualização (`Biblioteca`).

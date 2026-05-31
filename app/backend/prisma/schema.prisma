@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Perfil {
+  ADMINISTRADOR
+  USUARIO
+  CHECKER
+}
+
+enum StatusSolicitacao {
+  AGUARDANDO
+  ANALISE
+  ACEITA
+  INDEFERIDA
+}
+
+model Usuario {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  login        String   @unique
+  senha        String
+  perfil       Perfil   @default(USUARIO)
+  telefone     String?
+  departamento String?
+  dataCriacao  DateTime @default(now())
+
+  @@map("usuarios")
+}
+
+model Norma {
+  id            String   @id
+  codigo        String?
+  titulo        String
+  organizacao   String
+  categoria     String
+  subcategoria  String?
+  item          String?
+  tipo          String   @default("Pública")
+  revisao       String?
+  status        String   @default("Vigente")
+  notas         Json?
+  referencias   Json?
+  palavrasChave Json?
+  nomePdf       String?
+  urlPdf        String?      @db.MediumText
+  imagens       Json?
+  criadoPor     String?
+  dataCriacao   DateTime @default(now())
+  dataAlteracao DateTime @updatedAt
+
+  pecas Peca[] @relation("NormasPecas")
+
+  @@map("normas")
+}
+
+model Peca {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  categoria    String
+  subcategoria String
+  dataCriacao  DateTime @default(now())
+
+  normas Norma[] @relation("NormasPecas")
+
+  @@map("pecas")
+}
+
+model Solicitacao {
+  id           Int               @id @default(autoincrement())
+  codigo       String?
+  titulo       String
+  motivo       String?           @db.Text
+  solicitante  String
+  data         DateTime          @default(now())
+  status       StatusSolicitacao @default(AGUARDANDO)
+  motivoRecusa String?           @db.Text
+  avaliador    String?
+
+  @@map("solicitacoes")
+}
+
+model HistoricoAlteracao {
+  id            Int      @id @default(autoincrement())
+  normaId       String
+  codigoNorma   String?
+  tituloNorma   String
+  usuarioNome   String
+  tipoAlteracao String   // 'CADASTRO' | 'EDICAO' | 'EXCLUSAO'
+  detalhes      String   @db.Text
+  data          DateTime @default(now())
+
+  @@map("historico_alteracoes")
+}
