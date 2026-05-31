@@ -212,7 +212,7 @@ Com isso, o sistema ganha em proteção de dados, organização individual e cap
 ![mvp3_print2](/docs/sp3/print-2.png)
 
 - Vídeo (MVP)<br>
-[Assistir no YouTube](https://youtu.be/bYVjYIq_0_M)
+[Assistir no YouTube](https://www.youtube.com/watch?v=fYKKYGQbL4M)
 
 ---
 
