@@ -15,6 +15,7 @@ export interface Norma {
   nomePdf?: string;
   urlPdf?: string;
   imagens?: string[];
+  criadoPor?: string;
 }
 
 export interface ToastMsg {

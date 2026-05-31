@@ -7,6 +7,7 @@ import {
   SUBCATEGORIAS,
   type Norma,
 } from "./NormasViewModel";
+import { safeParseArray } from "../../utils/NormasUtils";
 
 type PropsFormularioNorma = {
   visivel: boolean;
@@ -326,7 +327,7 @@ export default function FormularioNorma({
                   <i className="fas fa-key"></i> Palavras-chave
                 </label>
                 <div className="dynamic-list">
-                  {(form.palavrasChave || []).map(
+                  {safeParseArray(form.palavrasChave).map(
                     (palavraAtual, indicePalavraAtual) => (
                       <div key={indicePalavraAtual} className="dynamic-row">
                         <input
@@ -334,7 +335,7 @@ export default function FormularioNorma({
                           value={palavraAtual}
                           onChange={(eventoMudanca) => {
                             const novasPalavras = [
-                              ...(form.palavrasChave || []),
+                              ...safeParseArray(form.palavrasChave),
                             ];
                             novasPalavras[indicePalavraAtual] =
                               eventoMudanca.target.value;
@@ -348,7 +349,7 @@ export default function FormularioNorma({
                           onClick={() =>
                             updateForm(
                               "palavrasChave",
-                              (form.palavrasChave || []).filter(
+                              safeParseArray(form.palavrasChave).filter(
                                 (_palavraIgnorada, indiceAtualCopia) =>
                                   indiceAtualCopia !== indicePalavraAtual,
                               ),
@@ -365,7 +366,7 @@ export default function FormularioNorma({
                     className="btn btn-ghost btn-add-more"
                     onClick={() =>
                       updateForm("palavrasChave", [
-                        ...(form.palavrasChave || []),
+                        ...safeParseArray(form.palavrasChave),
                         "",
                       ])
                     }
@@ -380,13 +381,13 @@ export default function FormularioNorma({
                   <i className="fas fa-pen-to-square"></i> Notas Técnicas
                 </label>
                 <div className="dynamic-list">
-                  {(form.notas || []).map((notaAtual, indiceNotaAtual) => (
+                  {safeParseArray(form.notas).map((notaAtual, indiceNotaAtual) => (
                     <div key={indiceNotaAtual} className="dynamic-row">
                       <input
                         className="form-input"
                         value={notaAtual}
                         onChange={(eventoMudanca) => {
-                          const novasNotas = [...(form.notas || [])];
+                          const novasNotas = [...safeParseArray(form.notas)];
                           novasNotas[indiceNotaAtual] = eventoMudanca.target.value;
                           updateForm("notas", novasNotas);
                         }}
@@ -398,7 +399,7 @@ export default function FormularioNorma({
                         onClick={() =>
                           updateForm(
                             "notas",
-                            (form.notas || []).filter(
+                            safeParseArray(form.notas).filter(
                               (_notaIgnorada, indiceAtualCopia) =>
                                 indiceAtualCopia !== indiceNotaAtual,
                             ),
@@ -413,7 +414,7 @@ export default function FormularioNorma({
                     type="button"
                     className="btn btn-ghost btn-add-more"
                     onClick={() =>
-                      updateForm("notas", [...(form.notas || []), ""])
+                      updateForm("notas", [...safeParseArray(form.notas), ""])
                     }
                   >
                     <i className="fas fa-plus"></i> Nova nota
@@ -426,7 +427,7 @@ export default function FormularioNorma({
                   <i className="fas fa-link"></i> Referências
                 </label>
                 <div className="dynamic-list">
-                  {(form.referencias || []).map(
+                  {safeParseArray(form.referencias).map(
                     (referenciaAtual, indiceReferenciaAtual) => (
                       <div key={indiceReferenciaAtual} className="dynamic-row">
                         <input
@@ -434,7 +435,7 @@ export default function FormularioNorma({
                           value={referenciaAtual}
                           onChange={(eventoMudanca) => {
                             const novasReferencias = [
-                              ...(form.referencias || []),
+                              ...safeParseArray(form.referencias),
                             ];
                             novasReferencias[indiceReferenciaAtual] =
                               eventoMudanca.target.value;
@@ -448,7 +449,7 @@ export default function FormularioNorma({
                           onClick={() =>
                             updateForm(
                               "referencias",
-                              (form.referencias || []).filter(
+                              safeParseArray(form.referencias).filter(
                                 (_referenciaIgnorada, indiceAtualCopia) =>
                                   indiceAtualCopia !== indiceReferenciaAtual,
                               ),
@@ -465,7 +466,7 @@ export default function FormularioNorma({
                     className="btn btn-ghost btn-add-more"
                     onClick={() =>
                       updateForm("referencias", [
-                        ...(form.referencias || []),
+                        ...safeParseArray(form.referencias),
                         "",
                       ])
                     }
@@ -551,13 +552,13 @@ export default function FormularioNorma({
                   />
                 </label>
 
-                {form.imagens && form.imagens.length > 0 && (
+                {safeParseArray(form.imagens).length > 0 && (
                   <div className="image-preview-list">
-                    {form.imagens.map((urlImagemExistente, indiceImagemExistente) => (
+                    {safeParseArray(form.imagens).map((urlImagemExistente, indiceImagemExistente) => (
                       <div key={`existente-${indiceImagemExistente}`} className="image-preview-item">
                         <img src={urlImagemExistente} alt="Preview" />
                         <button type="button" className="btn-remove-preview" onClick={() => {
-                          const novasImagensFormulario = [...form.imagens!];
+                          const novasImagensFormulario = [...safeParseArray(form.imagens)];
                           novasImagensFormulario.splice(indiceImagemExistente, 1);
                           updateForm("imagens", novasImagensFormulario);
                         }}>

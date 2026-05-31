@@ -8,7 +8,7 @@ import {
   type ToastMsg,
 } from "../components/Normas/NormasViewModel";
 import { carregarPecas, listarPecasRelacionadas, type Peca } from "../utils/pecas";
-import { converterParaBase64 } from "../utils/NormasUtils";
+import { converterParaBase64, safeParseArray } from "../utils/NormasUtils";
 
 export default function useNormas() {
   const [pecas] = useState<Peca[]>(() => carregarPecas());
@@ -47,7 +47,14 @@ export default function useNormas() {
       const response = await fetch("http://localhost:3001/normas");
       if (response.ok) {
         const data = await response.json();
-        setNormas(data);
+        const sanitized = data.map((norma: any) => ({
+          ...norma,
+          palavrasChave: safeParseArray(norma.palavrasChave),
+          notas: safeParseArray(norma.notas),
+          referencias: safeParseArray(norma.referencias),
+          imagens: safeParseArray(norma.imagens),
+        }));
+        setNormas(sanitized);
       } else {
         adicionarToast("erro", "Erro ao buscar normas do servidor.");
       }
@@ -311,9 +318,16 @@ export default function useNormas() {
 
         if (response.ok) {
           const atualizada = await response.json();
+          const sanitizedAtualizada = {
+            ...atualizada,
+            palavrasChave: safeParseArray(atualizada.palavrasChave),
+            notas: safeParseArray(atualizada.notas),
+            referencias: safeParseArray(atualizada.referencias),
+            imagens: safeParseArray(atualizada.imagens),
+          };
           setNormas((normasAnteriores) =>
             normasAnteriores.map((normaAnalisada) =>
-              normaAnalisada.id === idEmEdicao ? atualizada : normaAnalisada
+              normaAnalisada.id === idEmEdicao ? sanitizedAtualizada : normaAnalisada
             )
           );
           adicionarToast(
@@ -334,7 +348,14 @@ export default function useNormas() {
 
         if (response.ok) {
           const nova = await response.json();
-          setNormas([nova, ...normas]);
+          const sanitizedNova = {
+            ...nova,
+            palavrasChave: safeParseArray(nova.palavrasChave),
+            notas: safeParseArray(nova.notas),
+            referencias: safeParseArray(nova.referencias),
+            imagens: safeParseArray(nova.imagens),
+          };
+          setNormas([sanitizedNova, ...normas]);
           adicionarToast(
             "sucesso",
             `Norma "${normaSalva.id}" registrada com sucesso!`,

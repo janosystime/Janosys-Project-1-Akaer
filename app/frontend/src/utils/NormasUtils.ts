@@ -46,3 +46,27 @@ export function normalizarNormasSalvas(
     };
   });
 }
+
+export function safeParseArray(valor: any): string[] {
+  if (valor === undefined || valor === null) return [];
+  if (Array.isArray(valor)) {
+    return valor.map(item => typeof item === 'string' ? item : JSON.stringify(item));
+  }
+  if (typeof valor === 'string') {
+    if (!valor.trim()) return [];
+    try {
+      const parsed = JSON.parse(valor);
+      if (typeof parsed === 'string') {
+        return safeParseArray(parsed);
+      }
+      if (Array.isArray(parsed)) {
+        return parsed.map(item => typeof item === 'string' ? item : JSON.stringify(item));
+      }
+      return [String(parsed)];
+    } catch {
+      return [valor];
+    }
+  }
+  return [JSON.stringify(valor)];
+}
+

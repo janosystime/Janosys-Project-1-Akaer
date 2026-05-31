@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { Peca } from "../../utils/pecas";
 import type { Norma } from "./NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "./NormasViewModel";
+import { safeParseArray } from "../../utils/NormasUtils";
 
 interface LogHistorico {
   id: number;
@@ -126,6 +127,12 @@ export default function ModalDetalhesNorma({
             </div>
             <div className="view-item"><span className="view-label"><i className="fas fa-layer-group"></i> Subcategoria</span><span className="view-value">{norma.subcategoria || "—"}</span></div>
             <div className="view-item"><span className="view-label"><i className="fas fa-cube"></i> Item</span><span className="view-value">{norma.item || "—"}</span></div>
+            {norma.criadoPor && (
+              <div className="view-item">
+                <span className="view-label"><i className="fas fa-user-pen"></i> Criador</span>
+                <span className="view-value">{norma.criadoPor}</span>
+              </div>
+            )}
           </div>
 
           <div className="view-item">
@@ -157,26 +164,26 @@ export default function ModalDetalhesNorma({
 
           <hr className="divider" />
 
-          {norma.palavrasChave && norma.palavrasChave.length > 0 && (
+          {safeParseArray(norma.palavrasChave).length > 0 && (
             <div className="view-item">
               <span className="view-label"><i className="fas fa-key"></i> Palavras-chave</span>
               <div className="view-badges">
-                {norma.palavrasChave.map((palavra, i) => (
+                {safeParseArray(norma.palavrasChave).map((palavra, i) => (
                   <span key={i} className="badge theme-subcategoria">{palavra}</span>
                 ))}
               </div>
             </div>
           )}
 
-          {norma.notas && norma.notas.length > 0 && (
-            <div className="view-item"><span className="view-label"><i className="fas fa-pen-to-square"></i> Notas Técnicas</span><ul className="view-list">{norma.notas.map((nota, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {nota}</li>))}</ul></div>
+          {safeParseArray(norma.notas).length > 0 && (
+            <div className="view-item"><span className="view-label"><i className="fas fa-pen-to-square"></i> Notas Técnicas</span><ul className="view-list">{safeParseArray(norma.notas).map((nota, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {nota}</li>))}</ul></div>
           )}
 
-          {norma.referencias && norma.referencias.length > 0 && (
-            <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{norma.referencias.map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
+          {safeParseArray(norma.referencias).length > 0 && (
+            <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{safeParseArray(norma.referencias).map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
           )}
 
-          {(norma.urlPdf || (norma.imagens && norma.imagens.length > 0)) && (
+          {(norma.urlPdf || (safeParseArray(norma.imagens).length > 0)) && (
             <>
               <hr className="divider" />
               <div className="view-item">
@@ -187,10 +194,10 @@ export default function ModalDetalhesNorma({
                   </button>
                 )}
 
-                {norma.imagens && norma.imagens.length > 0 && (
+                {safeParseArray(norma.imagens).length > 0 && (
                   <div className="attachment-image-grid" style={{ marginTop: '10px' }}>
-                    {norma.imagens.map((urlImg, idxImg) => (
-                      <div key={idxImg} className="attachment-image-item" onClick={() => onViewImages(norma.imagens!, idxImg)}>
+                    {safeParseArray(norma.imagens).map((urlImg, idxImg) => (
+                      <div key={idxImg} className="attachment-image-item" onClick={() => onViewImages(safeParseArray(norma.imagens)!, idxImg)}>
                         <img src={urlImg} alt={`Anexo ${idxImg + 1}`} />
                         <div className="image-hover-overlay"><i className="fas fa-magnifying-glass-plus"></i></div>
                       </div>
@@ -201,10 +208,10 @@ export default function ModalDetalhesNorma({
             </>
           )}
 
-          {(!norma.notas || norma.notas.length === 0) &&
-            (!norma.referencias || norma.referencias.length === 0) &&
-            (!norma.palavrasChave || norma.palavrasChave.length === 0) &&
-            !norma.urlPdf && (!norma.imagens || norma.imagens.length === 0) && (
+          {safeParseArray(norma.notas).length === 0 &&
+            safeParseArray(norma.referencias).length === 0 &&
+            safeParseArray(norma.palavrasChave).length === 0 &&
+            !norma.urlPdf && safeParseArray(norma.imagens).length === 0 && (
               <div className="empty-state compact">
                 <i className="fas fa-folder-open"></i>
                 <p>Nenhuma nota ou anexo.</p>

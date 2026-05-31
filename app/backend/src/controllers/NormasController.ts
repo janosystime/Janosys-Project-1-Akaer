@@ -24,7 +24,7 @@ export class NormasController {
         return res.status(400).json({ error: 'Campos ID, título, organização e categoria são obrigatórios' });
       }
 
-      const norma = await prisma.$transaction(async (tx) => {
+      const norma = await prisma.$transaction(async (tx: any) => {
         await tx.$executeRawUnsafe(`SET @usuario_atual = ?;`, usuarioNome);
         return await tx.norma.create({
           data: {
@@ -85,7 +85,7 @@ export class NormasController {
         return res.status(404).json({ error: 'Norma não encontrada' });
       }
 
-      const norma = await prisma.$transaction(async (tx) => {
+      const norma = await prisma.$transaction(async (tx: any) => {
         await tx.$executeRawUnsafe(`SET @usuario_atual = ?;`, usuarioNome);
         return await tx.norma.update({
           where: { id },
@@ -130,7 +130,7 @@ export class NormasController {
         return res.status(404).json({ error: 'Norma não encontrada' });
       }
 
-      await prisma.$transaction(async (tx) => {
+      await prisma.$transaction(async (tx: any) => {
         await tx.$executeRawUnsafe(`SET @usuario_atual = ?;`, usuarioNome);
         await tx.norma.delete({
           where: { id }

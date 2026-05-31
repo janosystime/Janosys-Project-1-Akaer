@@ -11,6 +11,7 @@ interface Solicitacao {
   data: string;
   status: "Aguardando análise" | "Em análise" | "Aceita" | "Indeferida";
   motivoRecusa?: string;
+  avaliador?: string;
 }
 
 interface ToastMsg {
@@ -153,22 +154,28 @@ export default function Solicitacoes() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           status: novoStatus,
-          motivoRecusa: extras?.motivoRecusa || ""
+          motivoRecusa: extras?.motivoRecusa || "",
+          avaliador: novoStatus === "Aguardando análise" ? "" : (usuario?.nome || "Checker")
         })
       });
 
       if (response.ok) {
         const atualizada = await response.json();
         setSolicitacoes(prev => prev.map(s => s.id === id ? atualizada : s));
-        if (solicitacaoAnalise && solicitacaoAnalise.id === id) {
-          setSolicitacaoAnalise(atualizada);
-        }
+        setSolicitacaoAnalise(current => {
+          if (current && current.id === id) {
+            return atualizada;
+          }
+          return current;
+        });
+        return atualizada as Solicitacao;
       } else {
         adicionarToast("erro", "Erro ao atualizar status no servidor.");
       }
     } catch (err) {
       adicionarToast("erro", "Erro de conexão ao atualizar status.");
     }
+    return null;
   };
 
   /* Atualiza status do card */
@@ -177,7 +184,10 @@ export default function Solicitacoes() {
     setMotivoRecusa("");
     setConfirmacaoInsercao(false);
     if (isChecker && s.status === "Aguardando análise") {
-      await atualizarStatus(s.id, "Em análise");
+      const atualizada = await atualizarStatus(s.id, "Em análise");
+      if (atualizada) {
+        setSolicitacaoAnalise(atualizada);
+      }
     }
   };
 
@@ -288,6 +298,11 @@ const solicitacoesFiltradas = solicitacoes
                   <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--c-text-muted)" }}>
                     <i className="fas fa-user" style={{ marginRight: 4 }}></i>{s.solicitante}
                   </span>
+                  {s.avaliador && (
+                    <span style={{ fontSize: "0.68rem", color: "var(--c-text-muted)", marginTop: 2 }} title={`Avaliado por ${s.avaliador}`}>
+                      <i className="fas fa-user-shield" style={{ marginRight: 4 }}></i>{s.avaliador}
+                    </span>
+                  )}
                   {(isAdmin || isChecker) && (
                     <span style={{ fontSize: "0.68rem", color: "var(--c-text-muted)" }}>
                       <i className="fas fa-calendar" style={{ marginRight: 4 }}></i>
@@ -403,6 +418,12 @@ const solicitacoesFiltradas = solicitacoes
                       <span className="view-value">{solicitacaoAnalise.codigo}</span>
                     </div>
                   )}
+                  {solicitacaoAnalise.avaliador && (
+                    <div className="view-item">
+                      <span className="view-label"><i className="fas fa-user-shield"></i> Avaliador</span>
+                      <span className="view-value">{solicitacaoAnalise.avaliador}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="view-item">
@@ -469,7 +490,38 @@ const solicitacoesFiltradas = solicitacoes
                   Fechar
                 </button>
                 {isChecker && solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
-                  <div className="modal-footer-actions">
+                  <div className="modal-footer-actions" style={{ display: "flex", gap: "10px" }}>
+                    {solicitacaoAnalise.status === "Em análise" && (
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        onClick={async () => {
+                          const atualizada = await atualizarStatus(solicitacaoAnalise.id, "Aguardando análise");
+                          if (atualizada) {
+                            adicionarToast("sucesso", "Solicitação retornada para Aguardando análise.");
+                          }
+                        }}
+                      >
+                        <i className="fas fa-clock"></i> Voltar para Fila
+                      </button>
+                    )}
+                    {solicitacaoAnalise.status === "Aguardando análise" && (
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        onClick={async () => {
+                          const atualizada = await atualizarStatus(solicitacaoAnalise.id, "Em análise");
+                          if (atualizada) {
+                            adicionarToast("sucesso", "Solicitação alterada para Em análise.");
+                          }
+                        }}
+                      >
+                        <i className="fas fa-magnifying-glass"></i> Analisar
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       className="btn btn-danger-solid"
