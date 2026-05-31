@@ -140,7 +140,7 @@ const FORM_VAZIO = {
 // SIGNA — Componente Principal
 // ============================================
 export default function Usuarios() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>(carregarUsuarios);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [termoPesquisa, setTermoPesquisa] = useState("");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [filtroPerfil, setFiltroPerfil] = useState("Todos");
@@ -158,17 +158,6 @@ export default function Usuarios() {
   // Modal de confirmação de exclusão
   const [usuarioExcluindo, setUsuarioExcluindo] = useState<Usuario | null>(null);
 
-  // Persistência
-  useEffect(() => {
-    salvarUsuarios(usuarios);
-  }, [usuarios]);
-
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-
   // ── Toast ──
   const adicionarToast = useCallback((tipo: ToastMsg["tipo"], mensagem: string) => {
     const id = Date.now();
@@ -177,6 +166,30 @@ export default function Usuarios() {
   }, []);
 
   const removerToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
+
+  // Carregar dados da API
+  useEffect(() => {
+    async function fetchUsuarios() {
+      try {
+        const response = await fetch("http://localhost:3001/usuarios");
+        if (response.ok) {
+          const data = await response.json();
+          setUsuarios(data);
+        } else {
+          adicionarToast("erro", "Erro ao buscar usuários no servidor.");
+        }
+      } catch (err) {
+        adicionarToast("erro", "Erro ao conectar com a API de usuários.");
+      }
+    }
+    fetchUsuarios();
+  }, [adicionarToast]);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
 
   // ── Filtro ──
   const departamentos = ["Todos", ...Array.from(new Set(usuarios.map(u => u.departamento).filter(Boolean)))];
@@ -211,7 +224,7 @@ export default function Usuarios() {
     setForm({
       nome: u.nome,
       login: u.login,
-      senha: u.senha,
+      senha: "", // Don't autofill hashed password
       perfil: u.perfil,
       telefone: u.telefone,
       departamento: u.departamento,
@@ -221,51 +234,82 @@ export default function Usuarios() {
   }
 
   // ── Salvar (criar ou editar) ──
-  function handleSalvar() {
-    if (!form.nome.trim() || !form.login.trim() || !form.senha.trim()) {
-      adicionarToast("erro", "Nome, login e senha são obrigatórios.");
+  async function handleSalvar() {
+    if (!form.nome.trim() || !form.login.trim()) {
+      adicionarToast("erro", "Nome e login são obrigatórios.");
       return;
     }
 
-    const loginDuplicado = usuarios.some(
-      (u) => u.login === form.login.trim() && u.id !== usuarioEditando?.id
-    );
-    if (loginDuplicado) {
-      adicionarToast("erro", "Este login já está em uso.");
+    if (!usuarioEditando && !form.senha.trim()) {
+      adicionarToast("erro", "A senha é obrigatória para novos usuários.");
       return;
     }
 
-    if (usuarioEditando) {
-      setUsuarios((prev) =>
-        prev.map((u) =>
-          u.id === usuarioEditando.id ? { ...u, ...form, login: form.login.trim(), nome: form.nome.trim() } : u
-        )
-      );
-      adicionarToast("sucesso", "Usuário atualizado com sucesso.");
-    } else {
-      const novo: Usuario = {
-        id: Date.now(),
-        nome: form.nome.trim(),
-        login: form.login.trim(),
-        senha: form.senha.trim(),
-        perfil: form.perfil,
-        telefone: form.telefone.trim(),
-        departamento: form.departamento.trim(),
-        dataCriacao: new Date().toISOString().split("T")[0],
-      };
-      setUsuarios((prev) => [novo, ...prev]);
-      adicionarToast("sucesso", "Usuário criado com sucesso.");
-    }
+    try {
+      if (usuarioEditando) {
+        const response = await fetch(`http://localhost:3001/usuarios/${usuarioEditando.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(form)
+        });
 
-    setModalAberto(false);
+        if (response.ok) {
+          const atualizado = await response.json();
+          setUsuarios((prev) =>
+            prev.map((u) => (u.id === usuarioEditando.id ? atualizado : u))
+          );
+          adicionarToast("sucesso", "Usuário atualizado com sucesso.");
+          setModalAberto(false);
+        } else {
+          const errorData = await response.json();
+          adicionarToast("erro", errorData.error || "Erro ao atualizar usuário.");
+        }
+      } else {
+        const response = await fetch("http://localhost:3001/usuarios", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(form)
+        });
+
+        if (response.ok) {
+          const novo = await response.json();
+          setUsuarios((prev) => [novo, ...prev]);
+          adicionarToast("sucesso", "Usuário criado com sucesso.");
+          setModalAberto(false);
+        } else {
+          const errorData = await response.json();
+          adicionarToast("erro", errorData.error || "Erro ao criar usuário.");
+        }
+      }
+    } catch (err) {
+      adicionarToast("erro", "Erro ao conectar com o servidor.");
+    }
   }
 
   // ── Excluir ──
-  function handleExcluir() {
+  async function handleExcluir() {
     if (!usuarioExcluindo) return;
-    setUsuarios((prev) => prev.filter((u) => u.id !== usuarioExcluindo.id));
-    adicionarToast("sucesso", "Usuário removido.");
-    setUsuarioExcluindo(null);
+    
+    try {
+      const response = await fetch(`http://localhost:3001/usuarios/${usuarioExcluindo.id}`, {
+        method: "DELETE"
+      });
+
+      if (response.ok) {
+        setUsuarios((prev) => prev.filter((u) => u.id !== usuarioExcluindo.id));
+        adicionarToast("sucesso", "Usuário removido.");
+        setUsuarioExcluindo(null);
+      } else {
+        const errorData = await response.json();
+        adicionarToast("erro", errorData.error || "Erro ao remover usuário.");
+      }
+    } catch (err) {
+      adicionarToast("erro", "Erro ao conectar com o servidor.");
+    }
   }
 
   // ── Render ──

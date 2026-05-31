@@ -13,27 +13,28 @@ import { converterParaBase64, normalizarNormasSalvas } from "../utils/NormasUtil
 
 export default function useNormas() {
   const [pecas] = useState<Peca[]>(() => carregarPecas());
-  const [normas, setNormas] = useState<Norma[]>(() => {
-    const normasSalvas = localStorage.getItem("biblioteca_normas");
-    if (normasSalvas) {
-      try {
-        const parsed = JSON.parse(normasSalvas) as Norma[];
-        if (Array.isArray(parsed)) {
-          return normalizarNormasSalvas(parsed, NORMAS_BASE);
-        }
-      } catch (erroDeLeitura) {
-        console.error("Erro ao ler normas do localStorage:", erroDeLeitura);
-      }
-    }
-    return NORMAS_BASE;
-  });
-
+  const [normas, setNormas] = useState<Norma[]>([]);
   const usuario = obterUsuarioAtual();
   const podeEditar = usuario?.perfil === "administrador";
 
+  // Fetch norms from API
+  const fetchNormas = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:3001/normas");
+      if (response.ok) {
+        const data = await response.json();
+        setNormas(data);
+      } else {
+        adicionarToast("erro", "Erro ao buscar normas do servidor.");
+      }
+    } catch (err) {
+      adicionarToast("erro", "Erro de conexão ao buscar normas.");
+    }
+  }, [adicionarToast]);
+
   useEffect(() => {
-    localStorage.setItem("biblioteca_normas", JSON.stringify(normas));
-  }, [normas]);
+    fetchNormas();
+  }, [fetchNormas]);
 
   useEffect(() => {
     const bloquearAtalhos = (eventoTeclado: KeyboardEvent) => {
@@ -260,7 +261,7 @@ export default function useNormas() {
         if (arquivoPdf.size > 3 * 1024 * 1024) {
           adicionarToast(
             "erro",
-            "O PDF é muito grande para salvar localmente (Máx 3MB).",
+            "O PDF é muito grande (Máx 3MB).",
           );
           return;
         }
@@ -285,52 +286,75 @@ export default function useNormas() {
 
       const normaSalva = {
         ...form,
-        notas: (form.notas || []).filter((notaAtual) => notaAtual.trim() !== ""),
+        notas: (form.notas || []).filter((notaAtual) => typeof notaAtual === "string" && notaAtual.trim() !== ""),
         referencias: (form.referencias || []).filter(
-          (referenciaAtual) => referenciaAtual.trim() !== "",
+          (referenciaAtual) => typeof referenciaAtual === "string" && referenciaAtual.trim() !== "",
         ),
         palavrasChave: (form.palavrasChave || []).filter(
-          (palavraAtual) => palavraAtual.trim() !== "",
+          (palavraAtual) => typeof palavraAtual === "string" && palavraAtual.trim() !== "",
         ),
-        nomePdf: nomeArquivoPdf,
-        urlPdf: stringBase64Pdf,
+        nomePdf: nomeArquivoPdf || null,
+        urlPdf: stringBase64Pdf || null,
         imagens: stringsBase64Imagens,
-      } as Norma;
+      };
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        "x-usuario-nome": usuario?.nome || "Administrador"
+      };
 
       if (idEmEdicao) {
-        setNormas((normasAnteriores) =>
-          normasAnteriores.map((normaAnalisada) =>
-            normaAnalisada.id === idEmEdicao ? normaSalva : normaAnalisada
-          )
-        );
-        adicionarToast(
-          "sucesso",
-          `Norma "${normaSalva.id}" atualizada com sucesso!`,
-        );
+        const response = await fetch(`http://localhost:3001/normas/${idEmEdicao}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(normaSalva)
+        });
+
+        if (response.ok) {
+          const atualizada = await response.json();
+          setNormas((normasAnteriores) =>
+            normasAnteriores.map((normaAnalisada) =>
+              normaAnalisada.id === idEmEdicao ? atualizada : normaAnalisada
+            )
+          );
+          adicionarToast(
+            "sucesso",
+            `Norma "${normaSalva.id}" atualizada com sucesso!`,
+          );
+          fecharModal();
+        } else {
+          const errorData = await response.json();
+          adicionarToast("erro", errorData.error || "Erro ao atualizar norma.");
+        }
       } else {
-        setNormas([normaSalva, ...normas]);
-        adicionarToast(
-          "sucesso",
-          `Norma "${normaSalva.id}" registada com sucesso!`,
-        );
+        const response = await fetch("http://localhost:3001/normas", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(normaSalva)
+        });
+
+        if (response.ok) {
+          const nova = await response.json();
+          setNormas([nova, ...normas]);
+          adicionarToast(
+            "sucesso",
+            `Norma "${normaSalva.id}" registrada com sucesso!`,
+          );
+          fecharModal();
+        } else {
+          const errorData = await response.json();
+          adicionarToast("erro", errorData.error || "Erro ao criar norma.");
+        }
       }
-      fecharModal();
 
     } catch (erroDeProcessamento: unknown) {
       console.error(erroDeProcessamento);
-      if (erroDeProcessamento instanceof Error && erroDeProcessamento.name === "QuotaExceededError") {
-        adicionarToast(
-          "erro",
-          "Limite de armazenamento excedido! Tente remover anexos antigos ou usar ficheiros menores.",
-        );
-      } else {
-        adicionarToast(
-          "erro",
-          erroDeProcessamento instanceof Error
-            ? erroDeProcessamento.message
-            : "Erro ao processar os ficheiros.",
-        );
-      }
+      adicionarToast(
+        "erro",
+        erroDeProcessamento instanceof Error
+          ? erroDeProcessamento.message
+          : "Erro ao processar os ficheiros.",
+      );
     }
   };
 
@@ -338,14 +362,30 @@ export default function useNormas() {
     pedirConfirmacao(
       "Excluir norma",
       `Tem certeza que deseja excluir "${idParaExcluir}"? Esta ação não pode ser desfeita.`,
-      () => {
-        setNormas((normasAnteriores) =>
-          normasAnteriores.filter(
-            (normaAtual) => normaAtual.id !== idParaExcluir,
-          ),
-        );
-        fecharConfirmacao();
-        adicionarToast("sucesso", `Norma "${idParaExcluir}" excluída.`);
+      async () => {
+        try {
+          const response = await fetch(`http://localhost:3001/normas/${idParaExcluir}`, {
+            method: "DELETE",
+            headers: {
+              "x-usuario-nome": usuario?.nome || "Administrador"
+            }
+          });
+
+          if (response.ok) {
+            setNormas((normasAnteriores) =>
+              normasAnteriores.filter(
+                (normaAtual) => normaAtual.id !== idParaExcluir,
+               ),
+            );
+            fecharConfirmacao();
+            adicionarToast("sucesso", `Norma "${idParaExcluir}" excluída.`);
+          } else {
+            const errorData = await response.json();
+            adicionarToast("erro", errorData.error || "Erro ao excluir norma.");
+          }
+        } catch (err) {
+          adicionarToast("erro", "Erro de conexão ao excluir norma.");
+        }
       },
     );
   };

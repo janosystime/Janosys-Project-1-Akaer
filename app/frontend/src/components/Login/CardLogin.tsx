@@ -11,19 +11,30 @@ function CartaoLogin() {
   const [erro, setErro] = useState('');
   const navigate = useNavigate();
 
-const aoEnviar = (e: React.FormEvent) => {
+const aoEnviar = async (e: React.FormEvent) => {
   e.preventDefault();
   setErro('');
 
-  const encontrado = USUARIOS_MOCK.find(
-    (u) => u.email === usuario && u.senha === senha
-  );
+  try {
+    const response = await fetch('http://localhost:3001/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ login: usuario, senha }),
+    });
 
-  if (encontrado) {
-    salvarSessao({ nome: encontrado.nome, perfil: encontrado.perfil });
-    navigate('/home');
-  } else {
-    setErro('Login ou senha inválidos.');
+    if (response.ok) {
+      const dados = await response.json();
+      salvarSessao({ nome: dados.nome, perfil: dados.perfil });
+      navigate('/home');
+    } else {
+      const erroDados = await response.json();
+      setErro(erroDados.error || 'Login ou senha inválidos.');
+    }
+  } catch (err) {
+    console.error('Erro de conexão:', err);
+    setErro('Não foi possível conectar ao servidor.');
   }
 };
 

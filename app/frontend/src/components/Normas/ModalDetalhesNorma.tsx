@@ -1,6 +1,15 @@
+import { useState, useEffect } from "react";
 import type { Peca } from "../../utils/pecas";
 import type { Norma } from "./NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "./NormasViewModel";
+
+interface LogHistorico {
+  id: number;
+  tipoAlteracao: string; // 'CADASTRO' | 'EDICAO' | 'EXCLUSAO'
+  usuarioNome: string;
+  detalhes: string;
+  data: string;
+}
 
 type PropsModalDetalhesNorma = {
   norma: Norma;
@@ -22,6 +31,27 @@ export default function ModalDetalhesNorma({
   onViewPdf,
   onViewImages
 }: PropsModalDetalhesNorma) {
+  const [historico, setHistorico] = useState<LogHistorico[]>([]);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+
+  useEffect(() => {
+    async function fetchHistorico() {
+      setCarregandoHistorico(true);
+      try {
+        const response = await fetch(`http://localhost:3001/historico/${norma.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHistorico(data);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar histórico:", err);
+      } finally {
+        setCarregandoHistorico(false);
+      }
+    }
+    fetchHistorico();
+  }, [norma.id]);
+
   return (
     <div className="modal-overlay modal-overlay-nested" onClick={onClose}>
       <div className="modal modal-large" onClick={(evento) => evento.stopPropagation()}>
@@ -180,6 +210,44 @@ export default function ModalDetalhesNorma({
                 <p>Nenhuma nota ou anexo.</p>
               </div>
             )}
+
+          <hr className="divider" />
+          <div className="view-item">
+            <span className="view-label">
+              <i className="fas fa-history"></i> Histórico de Alterações (Auditoria)
+            </span>
+            {carregandoHistorico ? (
+              <div style={{ color: "var(--c-text-muted)", fontSize: "0.9rem" }}>Carregando histórico...</div>
+            ) : historico.length > 0 ? (
+              <div className="timeline-container" style={{ marginTop: "10px", padding: "10px 0" }}>
+                {historico.map((log) => (
+                  <div key={log.id} style={{ display: "flex", gap: "10px", marginBottom: "12px", fontSize: "0.85rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <span className={`badge ${log.tipoAlteracao === 'CADASTRO' ? 'vigente' : log.tipoAlteracao === 'EDICAO' ? 'theme-subcategoria' : 'revogada'}`} style={{ fontSize: "0.65rem", padding: "2px 6px" }}>
+                        {log.tipoAlteracao}
+                      </span>
+                      <div style={{ width: "2px", flex: 1, backgroundColor: "var(--c-border)", marginTop: "4px" }}></div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: "var(--c-text-1)" }}>
+                        {log.usuarioNome} <span style={{ fontWeight: 400, color: "var(--c-text-muted)", float: "right", fontSize: "0.75rem" }}>
+                          {new Date(log.data).toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                      <div style={{ color: "var(--c-text-2)", marginTop: "3px", lineHeight: "1.3" }}>
+                        {log.detalhes}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state compact" style={{ border: "none", background: "none", padding: 0 }}>
+                <i className="fas fa-history"></i>
+                <p>Nenhuma alteração registrada para esta norma.</p>
+              </div>
+            )}
+          </div>
         </div>
         <div className="modal-footer">
           <button type="button" className="btn btn-primary" onClick={onClose}><i className="fas fa-arrow-left"></i> Voltar</button>

@@ -37,7 +37,7 @@ export const USUARIO_DEV: UsuarioSessao = {
   perfil: 'administrador',
 }
 
-/** Sessão real ou, em desenvolvimento sem login, o usuário dev acima. */
+/** Sessão real obtida do localStorage. */
 export function obterUsuarioAtual(): UsuarioSessao | null {
-  return obterSessao() ?? (import.meta.env.DEV ? USUARIO_DEV : null)
+  return obterSessao();
 }

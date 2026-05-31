@@ -153,7 +153,7 @@ export default function Solicitacoes() {
   const isAdmin = usuario?.perfil === "administrador";
   const isChecker = usuario?.perfil === "checker";
 
-  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(SOLICITACOES_BASE);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [titulo, setTitulo] = useState("");
@@ -176,43 +176,94 @@ export default function Solicitacoes() {
   const removerToast = (id: number) =>
     setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  const handleSolicitar = () => {
-    if (!codigo.trim() && !titulo.trim()) {
-      adicionarToast("erro", "Preencha ao menos um campo antes de solicitar.");
+  // Carregar solicitações da API
+  const fetchSolicitacoes = useCallback(async () => {
+    try {
+      const response = await fetch("http://localhost:3001/solicitacoes");
+      if (response.ok) {
+        const data = await response.json();
+        setSolicitacoes(data);
+      } else {
+        adicionarToast("erro", "Erro ao carregar solicitações do servidor.");
+      }
+    } catch (err) {
+      adicionarToast("erro", "Erro ao conectar com a API de solicitações.");
+    }
+  }, [adicionarToast]);
+
+  useEffect(() => {
+    fetchSolicitacoes();
+  }, [fetchSolicitacoes]);
+
+  const handleSolicitar = async () => {
+    if (!titulo.trim()) {
+      adicionarToast("erro", "Preencha o campo de título antes de solicitar.");
       return;
     }  
 
-    const nova: Solicitacao = {
-      id: Date.now(),
-      codigo: codigo.trim(),
-      titulo: titulo.trim(),
-      motivo: motivo.trim(),
-      solicitante: usuario?.nome ?? "Usuário",
-      data: new Date().toISOString().split("T")[0],
-      status: "Aguardando análise",
-    };
+    try {
+      const response = await fetch("http://localhost:3001/solicitacoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          codigo: codigo.trim(),
+          titulo: titulo.trim(),
+          motivo: motivo.trim(),
+          solicitante: usuario?.nome ?? "Usuário"
+        })
+      });
 
-    setSolicitacoes((prev) => [nova, ...prev]);
-    setCodigo("");
-    setTitulo("");
-    setShowModal(false);
-    setMotivo("");
-    adicionarToast("sucesso", "Solicitação enviada com sucesso!");
+      if (response.ok) {
+        const nova = await response.json();
+        setSolicitacoes((prev) => [nova, ...prev]);
+        setCodigo("");
+        setTitulo("");
+        setShowModal(false);
+        setMotivo("");
+        adicionarToast("sucesso", "Solicitação enviada com sucesso!");
+      } else {
+        const errorData = await response.json();
+        adicionarToast("erro", errorData.error || "Erro ao criar solicitação.");
+      }
+    } catch (err) {
+      adicionarToast("erro", "Erro ao conectar com o servidor.");
+    }
   };
 
-const atualizarStatus = (id: number, novoStatus: Solicitacao["status"], extras?: Partial<Solicitacao>) => {
-  setSolicitacoes(prev => prev.map(s => s.id === id ? { ...s, status: novoStatus, ...extras } : s));
-};
+  const atualizarStatus = async (id: number, novoStatus: Solicitacao["status"], extras?: Partial<Solicitacao>) => {
+    try {
+      const response = await fetch(`http://localhost:3001/solicitacoes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: novoStatus,
+          motivoRecusa: extras?.motivoRecusa || ""
+        })
+      });
 
-/* Atualiza status do card */
-const abrirModalAnalise = (s: Solicitacao) => {
-  setSolicitacaoAnalise(s);
-  setMotivoRecusa("");
-  setConfirmacaoInsercao(false);
-  if (isChecker && s.status === "Aguardando análise") {
-    atualizarStatus(s.id, "Em análise");
-  }
-};
+      if (response.ok) {
+        const atualizada = await response.json();
+        setSolicitacoes(prev => prev.map(s => s.id === id ? atualizada : s));
+        if (solicitacaoAnalise && solicitacaoAnalise.id === id) {
+          setSolicitacaoAnalise(atualizada);
+        }
+      } else {
+        adicionarToast("erro", "Erro ao atualizar status no servidor.");
+      }
+    } catch (err) {
+      adicionarToast("erro", "Erro de conexão ao atualizar status.");
+    }
+  };
+
+  /* Atualiza status do card */
+  const abrirModalAnalise = async (s: Solicitacao) => {
+    setSolicitacaoAnalise(s);
+    setMotivoRecusa("");
+    setConfirmacaoInsercao(false);
+    if (isChecker && s.status === "Aguardando análise") {
+      await atualizarStatus(s.id, "Em análise");
+    }
+  };
 
 const termoMinusculo = termoPesquisa.toLowerCase();
 const solicitacoesFiltradas = solicitacoes
