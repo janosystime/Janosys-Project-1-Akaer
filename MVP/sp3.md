@@ -219,7 +219,7 @@ Com isso, o sistema ganha em proteção de dados, organização individual e cap
 ## 📂 Anexos / Evidências <a id="anexos"></a>
 
 - [Cenários para as User Stories da Sprint 3](../docs/sp3/gherkin_sp3.pdf)
-- [Modelo do Banco de Dados](../docs/sp3/modelagem_bd_api_III_akaer.png)
+- [Modelo do Banco de Dados](../docs/sp3/modelagem_bd_api_II_akaer.png)
 
 ---
 
