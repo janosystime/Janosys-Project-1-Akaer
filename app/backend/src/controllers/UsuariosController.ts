@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { Perfil } from '@prisma/client';
-import bcrypt from 'bcrypt';
 
 export class UsuariosController {
   async index(req: Request, res: Response) {
@@ -45,16 +44,13 @@ export class UsuariosController {
         return res.status(400).json({ error: 'Este login já está em uso' });
       }
 
-      // Hash password
-      const senhaHasheada = await bcrypt.hash(senha, 10);
-
       const dbPerfil = perfil.toUpperCase() as Perfil;
 
       const usuario = await prisma.usuario.create({
         data: {
           nome,
           login,
-          senha: senhaHasheada,
+          senha,
           perfil: dbPerfil,
           telefone: telefone || null,
           departamento: departamento || null
@@ -117,7 +113,7 @@ export class UsuariosController {
 
       // Only update password if a new one is provided (and it's not a dummy blank password from frontend)
       if (senha && senha.trim() !== '') {
-        dataUpdate.senha = await bcrypt.hash(senha, 10);
+        dataUpdate.senha = senha;
       }
 
       const usuario = await prisma.usuario.update({

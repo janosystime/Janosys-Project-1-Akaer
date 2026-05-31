@@ -1,6 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 const { PrismaMariaDb } = require('@prisma/adapter-mariadb');
-const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const databaseUrl = process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/janosys_db';
@@ -34,44 +33,205 @@ const adapter = new PrismaMariaDb({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Seeding initial users...');
+  console.log('Seeding initial data...');
 
-  const count = await prisma.usuario.count();
-  if (count > 0) {
-    console.log('Database already has users. Skipping seed.');
-    return;
+  // 1. Seed Users
+  const userCount = await prisma.usuario.count();
+  if (userCount === 0) {
+    console.log('Seeding users...');
+    const hash123 = '123';
+    await prisma.usuario.createMany({
+      data: [
+        {
+          nome: 'Administrador Janosys',
+          login: 'admin',
+          senha: hash123,
+          perfil: 'ADMINISTRADOR',
+          telefone: '(12) 99999-0001',
+          departamento: 'TI',
+        },
+        {
+          nome: 'Usuario Janosys',
+          login: 'usuario',
+          senha: hash123,
+          perfil: 'USUARIO',
+          telefone: '(12) 99999-0002',
+          departamento: 'Engenharia',
+        },
+        {
+          nome: 'Checker Janosys',
+          login: 'checker',
+          senha: hash123,
+          perfil: 'CHECKER',
+          telefone: '(12) 99999-0003',
+          departamento: 'Operações',
+        },
+      ],
+    });
+  } else {
+    console.log('Users table not empty. Skipping user seed.');
   }
 
-  const hash123 = await bcrypt.hash('123', 10);
+  // 2. Seed Norms
+  const normsCount = await prisma.norma.count();
+  if (normsCount === 0) {
+    console.log('Seeding norms...');
+    await prisma.norma.createMany({
+      data: [
+        {
+          id: "RBAC 25.1309",
+          codigo: "25.1309",
+          titulo: "Análise de Segurança de Sistemas",
+          organizacao: "ANAC",
+          categoria: "Instalação",
+          subcategoria: "Geral",
+          item: "Parafuso",
+          tipo: "Pública",
+          revisao: "Emenda 09",
+          status: "Vigente",
+          notas: JSON.stringify(["Norma principal de safety."]),
+          referencias: JSON.stringify(["SAE ARP4761"]),
+          palavrasChave: JSON.stringify(["safety", "análise de risco"]),
+          nomePdf: "rbac-25-1309.pdf",
+          urlPdf: "/pdf/rbac-25-1309.pdf",
+          imagens: JSON.stringify(["/imagem/rbac-25-1309.jpeg"])
+        },
+        {
+          id: "FAR 25.571",
+          codigo: "25.571",
+          titulo: "Damage Tolerance and Fatigue Evaluation",
+          organizacao: "FAA",
+          categoria: "Conjunto",
+          subcategoria: "União de Peças",
+          item: "Soldagem",
+          tipo: "Pública",
+          revisao: "Amendment 27",
+          status: "Vigente",
+          notas: JSON.stringify([]),
+          referencias: JSON.stringify([]),
+          palavrasChave: JSON.stringify(["fadiga", "tolerância", "dano"]),
+          nomePdf: "far-25-571.pdf",
+          urlPdf: "/pdf/far-25-571.pdf",
+          imagens: JSON.stringify(["/imagem/far-25-571.jpeg"])
+        },
+        {
+          id: "ISO 9001:2015",
+          codigo: "9001",
+          titulo: "Quality management systems — Requirements",
+          organizacao: "ISO",
+          categoria: "Peça",
+          subcategoria: "Metálica",
+          item: "Usinado",
+          tipo: "Pública",
+          revisao: "2015",
+          status: "Vigente",
+          notas: JSON.stringify(["Requisitos gerais para o sistema de gestão da qualidade nas plantas de manufatura."]),
+          referencias: JSON.stringify(["ISO 9000:2015"]),
+          palavrasChave: JSON.stringify(["qualidade", "gestão", "requisitos"])
+        },
+        {
+          id: "CS-25",
+          codigo: "CS-25",
+          titulo: "Certification Specifications for Large Aeroplanes",
+          organizacao: "EASA",
+          categoria: "Conjunto",
+          subcategoria: "Cablagem",
+          item: "Conector",
+          tipo: "Privada",
+          revisao: "Amendment 27",
+          status: "Vigente",
+          notas: JSON.stringify(["Especificações essenciais para certificação EASA em aeronaves de grande porte."]),
+          referencias: JSON.stringify(["FAR 25"]),
+          palavrasChave: JSON.stringify(["certificação", "aeronave grande", "easa"])
+        }
+      ]
+    });
+  } else {
+    console.log('Norms table not empty. Skipping norm seed.');
+  }
 
-  await prisma.usuario.createMany({
-    data: [
-      {
-        nome: 'Administrador Janosys',
-        login: 'admin',
-        senha: hash123,
-        perfil: 'ADMINISTRADOR',
-        telefone: '(12) 99999-0001',
-        departamento: 'TI',
-      },
-      {
-        nome: 'Usuario Janosys',
-        login: 'usuario',
-        senha: hash123,
-        perfil: 'USUARIO',
-        telefone: '(12) 99999-0002',
-        departamento: 'Engenharia',
-      },
-      {
-        nome: 'Checker Janosys',
-        login: 'checker',
-        senha: hash123,
-        perfil: 'CHECKER',
-        telefone: '(12) 99999-0003',
-        departamento: 'Operações',
-      },
-    ],
-  });
+  // 3. Seed Solicitations
+  const solicitationsCount = await prisma.solicitacao.count();
+  if (solicitationsCount === 0) {
+    console.log('Seeding solicitations...');
+    await prisma.solicitacao.createMany({
+      data: [
+        {
+          codigo: "AS9100",
+          titulo: "Quality Management Systems - Requirements for Aviation",
+          solicitante: "Ana Silva",
+          data: new Date("2026-03-01"),
+          status: "ACEITA"
+        },
+        {
+          codigo: "MIL-STD-810",
+          titulo: "Environmental Engineering Considerations and Laboratory Tests",
+          solicitante: "Carlos Mendes",
+          data: new Date("2026-03-05"),
+          status: "ANALISE"
+        },
+        {
+          codigo: "RTCA DO-160",
+          titulo: "Environmental Conditions and Test Procedures for Airborne Equipment",
+          solicitante: "Fernanda Rocha",
+          data: new Date("2026-03-10"),
+          status: "AGUARDANDO"
+        },
+        {
+          codigo: "SAE ARP4754",
+          titulo: "Guidelines for Development of Civil Aircraft and Systems",
+          solicitante: "Marcos Oliveira",
+          data: new Date("2026-03-12"),
+          status: "AGUARDANDO"
+        },
+        {
+          codigo: "MIL-STD-1553",
+          titulo: "Digital Time Division Command/Response Multiplex Data Bus",
+          solicitante: "Julia Ferreira",
+          data: new Date("2026-03-15"),
+          status: "ANALISE"
+        },
+        {
+          codigo: "ASTM B117",
+          titulo: "Standard Practice for Operating Salt Spray Apparatus",
+          solicitante: "Ricardo Souza",
+          data: new Date("2026-03-18"),
+          status: "INDEFERIDA",
+          motivoRecusa: "Norma já contemplada pela ISO 9227, disponível na biblioteca."
+        },
+        {
+          codigo: "",
+          titulo: "Norma de proteção contra corrosão em estruturas metálicas aeronáuticas",
+          solicitante: "Patrícia Lima",
+          data: new Date("2026-03-20"),
+          status: "AGUARDANDO"
+        },
+        {
+          codigo: "ISO 10007",
+          titulo: "Quality Management - Guidelines for Configuration Management",
+          solicitante: "Eduardo Costa",
+          data: new Date("2026-03-22"),
+          status: "ACEITA"
+        },
+        {
+          codigo: "RTCA DO-178C",
+          titulo: "Software Considerations in Airborne Systems and Equipment Certification",
+          solicitante: "Beatriz Nunes",
+          data: new Date("2026-04-01"),
+          status: "AGUARDANDO"
+        },
+        {
+          codigo: "ARP5412",
+          titulo: "Aircraft Lightning Environment and Related Test Waveforms",
+          solicitante: "Thiago Alves",
+          data: new Date("2026-04-10"),
+          status: "ANALISE"
+        }
+      ]
+    });
+  } else {
+    console.log('Solicitations table not empty. Skipping solicitation seed.');
+  }
 
   console.log('Seed completed successfully!');
 }

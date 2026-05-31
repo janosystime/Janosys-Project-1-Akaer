@@ -22,56 +22,6 @@ export interface Usuario {
   departamento: string;
   dataCriacao: string;
 }
-
-// ============================================
-// SIGNA — Camada de dados (mock localStorage)
-// Substituir estas funções pelas chamadas à API quando o BD estiver pronto:
-// Ex: GET /api/usuarios | POST /api/usuarios | PUT /api/usuarios/:id | DELETE /api/usuarios/:id
-// ============================================
-const STORAGE_KEY = "signa_usuarios";
-
-const USUARIOS_INICIAIS: Usuario[] = [
-  {
-    id: 1,
-    nome: "Administrador Janosys",
-    login: "admin",
-    senha: "123",
-    perfil: "administrador",
-    telefone: "(12) 99999-0001",
-    departamento: "TI",
-    dataCriacao: "2026-01-01",
-  },
-  {
-    id: 2,
-    nome: "Usuario Janosys",
-    login: "usuario",
-    senha: "123",
-    perfil: "usuario",
-    telefone: "(12) 99999-0002",
-    departamento: "Engenharia",
-    dataCriacao: "2026-01-02",
-  },
-  {
-    id: 3,
-    nome: "Checker Janosys",
-    login: "checker",
-    senha: "123",
-    perfil: "checker",
-    telefone: "(12) 99999-0003",
-    departamento: "Operações",
-    dataCriacao: "2026-01-03",
-  },
-];
-
-function carregarUsuarios(): Usuario[] {
-  const salvo = localStorage.getItem(STORAGE_KEY);
-  return salvo ? JSON.parse(salvo) : USUARIOS_INICIAIS;
-}
-
-function salvarUsuarios(lista: Usuario[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
-}
-
 // ============================================
 // SIGNA — Toast
 // ============================================

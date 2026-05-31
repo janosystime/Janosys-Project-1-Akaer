@@ -124,7 +124,7 @@ O projeto é idealizado pela FATEC de São José dos Campos e alunos, tendo como
 | :---------------: | :--------: | :----------: | :---------------: |
 |        01         | 05/04/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp1.md) |
 |        02         | 03/05/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp2.md) |
-|        03         | 31/05/2026 |  Em construção  | ---- |
+|        03         | 31/05/2026 |  Concluída  | [Sprint Backlog - MVP](MVP/sp3.md) |
 | Feira de Soluções | 11/06/2026 |  Em construção  | ---- |
 
 ---
@@ -169,53 +169,108 @@ A estrutura de ramificação do repositório segue este padrão de nomenclatura:
 
 ---
 
-## 📦 Manual de Instalação <a id="instalacao"></a>
+## 📦 Manual de Instalação e Execução <a id="instalacao"></a>
 
-### Pré-requisitos
+### 📋 Pré-requisitos
 
-  Antes de começar, certifique-se de ter instalado:
-
-
-   Git: Para clonar o repositório. Download Git (https://git-scm.com/)
-
-   Node.js (Versão 18 ou superior): Para gerenciar pacotes e rodar o frontend. Download Node.js (https://nodejs.org/)
-
-   Gerenciador de pacotes: O Node.js já vem com o npm, mas você também pode usar o yarn ou pnpm.
-
+Antes de começar, certifique-se de ter instalado em sua máquina:
+* **Git**: Para clonagem e controle de versão.
+* **Node.js** (Versão 18 ou superior): Para gerenciar dependências e rodar os servidores de backend e frontend.
+* **MySQL**: Banco de dados relacional para persistência de dados e auditoria (rodando localmente na porta padrão `3306`).
+* **MySQL Workbench** or similar CLI/Client: Para visualizar as tabelas de forma interativa.
 
 ---
 
-### 🚀 Passo a Passo para Rodar Localmente
+### 🚀 Passo a Passo para Execução Local
 
-1. Clonar o Repositório
+#### 1. Clonar o Repositório e Acessar o Diretório
+Abra o terminal e execute os comandos abaixo para baixar o projeto e entrar na pasta raiz:
+```bash
+git clone https://github.com/janosystime/Janosys-Project-1-Akaer.git
+cd Janosys-Project-1-Akaer
+```
 
-  Abra o terminal e execute o comando abaixo para baixar o projeto:
+---
 
+#### 2. Configurar e Iniciar o Back-end (API + Banco de Dados)
 
-    git clone https://github.com/janosystime/Janosys-Project-1-Akaer.git
+O backend do projeto utiliza **Node.js**, **Express** e **Prisma ORM (Prisma 7)** integrado ao MySQL.
 
-    cd Janosys-Project-1-Akaer
+1. **Acessar a pasta do Back-end**:
+   ```bash
+   cd app/backend
+   ```
+2. **Instalar dependências**:
+   ```bash
+   npm install
+   ```
+3. **Configurar as Variáveis de Ambiente**:
+   Crie um arquivo chamado `.env` na raiz da pasta `app/backend/` e defina a URL de conexão com o seu MySQL local e a porta do servidor:
+   ```env
+   DATABASE_URL="mysql://USUARIO:SENHA@localhost:3306/janosys_db"
+   PORT=3001
+   ```
+   *(Substitua `USUARIO` e `SENHA` pelas suas credenciais locais do MySQL).*
 
-2. Configurar o Frontend
+4. **Sincronizar e Sincronizar o Banco com o Prisma**:
+   Execute o comando abaixo para gerar o Prisma Client e criar as tabelas automaticamente no seu MySQL:
+   ```bash
+   npx prisma db push
+   ```
 
-  O projeto utiliza React + Vite + TypeScript. Navegue até a pasta do frontend e instale as dependências:
+5. **Instalar Triggers de Auditoria Nativas no MySQL**:
+   Para configurar a auditoria nativa no banco que grava todas as inserções, atualizações e exclusões de normas de forma procedimental, instale as triggers executando:
+   ```bash
+   node setup-triggers.js
+   ```
+   *(O script aplicará as queries do arquivo [triggers.sql](file:///home/pedro/Documentos/FATEC/2Semestre/API/Janosys-Project-1-Akaer/app/backend/triggers.sql) diretamente na sua base MySQL).*
 
+6. **Alimentar o Banco de Dados (Database Seeding)**:
+   Alimente o banco com os usuários iniciais de teste (admin, checker e usuário comum com senhas simplificadas) e as normas/solicitações iniciais executando:
+   ```bash
+   node prisma/seed.js
+   ```
 
-    # Entrar na pasta do frontend
-    cd frontend
-    
-    # Instalar dependências
-    npm install
+7. **Iniciar o Servidor do Back-end**:
+   Inicie a API em modo de desenvolvimento (rodando na porta `3001`):
+   ```bash
+   npm run dev
+   ```
 
-3. Executar o Projeto
+---
 
-  Ainda na pasta frontend, inicie o servidor de desenvolvimento:
+#### 3. Configurar e Iniciar o Front-end (React)
 
-     npm run dev
+O frontend foi desenvolvido em **React**, **Vite** e **TypeScript** estruturado na pasta `app/frontend`.
 
+1. **Acessar a pasta do Front-end** (abra uma nova aba de terminal na pasta raiz do projeto):
+   ```bash
+   cd app/frontend
+   ```
+2. **Instalar dependências**:
+   ```bash
+   npm install
+   ```
+3. **Iniciar o Servidor de Desenvolvimento**:
+   ```bash
+   npm run dev
+   ```
+4. **Acessar no Navegador**:
+   Acesse a aplicação no endereço: **[http://localhost:5173](http://localhost:5173)**
 
-  Após executar o comando, o terminal exibirá um link (geralmente http://localhost:5173). Abra-o no seu navegador.
+---
 
+### 🔑 Contas de Teste Pré-cadastradas (Seed)
+
+Após rodar o script de seed, use as seguintes credenciais para testar as diferentes permissões do sistema (senhas em formato simplificado em texto plano):
+
+| Perfil de Acesso | Usuário (Login) | Senha | Departamento |
+| :---: | :---: | :---: | :---: |
+| **Administrador** | `admin` | `123` | TI |
+| **Checker (Revisor)** | `checker` | `123` | Operações |
+| **Visualizador (Colaborador)** | `usuario` | `123` | Engenharia |
+
+---
 
 ---
 

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import bcrypt from 'bcrypt';
 
 export class AuthController {
   async login(req: Request, res: Response) {
@@ -21,7 +20,7 @@ export class AuthController {
       }
 
       // Check password
-      const senhaValida = await bcrypt.compare(senha, usuario.senha);
+      const senhaValida = senha === usuario.senha;
       if (!senhaValida) {
         return res.status(401).json({ error: 'Login ou senha incorretos' });
       }

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import "../styles/Normas.css";
 import { obterUsuarioAtual } from "../auth/session";
 
@@ -12,90 +12,6 @@ interface Solicitacao {
   status: "Aguardando análise" | "Em análise" | "Aceita" | "Indeferida";
   motivoRecusa?: string;
 }
-
-const SOLICITACOES_BASE: Solicitacao[] = [
-  {
-    id: 1,
-    codigo: "AS9100",
-    titulo: "Quality Management Systems - Requirements for Aviation",
-    solicitante: "Ana Silva",
-    data: "2026-03-01",
-    status: "Aceita",
-  },
-  {
-    id: 2,
-    codigo: "MIL-STD-810",
-    titulo: "Environmental Engineering Considerations and Laboratory Tests",
-    solicitante: "Carlos Mendes",
-    data: "2026-03-05",
-    status: "Em análise",
-  },
-  {
-    id: 3,
-    codigo: "RTCA DO-160",
-    titulo: "Environmental Conditions and Test Procedures for Airborne Equipment",
-    solicitante: "Fernanda Rocha",
-    data: "2026-03-10",
-    status: "Aguardando análise",
-  },
-  {
-    id: 4,
-    codigo: "SAE ARP4754",
-    titulo: "Guidelines for Development of Civil Aircraft and Systems",
-    solicitante: "Marcos Oliveira",
-    data: "2026-03-12",
-    status: "Aguardando análise",
-  },
-  {
-    id: 5,
-    codigo: "MIL-STD-1553",
-    titulo: "Digital Time Division Command/Response Multiplex Data Bus",
-    solicitante: "Julia Ferreira",
-    data: "2026-03-15",
-    status: "Em análise",
-  },
-  {
-    id: 6,
-    codigo: "ASTM B117",
-    titulo: "Standard Practice for Operating Salt Spray Apparatus",
-    solicitante: "Ricardo Souza",
-    data: "2026-03-18",
-    status: "Indeferida",
-    motivoRecusa: "Norma já contemplada pela ISO 9227, disponível na biblioteca.",
-  },
-  {
-    id: 7,
-    codigo: "",
-    titulo: "Norma de proteção contra corrosão em estruturas metálicas aeronáuticas",
-    solicitante: "Patrícia Lima",
-    data: "2026-03-20",
-    status: "Aguardando análise",
-  },
-  {
-    id: 8,
-    codigo: "ISO 10007",
-    titulo: "Quality Management - Guidelines for Configuration Management",
-    solicitante: "Eduardo Costa",
-    data: "2026-03-22",
-    status: "Aceita",
-  },
-  {
-    id: 9,
-    codigo: "RTCA DO-178C",
-    titulo: "Software Considerations in Airborne Systems and Equipment Certification",
-    solicitante: "Beatriz Nunes",
-    data: "2026-04-01",
-    status: "Aguardando análise",
-  },
-  {
-    id: 10,
-    codigo: "ARP5412",
-    titulo: "Aircraft Lightning Environment and Related Test Waveforms",
-    solicitante: "Thiago Alves",
-    data: "2026-04-10",
-    status: "Em análise",
-  },
-];
 
 interface ToastMsg {
   id: number;

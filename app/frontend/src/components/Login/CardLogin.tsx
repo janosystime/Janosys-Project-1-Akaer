@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import CampoEntrada from './CamposDeTexto';
 import Botao from './BotaoEntrar';
 import { salvarSessao } from '../../auth/session';
-import { USUARIOS_MOCK } from './Mocks';
 
 function CartaoLogin() {
   const [usuario, setUsuario] = useState('');

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, type ChangeEvent } from "react";
 import { obterUsuarioAtual } from "../auth/session";
-import { NORMAS_BASE } from "../components/Normas/mocks";
 import {
   FORM_INICIAL,
   SUBCATEGORIAS,
@@ -9,13 +8,38 @@ import {
   type ToastMsg,
 } from "../components/Normas/NormasViewModel";
 import { carregarPecas, listarPecasRelacionadas, type Peca } from "../utils/pecas";
-import { converterParaBase64, normalizarNormasSalvas } from "../utils/NormasUtils";
+import { converterParaBase64 } from "../utils/NormasUtils";
 
 export default function useNormas() {
   const [pecas] = useState<Peca[]>(() => carregarPecas());
   const [normas, setNormas] = useState<Norma[]>([]);
   const usuario = obterUsuarioAtual();
   const podeEditar = usuario?.perfil === "administrador";
+
+  const [toasts, setToasts] = useState<ToastMsg[]>([]);
+  const adicionarToast = useCallback(
+    (tipoMensagem: ToastMsg["tipo"], mensagemConteudo: string) => {
+      const identificadorToast = Date.now();
+      setToasts((toastsAnteriores) => [
+        ...toastsAnteriores,
+        { id: identificadorToast, tipo: tipoMensagem, mensagem: mensagemConteudo },
+      ]);
+      setTimeout(
+        () =>
+          setToasts((toastsAnteriores) =>
+            toastsAnteriores.filter((toastAtual) => toastAtual.id !== identificadorToast),
+          ),
+        4000,
+      );
+    },
+    [],
+  );
+  const removerToast = (idToastParaRemover: number) =>
+    setToasts((toastsAnteriores) =>
+      toastsAnteriores.filter(
+        (toastAtual) => toastAtual.id !== idToastParaRemover,
+      ),
+    );
 
   // Fetch norms from API
   const fetchNormas = useCallback(async () => {
@@ -67,31 +91,6 @@ export default function useNormas() {
   } | null>(null);
   const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
-
-  const [toasts, setToasts] = useState<ToastMsg[]>([]);
-  const adicionarToast = useCallback(
-    (tipoMensagem: ToastMsg["tipo"], mensagemConteudo: string) => {
-      const identificadorToast = Date.now();
-      setToasts((toastsAnteriores) => [
-        ...toastsAnteriores,
-        { id: identificadorToast, tipo: tipoMensagem, mensagem: mensagemConteudo },
-      ]);
-      setTimeout(
-        () =>
-          setToasts((toastsAnteriores) =>
-            toastsAnteriores.filter((toastAtual) => toastAtual.id !== identificadorToast),
-          ),
-        4000,
-      );
-    },
-    [],
-  );
-  const removerToast = (idToastParaRemover: number) =>
-    setToasts((toastsAnteriores) =>
-      toastsAnteriores.filter(
-        (toastAtual) => toastAtual.id !== idToastParaRemover,
-      ),
-    );
 
   const [confirmacao, setConfirmacao] = useState<ConfirmacaoState>({
     visivel: false,

@@ -20,6 +20,7 @@ import Home       from './pages/Home'
 import Normas     from './pages/Normas'
 import Solicitacoes     from './pages/Solicitacoes'
 import Usuarios   from './pages/Usuarios'
+import Auditoria  from './pages/Auditoria'
 import Layout     from './components/Layout'
 
 // ------------------------------------------------------------
@@ -94,6 +95,7 @@ export default function App() {
         {/* Rota de usuários: RotaAdmin protege o conteúdo interno.
             O Layout já está montado — só o <Outlet /> troca. */}
         <Route path="/usuarios" element={ <RotaAdmin> <Usuarios /> </RotaAdmin> } />
+        <Route path="/auditoria" element={ <RotaAdmin> <Auditoria /> </RotaAdmin> } />
       </Route>
 
       {/* Qualquer URL desconhecida vai para /home */}
