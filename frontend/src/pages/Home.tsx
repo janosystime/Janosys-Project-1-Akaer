@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
-import "../styles/Normas.css"; 
+import "../styles/Normas.css";
 import "../styles/Home.css";
-import { salvarPecas, carregarPecas, type Peca } from "../helpers/pecas";
+import { salvarPecas, carregarPecas, type Peca } from "../utils/pecas";
+import { obterUsuarioAtual } from '../auth/session'
 
-import { 
-  type Norma, 
-  NORMAS_BASE, 
-  ORG_ORIGENS, 
-  CAT_ICONES, 
-  PdfViewer, 
-  ModalConfirmacao,
-  ImageLightbox,
-  ModalDetalhesNorma
-} from "./Normas";
+import type { Norma } from "../components/Normas/NormasViewModel";
+import { CAT_ICONES, ORG_ORIGENS } from "../components/Normas/NormasViewModel";
+import { NORMAS_BASE } from "../components/Normas/mocks";
+import VisualizadorPdf from "../components/Normas/VisualizadorPdf";
+import ModalConfirmacao from "../components/Normas/ModalConfirmacao";
+import LightboxImagens from "../components/Normas/LightboxImagens";
+import ModalDetalhesNorma from "../components/Normas/ModalDetalhesNorma";
 
 type CategoriaRaiz = "Peça" | "Conjunto" | "Instalação" | "Geral";
 
@@ -36,12 +34,15 @@ export default function Home() {
     return normasSalvas ? JSON.parse(normasSalvas) : NORMAS_BASE;
   });
 
+  const usuario = obterUsuarioAtual()
+  const podeEditar = usuario?.perfil === 'administrador'
+  
   const [pecas, setPecas] = useState<Peca[]>(() => carregarPecas());
   const [estruturaPastas, setEstruturaPastas] = useState<Record<string, string[]>>(ESTRUTURA_PASTAS_BASE);
   const [pecaVisualizar, setPecaVisualizar] = useState<Peca | null>(null);
   const [normaDetalheVisualizar, setNormaDetalheVisualizar] = useState<Norma | null>(null);
-  const [pdfVisualizar, setPdfVisualizar] = useState<{url: string, nome: string} | null>(null);
-  
+  const [pdfVisualizar, setPdfVisualizar] = useState<{ url: string, nome: string } | null>(null);
+
   const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
 
@@ -52,7 +53,7 @@ export default function Home() {
 
   const [showAddSubcategoria, setShowAddSubcategoria] = useState(false);
   const [nomeNovaSubcategoria, setNomeNovaSubcategoria] = useState("");
-  
+
   const [showAddPeca, setShowAddPeca] = useState(false);
   const [nomeNovaPeca, setNomeNovaPeca] = useState("");
   const [normasNovaPeca, setNormasNovaPeca] = useState<string[]>([]);
@@ -91,7 +92,7 @@ export default function Home() {
     evento.preventDefault();
     if (!nomeEditadoSubcategoria.trim() || !navCategoria || !subcategoriaEditando) return;
     const novoNome = nomeEditadoSubcategoria.trim();
-    
+
     setEstruturaPastas(prev => {
       const novasPastas = prev[navCategoria].map(subcategoriaAtual => subcategoriaAtual === subcategoriaEditando ? novoNome : subcategoriaAtual);
       return { ...prev, [navCategoria]: novasPastas };
@@ -144,10 +145,12 @@ export default function Home() {
         </div>
         <div className="peca-card-footer">
           <span className="normas-count"><i className="fas fa-file-shield"></i> {pecaAtual.normasVinculadas.length} Normas</span>
-          <div className="card-actions inline">
-            <button className="btn btn-warning btn-icon" onClick={(evento) => { evento.stopPropagation(); setPecaEditando(pecaAtual); setNomeEditadoPeca(pecaAtual.nome); setNormasEditadasPeca(pecaAtual.normasVinculadas); }} title="Editar Peça"><i className="fas fa-pen"></i></button>
-            <button className="btn btn-danger btn-icon" onClick={(evento) => { evento.stopPropagation(); setPecaExcluindo(pecaAtual); }} title="Excluir Peça"><i className="fas fa-trash"></i></button>
-          </div>
+          {podeEditar && (
+            <div className="card-actions inline">
+              <button className="btn btn-warning btn-icon" onClick={(evento) => { evento.stopPropagation(); setPecaEditando(pecaAtual); setNomeEditadoPeca(pecaAtual.nome); setNormasEditadasPeca(pecaAtual.normasVinculadas); }} title="Editar Peça"><i className="fas fa-pen"></i></button>
+              <button className="btn btn-danger btn-icon" onClick={(evento) => { evento.stopPropagation(); setPecaExcluindo(pecaAtual); }} title="Excluir Peça"><i className="fas fa-trash"></i></button>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -197,7 +200,10 @@ export default function Home() {
             <div className="category-view-container">
               <div className="category-header-actions">
                 <h2 className="category-title"><i className={`fas ${CATEGORIAS_DEF[navCategoria].icone}`}></i> {navCategoria}</h2>
-                <button className="btn btn-ghost" onClick={() => setShowManageSubcategorias(true)}><i className="fas fa-sliders"></i> Gerenciar Pastas</button>
+                {podeEditar && (
+                  <button className="btn btn-ghost" onClick={() => setShowManageSubcategorias(true)}>
+                    <i className="fas fa-sliders"></i> Gerenciar Pastas</button>
+                )}
               </div>
 
               <div className="folder-grid">
@@ -213,10 +219,13 @@ export default function Home() {
                     </div>
                   );
                 })}
-                <div className="folder-card add-card" onClick={() => setShowAddSubcategoria(true)}>
-                  <div className="folder-icon"><i className="fas fa-plus"></i></div>
-                  <div className="folder-info"><span className="folder-title">Nova Subcategoria</span></div>
-                </div>
+                {podeEditar && (
+                  <div className="folder-card add-card" onClick={() => setShowAddSubcategoria(true)}>
+                    <div className="folder-icon"><i className="fas fa-plus"></i></div>
+                    <div className="folder-info"><span className="folder-title">Nova Subcategoria</span></div>
+                  </div>
+                )}
+
               </div>
             </div>
           )}
@@ -228,29 +237,32 @@ export default function Home() {
               </div>
               <div className="pecas-lista">
                 {pecasDaSubcategoria.map((pecaAtual, indicePeca) => renderPecaCard(pecaAtual, indicePeca))}
-                <div className="peca-card add-card" onClick={() => { setNomeNovaPeca(""); setNormasNovaPeca([]); setShowAddPeca(true); }}>
-                  <div className="peca-card-header centralizado">
-                    <div className="peca-icon-wrapper ghost-icon"><i className="fas fa-plus"></i></div>
-                    <div className="peca-info"><h3>Novo Item</h3></div>
+                {podeEditar && (
+                  <div className="peca-card add-card" onClick={() => { setNomeNovaPeca(""); setNormasNovaPeca([]); setShowAddPeca(true); }}>
+                    <div className="peca-card-header centralizado">
+                      <div className="peca-icon-wrapper ghost-icon"><i className="fas fa-plus"></i></div>
+                      <div className="peca-info"><h3>Novo Item</h3></div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
+
             </div>
           )}
         </div>
 
-        {pdfVisualizar && <PdfViewer url={pdfVisualizar.url} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
-        
+        {pdfVisualizar && <VisualizadorPdf url={pdfVisualizar.url} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
+
         {indiceImagemAberta !== null && imagensAbertas && (
-          <ImageLightbox imagens={imagensAbertas} indiceInicial={indiceImagemAberta} onClose={() => { setIndiceImagemAberta(null); setImagensAbertas(null); }} />
+          <LightboxImagens imagens={imagensAbertas} indiceInicial={indiceImagemAberta} onClose={() => { setIndiceImagemAberta(null); setImagensAbertas(null); }} />
         )}
-        
+
         {subcategoriaExcluindo && (
           <ModalConfirmacao titulo="Excluir Subcategoria" mensagem={`Tem certeza que deseja excluir a subcategoria ${subcategoriaExcluindo}? Todas as peças cadastradas nela serão deletadas.`} onConfirmar={handleDeleteSubcategoria} onCancelar={() => setSubcategoriaExcluindo(null)} />
         )}
-        
+
         {pecaExcluindo && (
-           <ModalConfirmacao titulo="Excluir Item" mensagem={`Tem certeza que deseja excluir o item ${pecaExcluindo.nome}?`} onConfirmar={handleDeletePeca} onCancelar={() => setPecaExcluindo(null)} />
+          <ModalConfirmacao titulo="Excluir Item" mensagem={`Tem certeza que deseja excluir o item ${pecaExcluindo.nome}?`} onConfirmar={handleDeletePeca} onCancelar={() => setPecaExcluindo(null)} />
         )}
 
         {pecaVisualizar && (
@@ -291,12 +303,12 @@ export default function Home() {
                       {pecaVisualizar.normasVinculadas.map((normaId) => {
                         const normaDetalhes = normas.find((n) => n.id === normaId);
                         if (!normaDetalhes) return null;
-                        
+
                         const temaCatNorma = `theme-cat-${normaDetalhes.categoria.toLowerCase()}`;
 
                         return (
-                          <div 
-                            key={normaId} 
+                          <div
+                            key={normaId}
                             className={`vinculo-norma-card ${temaCatNorma} clicavel`}
                             onClick={() => setNormaDetalheVisualizar(normaDetalhes)}
                           >
@@ -328,7 +340,7 @@ export default function Home() {
                                       <i className="fas fa-file-pdf"></i>
                                     </button>
                                   )}
-                                  
+
                                   {normaDetalhes.imagens && normaDetalhes.imagens.length > 0 && (
                                     <button
                                       type="button"
@@ -370,9 +382,9 @@ export default function Home() {
         )}
 
         {normaDetalheVisualizar && (
-          <ModalDetalhesNorma 
-            norma={normaDetalheVisualizar} 
-            onClose={() => setNormaDetalheVisualizar(null)} 
+          <ModalDetalhesNorma
+            norma={normaDetalheVisualizar}
+            onClose={() => setNormaDetalheVisualizar(null)}
             onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfVisualizar({ url: urlVisualizada, nome: nomePdfVisualizado })}
             onViewImages={(imagensParaVisualizar, indiceImagemSelecionada) => {
               setImagensAbertas(imagensParaVisualizar);
@@ -438,7 +450,7 @@ export default function Home() {
                 <div className="view-details modal-pad form-body-scroll">
                   <label className="view-label">Nome do componente em {navSubcategoria}</label>
                   <input type="text" className="form-input" autoFocus value={nomeNovaPeca} onChange={evento => setNomeNovaPeca(evento.target.value)} />
-                  
+
                   <label className="view-label margem-top"><i className="fas fa-link"></i> Vincular Normativas</label>
                   <div className="checkbox-list">
                     {normas.map(norma => {
@@ -446,8 +458,8 @@ export default function Home() {
                       const temaCatNorma = `theme-cat-${norma.categoria.toLowerCase()}`;
                       return (
                         <label key={norma.id} className={`checkbox-card ${isChecked ? `checked ${temaCatNorma}` : ''}`}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="custom-checkbox"
                             checked={isChecked}
                             onChange={(evento) => {
@@ -505,7 +517,7 @@ export default function Home() {
                 <div className="view-details modal-pad form-body-scroll">
                   <label className="view-label">Renomear Componente</label>
                   <input type="text" className="form-input" autoFocus value={nomeEditadoPeca} onChange={evento => setNomeEditadoPeca(evento.target.value)} />
-                  
+
                   <label className="view-label margem-top"><i className="fas fa-link"></i> Normativas Vinculadas</label>
                   <div className="checkbox-list">
                     {normas.map(norma => {
@@ -513,8 +525,8 @@ export default function Home() {
                       const temaCatNorma = `theme-cat-${norma.categoria.toLowerCase()}`;
                       return (
                         <label key={norma.id} className={`checkbox-card ${isChecked ? `checked ${temaCatNorma}` : ''}`}>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             className="custom-checkbox"
                             checked={isChecked}
                             onChange={(evento) => {

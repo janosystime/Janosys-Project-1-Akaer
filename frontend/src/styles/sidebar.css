@@ -8,7 +8,10 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible;
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 58px);
 }
 
 /* Estado recolhido */
@@ -135,14 +138,30 @@ button.nav-item {
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding: 10px 0 4px;
+  flex-shrink: 0;
 }
 
 .sidebar-usuario {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 17px;
   white-space: nowrap;
+}
+
+/*--Sidebar expande com conteúdo da página--*/
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
 }
 
 /* Centraliza avatar quando recolhida */
@@ -152,9 +171,9 @@ button.nav-item {
 }
 
 .sidebar-avatar {
-  width: 26px;
+  width: 30px;
   height: 26px;
-  border-radius: 50%;
+  border-radius: 6px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
@@ -231,11 +250,12 @@ button.nav-item {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
-    width: 260px !important; 
+    width: 260px; 
     transform: translateX(-100%); 
     transition: transform 0.3s ease-in-out;
     z-index: 999;
+    height: 100svh !important;
+    padding-bottom: env(safe-area-inset-bottom, 20px)
   }
 
   .sidebar.mobile-aberto {
@@ -254,26 +274,31 @@ button.nav-item {
   }
 
   .sidebar-toggle {
-    justify-content: flex-end !important;
-    padding: 15px 17px !important;
+    justify-content: flex-end;
+    padding: 15px 17px;
   }
 
   .sidebar .nav-label,
   .sidebar .nav-secao-label,
   .sidebar .sidebar-usuario-nome {
-    opacity: 1 !important;
-    width: auto !important;
-    overflow: visible !important;
+    opacity: 1;
+    width: auto;
+    overflow: visible;
   }
 
   .sidebar .nav-item {
-    justify-content: flex-start !important;
-    padding: 13px 17px !important;
-    gap: 12px !important;
+    justify-content: flex-start;
+    padding: 13px 17px;
+    gap: 12px;
   }
 
   .sidebar .sidebar-usuario {
-    justify-content: flex-start !important;
-    padding: 8px 17px !important;
+    justify-content: flex-start;
+    padding: 8px 17px;
+  }
+
+  .sidebar-rodape {
+    flex: 0 0 auto;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
   }
 }

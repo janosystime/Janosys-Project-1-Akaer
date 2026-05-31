@@ -1,9 +1,12 @@
-export const CREDENCIAIS_MOCK = {
-  email: '',
-  senha: '',
-};
+export interface CredencialMock {
+  email: string;
+  senha: string;
+  nome: string;
+  perfil: 'administrador' | 'usuario' | 'checker';
+}
 
-export const USUARIO_MOCK = {
-  nome: 'Usuário Janosys',
-  perfil: 'administrador' as const,
-};
+export const USUARIOS_MOCK: CredencialMock[] = [
+  { email: 'admin',      senha: '123', nome: 'Administrador Janosys', perfil: 'administrador' },
+  { email: 'usuario', senha: '123', nome: 'Usuario Janosys',    perfil: 'usuario'    },
+  { email: 'checker',   senha: '123', nome: 'Checker Janosys',      perfil: 'checker'      },
+];

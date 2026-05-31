@@ -61,6 +61,7 @@ const SOLICITACOES_BASE: Solicitacao[] = [
     solicitante: "Ricardo Souza",
     data: "2026-03-18",
     status: "Indeferida",
+    motivoRecusa: "Norma já contemplada pela ISO 9227, disponível na biblioteca.",
   },
   {
     id: 7,
@@ -150,6 +151,7 @@ const STATUS_OPCOES = ["Todos", "Aguardando análise", "Em análise", "Aceita", 
 export default function Solicitacoes() {
   const usuario = obterUsuarioAtual();
   const isAdmin = usuario?.perfil === "administrador";
+  const isChecker = usuario?.perfil === "checker";
 
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(SOLICITACOES_BASE);
   const [showModal, setShowModal] = useState(false);
@@ -202,11 +204,12 @@ const atualizarStatus = (id: number, novoStatus: Solicitacao["status"], extras?:
   setSolicitacoes(prev => prev.map(s => s.id === id ? { ...s, status: novoStatus, ...extras } : s));
 };
 
+/* Atualiza status do card */
 const abrirModalAnalise = (s: Solicitacao) => {
   setSolicitacaoAnalise(s);
   setMotivoRecusa("");
   setConfirmacaoInsercao(false);
-  if (s.status === "Aguardando análise") {
+  if (isChecker && s.status === "Aguardando análise") {
     atualizarStatus(s.id, "Em análise");
   }
 };
@@ -243,9 +246,11 @@ const solicitacoesFiltradas = solicitacoes
           <h1 className="page-title">
             <i className="fas fa-clipboard-list"></i> Painel de Solicitações de Normas
           </h1>
-          <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-            <i className="fas fa-circle-plus"></i> Nova Solicitação
-          </button>
+          {!isChecker && (
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+              <i className="fas fa-circle-plus"></i> Nova Solicitação
+            </button>
+          )}
         </div>
 
         {/* Filtros */}
@@ -291,7 +296,9 @@ const solicitacoesFiltradas = solicitacoes
         {/* ── Lista de Solicitações ── */}
         <div className="normas-lista">
           {solicitacoesFiltradas.map((s) => (
-            <div key={s.id} className="norma-card solicitacao-card" onClick={() => isAdmin && abrirModalAnalise(s)} style={{ cursor: isAdmin ? "pointer" : "default" }}>
+            <div key={s.id} className="norma-card solicitacao-card"
+              onClick={() => abrirModalAnalise(s)}
+              style={{ cursor: "pointer" }}>
               <div className="norma-card-body solicitacao-body">
                 
                 {/* Lado esquerdo — status, código e título */}
@@ -314,7 +321,7 @@ const solicitacoesFiltradas = solicitacoes
                   <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--c-text-muted)" }}>
                     <i className="fas fa-user" style={{ marginRight: 4 }}></i>{s.solicitante}
                   </span>
-                  {isAdmin && (
+                  {(isAdmin || isChecker) && (
                     <span style={{ fontSize: "0.68rem", color: "var(--c-text-muted)" }}>
                       <i className="fas fa-calendar" style={{ marginRight: 4 }}></i>
                       {new Date(s.data + "T00:00:00").toLocaleDateString("pt-BR")}
@@ -402,7 +409,7 @@ const solicitacoesFiltradas = solicitacoes
           </div>
         )}
 
-        {/* ── Modal: Analisar Solicitação (admin) ── */}
+        {/* ── Modal: Analisar Solicitação (checker) ── */}
         {solicitacaoAnalise && (
           <div className="modal-overlay" onClick={() => setSolicitacaoAnalise(null)}>
             <div className="modal modal-large modal-analisar" onClick={(e) => e.stopPropagation()}>
@@ -452,7 +459,7 @@ const solicitacoesFiltradas = solicitacoes
                   </div>
                 </div>
 
-                {solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
+                {isChecker && solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
                   <>
                     <div className="view-item">
                       <label className={`checkbox-card ${confirmacaoInsercao ? "checked theme-cat-geral" : ""}`}>
@@ -494,7 +501,7 @@ const solicitacoesFiltradas = solicitacoes
                 <button type="button" className="btn btn-ghost" onClick={() => setSolicitacaoAnalise(null)}>
                   Fechar
                 </button>
-                {solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
+                {isChecker && solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
                   <div className="modal-footer-actions">
                     <button
                       type="button"
