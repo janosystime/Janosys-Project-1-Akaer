@@ -1,0 +1,8 @@
+Para gerar o BD e o Front:
+
+1- Configure o backend/.env
+2- Rode 'bash instalacao.sh'no terminal
+
+Para subir os servidores:
+
+1- Rode 'bash run.sh'
