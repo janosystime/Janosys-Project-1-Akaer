@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../../config/api";
 import type { Peca } from "../../utils/pecas";
 import type { Norma } from "./NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "./NormasViewModel";
@@ -52,7 +53,7 @@ export default function ModalDetalhesNorma({
     async function fetchHistorico() {
       setCarregandoHistorico(true);
       try {
-        const response = await fetch(`http://localhost:3001/historico/${norma.id}`);
+        const response = await fetch(`${API_BASE_URL}/historico/${norma.id}`);
         if (response.ok) {
           const data = await response.json();
           setHistorico(data);
@@ -67,7 +68,7 @@ export default function ModalDetalhesNorma({
     async function fetchVersoes() {
       setCarregandoVersoes(true);
       try {
-        const response = await fetch(`http://localhost:3001/normas/${norma.id}/versoes`);
+        const response = await fetch(`${API_BASE_URL}/normas/${norma.id}/versoes`);
         if (response.ok) {
           const data = await response.json();
           setVersoes(data);

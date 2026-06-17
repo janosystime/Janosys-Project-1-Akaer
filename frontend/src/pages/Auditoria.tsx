@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { API_BASE_URL } from "../config/api";
 import { History, ShieldAlert, Search, RefreshCw, Layers, Calendar, User, FileText } from "lucide-react";
 import "../styles/Normas.css";
 
@@ -66,7 +67,7 @@ export default function Auditoria() {
   const fetchLogs = useCallback(async () => {
     setCarregando(true);
     try {
-      const response = await fetch("http://localhost:3001/historico");
+      const response = await fetch(`${API_BASE_URL}/historico`);
       if (response.ok) {
         const data = await response.json();
         setLogs(data);

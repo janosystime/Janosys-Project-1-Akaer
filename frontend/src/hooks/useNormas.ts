@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, type ChangeEvent } from "react";
+import { API_BASE_URL } from "../config/api";
 import { obterUsuarioAtual } from "../auth/session";
 import {
   FORM_INICIAL,
@@ -44,7 +45,7 @@ export default function useNormas() {
   // Fetch norms from API
   const fetchNormas = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:3001/normas");
+      const response = await fetch(`${API_BASE_URL}/normas`);
       if (response.ok) {
         const data = await response.json();
         const sanitized = data.map((norma: any) => ({
@@ -312,7 +313,7 @@ export default function useNormas() {
       };
 
       if (idEmEdicao) {
-        const response = await fetch(`http://localhost:3001/normas/${idEmEdicao}`, {
+        const response = await fetch(`${API_BASE_URL}/normas/${idEmEdicao}`, {
           method: "PUT",
           headers,
           body: JSON.stringify(normaSalva)
@@ -342,7 +343,7 @@ export default function useNormas() {
           adicionarToast("erro", errorData.error || "Erro ao atualizar norma.");
         }
       } else {
-        const response = await fetch("http://localhost:3001/normas", {
+        const response = await fetch(`${API_BASE_URL}/normas`, {
           method: "POST",
           headers,
           body: JSON.stringify(normaSalva)
@@ -386,7 +387,7 @@ export default function useNormas() {
       `Tem certeza que deseja excluir "${idParaExcluir}"? Esta ação não pode ser desfeita.`,
       async () => {
         try {
-          const response = await fetch(`http://localhost:3001/normas/${idParaExcluir}`, {
+          const response = await fetch(`${API_BASE_URL}/normas/${idParaExcluir}`, {
             method: "DELETE",
             headers: {
               "x-usuario-nome": usuario?.nome || "Administrador"
