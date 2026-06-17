@@ -12,6 +12,8 @@ type PropsListaNormas = {
   onVerDetalhes: (norma: Norma) => void;
   onVerPdf: (url: string, nome: string) => void;
   onVerImagens: (imagens: string[]) => void;
+  ehFavorito?: (idNorma: string) => boolean;
+  onToggleFavorito?: (idNorma: string) => void;
 };
 
 export default function ListaNormas({
@@ -25,6 +27,8 @@ export default function ListaNormas({
   onVerDetalhes,
   onVerPdf,
   onVerImagens,
+  ehFavorito,
+  onToggleFavorito,
 }: PropsListaNormas) {
   return (
     <>
@@ -44,6 +48,8 @@ export default function ListaNormas({
             onShowDetails={onVerDetalhes}
             onViewPdf={onVerPdf}
             onViewImages={onVerImagens}
+            ehFavorito={ehFavorito ? ehFavorito(normaMapeada.id) : undefined}
+            onToggleFavorito={onToggleFavorito}
           />
 
         ))}
