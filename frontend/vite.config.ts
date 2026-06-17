@@ -8,5 +8,12 @@ export default defineConfig({
     port: 5173,
     /** Se 5173 estiver ocupada, o Vite avisa em vez de abrir 5174 “no escuro”. */
     strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 })

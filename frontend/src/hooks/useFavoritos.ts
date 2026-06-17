@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { obterUsuarioAtual } from "../auth/session";
+import { API_BASE_URL } from "../config/api";
 
-const API = "http://localhost:3001";
+const API = API_BASE_URL;
 
 /**
  * Favoritos por usuário, persistidos no backend.

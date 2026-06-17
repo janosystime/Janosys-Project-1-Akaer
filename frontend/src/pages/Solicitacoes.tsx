@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 import "../styles/Normas.css";
 import { obterUsuarioAtual } from "../auth/session";
 
@@ -96,7 +97,7 @@ export default function Solicitacoes() {
   // Carregar solicitações da API
   const fetchSolicitacoes = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:3001/solicitacoes");
+      const response = await fetch(`${API_BASE_URL}/solicitacoes`);
       if (response.ok) {
         const data = await response.json();
         setSolicitacoes(data);
@@ -119,7 +120,7 @@ export default function Solicitacoes() {
     }  
 
     try {
-      const response = await fetch("http://localhost:3001/solicitacoes", {
+      const response = await fetch(`${API_BASE_URL}/solicitacoes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -149,7 +150,7 @@ export default function Solicitacoes() {
 
   const atualizarStatus = async (id: number, novoStatus: Solicitacao["status"], extras?: Partial<Solicitacao>) => {
     try {
-      const response = await fetch(`http://localhost:3001/solicitacoes/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/solicitacoes/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

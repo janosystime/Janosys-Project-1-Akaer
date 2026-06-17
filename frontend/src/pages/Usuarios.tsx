@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 import "../styles/Normas.css";
 import "../styles/Usuarios.css";
 
@@ -121,7 +122,7 @@ export default function Usuarios() {
   useEffect(() => {
     async function fetchUsuarios() {
       try {
-        const response = await fetch("http://localhost:3001/usuarios");
+        const response = await fetch(`${API_BASE_URL}/usuarios`);
         if (response.ok) {
           const data = await response.json();
           setUsuarios(data);
@@ -197,7 +198,7 @@ export default function Usuarios() {
 
     try {
       if (usuarioEditando) {
-        const response = await fetch(`http://localhost:3001/usuarios/${usuarioEditando.id}`, {
+        const response = await fetch(`${API_BASE_URL}/usuarios/${usuarioEditando.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
@@ -217,7 +218,7 @@ export default function Usuarios() {
           adicionarToast("erro", errorData.error || "Erro ao atualizar usuário.");
         }
       } else {
-        const response = await fetch("http://localhost:3001/usuarios", {
+        const response = await fetch(`${API_BASE_URL}/usuarios`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -245,7 +246,7 @@ export default function Usuarios() {
     if (!usuarioExcluindo) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/usuarios/${usuarioExcluindo.id}`, {
+      const response = await fetch(`${API_BASE_URL}/usuarios/${usuarioExcluindo.id}`, {
         method: "DELETE"
       });
 
