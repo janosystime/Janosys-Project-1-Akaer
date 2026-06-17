@@ -10,7 +10,8 @@ import {
   Menu, // Ícone para abrir no mobile
   X,    // Ícone para fechar no mobile
   ClipboardList,
-  ShieldAlert
+  ShieldAlert,
+  MessageCircle
 } from 'lucide-react'
 import type { UsuarioSessao } from '../auth/session'
 
@@ -114,6 +115,11 @@ export default function Sidebar(props: PropsSidebar) {
           <NavLink to="/solicitacoes" className="nav-item" onClick={fecharMenuMobile}>
             <ClipboardList size={20} />
             <span className="nav-label">Solicitações</span>
+          </NavLink>
+
+          <NavLink to="/chatbot" className="nav-item" onClick={fecharMenuMobile}>
+            <MessageCircle size={20} />
+            <span className="nav-label">Chatbot IA</span>
           </NavLink>
 
           {isAdmin && (
