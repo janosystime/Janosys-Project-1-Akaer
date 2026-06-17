@@ -25,3 +25,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dados do ChromaDB (banco vetorial local)
+chroma_data/
+
+# Variáveis de ambiente (contém token secreto)
+.env
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# PDFs na pasta documentos (não versionar arquivos grandes)
+documentos/*.pdf
