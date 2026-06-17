@@ -1,42 +1,42 @@
 services:
+  db:
+    build: ./database
+    image: akaer-db
+    # MySQL 8.4 desativa o mysql_native_password por padrão; reativamos aqui.
+    command: --mysql-native-password=ON
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: janosys_db
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-ppassword", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    image: akaer-backend
+    environment:
+      DATABASE_URL: "mysql://root:password@db:3306/janosys_db"
+      PORT: "3001"
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
   frontend:
     build: ./frontend
     image: akaer-frontend
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     depends_on:
-      - db
-    restart: unless-stopped
-
-  # backend ainda não implementado nesta etapa do refactor.
-  # Ao reconstruir a API, descomente este serviço (ver backend/README.md).
-  # backend:
-  #   build: ./backend
-  #   image: akaer-backend
-  #   ports:
-  #     - "${BACKEND_PORT:-3001}:3001"
-  #   environment:
-  #     DB_HOST: db
-  #     DB_PORT: 3306
-  #     DB_NAME: ${MYSQL_DATABASE}
-  #     DB_USER: ${MYSQL_USER}
-  #     DB_PASSWORD: ${MYSQL_PASSWORD}
-  #   depends_on:
-  #     - db
-  #   restart: unless-stopped
-
-  db:
-    build: ./database
-    image: akaer-db
-    ports:
-      - "${MYSQL_PORT:-3306}:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-    volumes:
-      - db_data:/var/lib/mysql
+      - backend
     restart: unless-stopped
 
 volumes:

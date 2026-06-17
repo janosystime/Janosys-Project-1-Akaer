@@ -13,6 +13,7 @@ import { pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import useNormas from "../hooks/useNormas";
+import useFavoritos from "../hooks/useFavoritos";
 import CabecalhoNormas from "../components/Normas/CabecalhoNormas";
 import ContainerDeToasts from "../components/Normas/ContainerDeToasts";
 import FiltrosNormas from "../components/Normas/FiltrosNormas";
@@ -79,6 +80,17 @@ export default function Biblioteca() {
     handleDelete,
   } = useNormas();
 
+  const {
+    favoritosDisponiveis,
+    ehFavorito,
+    alternarFavorito,
+    soFavoritos,
+    setSoFavoritos,
+    aplicarFiltroFavoritos,
+  } = useFavoritos();
+
+  const normasExibidas = aplicarFiltroFavoritos(normasFiltradas);
+
   return (
     <div className="app-container">
       <ContainerDeToasts toasts={toasts} onRemover={removerToast} />
@@ -103,9 +115,21 @@ export default function Biblioteca() {
           onStatusChange={setFiltroStatus}
         />
 
+        {favoritosDisponiveis && (
+          <button
+            type="button"
+            className={`btn ${soFavoritos ? "btn-warning" : "btn-ghost"}`}
+            onClick={() => setSoFavoritos(!soFavoritos)}
+            style={{ alignSelf: "flex-start", marginBottom: "8px" }}
+            title="Mostrar apenas favoritos"
+          >
+            <i className={`${soFavoritos ? "fas" : "far"} fa-star`}></i> Só favoritos
+          </button>
+        )}
+
         <ListaNormas
           normas={normas}
-          normasFiltradas={normasFiltradas}
+          normasFiltradas={normasExibidas}
           podeEditar={podeEditar}
           filtrosAtivos={filtrosAtivos}
           onLimparFiltros={limparFiltros}
@@ -117,6 +141,8 @@ export default function Biblioteca() {
             setImagensAbertas(imagensParaVisualizar);
             setIndiceImagemAberta(0);
           }}
+          ehFavorito={favoritosDisponiveis ? ehFavorito : undefined}
+          onToggleFavorito={favoritosDisponiveis ? alternarFavorito : undefined}
         />
 
         <FormularioNorma

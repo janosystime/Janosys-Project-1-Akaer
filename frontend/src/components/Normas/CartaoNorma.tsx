@@ -8,6 +8,8 @@ type PropsCartaoNorma = {
   onShowDetails: (normaAtual: Norma) => void;
   onViewPdf: (urlPdf: string, nomePdf: string) => void;
   onViewImages: (listaImagens: string[]) => void;
+  ehFavorito?: boolean;
+  onToggleFavorito?: (idNorma: string) => void;
 };
 
 export default function CartaoNorma({
@@ -17,6 +19,8 @@ export default function CartaoNorma({
   onShowDetails,
   onViewPdf,
   onViewImages,
+  ehFavorito,
+  onToggleFavorito,
 }: PropsCartaoNorma) {
   const classeCorTema = `theme-cat-${norma.categoria.toLowerCase()}`;
   const possuiAnexos = norma.urlPdf || (norma.imagens && norma.imagens.length > 0);
@@ -87,6 +91,20 @@ export default function CartaoNorma({
         </div>
       </div>
       <div className="norma-card-actions">
+        {onToggleFavorito && (
+          <button
+            className="btn btn-icon"
+            onClick={(eventoClique) => {
+              eventoClique.stopPropagation();
+              onToggleFavorito(norma.id);
+            }}
+            title={ehFavorito ? "Desfavoritar" : "Favoritar"}
+            style={{ color: ehFavorito ? "#f5b301" : "var(--c-text-muted)" }}
+          >
+            <i className={`${ehFavorito ? "fas" : "far"} fa-star`}></i>
+          </button>
+        )}
+
         {norma.urlPdf && (
           <button
             className="btn btn-info btn-icon"

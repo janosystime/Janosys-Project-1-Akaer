@@ -12,6 +12,17 @@ interface LogHistorico {
   data: string;
 }
 
+interface VersaoNorma {
+  id: number;
+  numero: number;
+  evento: string; // 'CADASTRO' | 'EDICAO'
+  titulo: string;
+  status: string;
+  revisao: string | null;
+  usuarioNome: string | null;
+  data: string;
+}
+
 type PropsModalDetalhesNorma = {
   norma: Norma;
   pecasRelacionadas?: Peca[];
@@ -34,6 +45,8 @@ export default function ModalDetalhesNorma({
 }: PropsModalDetalhesNorma) {
   const [historico, setHistorico] = useState<LogHistorico[]>([]);
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+  const [versoes, setVersoes] = useState<VersaoNorma[]>([]);
+  const [carregandoVersoes, setCarregandoVersoes] = useState(false);
 
   useEffect(() => {
     async function fetchHistorico() {
@@ -50,7 +63,24 @@ export default function ModalDetalhesNorma({
         setCarregandoHistorico(false);
       }
     }
+
+    async function fetchVersoes() {
+      setCarregandoVersoes(true);
+      try {
+        const response = await fetch(`http://localhost:3001/normas/${norma.id}/versoes`);
+        if (response.ok) {
+          const data = await response.json();
+          setVersoes(data);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar versões:", err);
+      } finally {
+        setCarregandoVersoes(false);
+      }
+    }
+
     fetchHistorico();
+    fetchVersoes();
   }, [norma.id]);
 
   return (
@@ -217,6 +247,46 @@ export default function ModalDetalhesNorma({
                 <p>Nenhuma nota ou anexo.</p>
               </div>
             )}
+
+          <hr className="divider" />
+          <div className="view-item">
+            <span className="view-label">
+              <i className="fas fa-code-branch"></i> Histórico de Versões
+            </span>
+            {carregandoVersoes ? (
+              <div style={{ color: "var(--c-text-muted)", fontSize: "0.9rem" }}>Carregando versões...</div>
+            ) : versoes.length > 0 ? (
+              <div className="timeline-container" style={{ marginTop: "10px", padding: "10px 0" }}>
+                {versoes.map((versao) => (
+                  <div key={versao.id} style={{ display: "flex", gap: "10px", marginBottom: "12px", fontSize: "0.85rem" }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <span className={`badge ${versao.evento === 'CADASTRO' ? 'vigente' : 'theme-subcategoria'}`} style={{ fontSize: "0.65rem", padding: "2px 6px" }}>
+                        v{versao.numero}
+                      </span>
+                      <div style={{ width: "2px", flex: 1, backgroundColor: "var(--c-border)", marginTop: "4px" }}></div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: "var(--c-text-1)" }}>
+                        {versao.titulo} <span style={{ fontWeight: 400, color: "var(--c-text-muted)", float: "right", fontSize: "0.75rem" }}>
+                          {new Date(versao.data).toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                      <div style={{ color: "var(--c-text-2)", marginTop: "3px", lineHeight: "1.3" }}>
+                        {versao.evento === 'CADASTRO' ? 'Cadastro inicial' : 'Edição'} · Status: {versao.status}
+                        {versao.revisao ? ` · Revisão: ${versao.revisao}` : ''}
+                        {versao.usuarioNome ? ` · por ${versao.usuarioNome}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state compact" style={{ border: "none", background: "none", padding: 0 }}>
+                <i className="fas fa-code-branch"></i>
+                <p>Nenhuma versão registrada para esta norma.</p>
+              </div>
+            )}
+          </div>
 
           <hr className="divider" />
           <div className="view-item">

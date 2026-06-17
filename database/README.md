@@ -1,12 +1,14 @@
 # database
 
-Imagem do banco **MySQL 8.4**.
+Imagem do banco **MySQL 8.4** do projeto.
 
-- `init/*.sql` — scripts executados na primeira inicialização (volume vazio), em
-  ordem alfabética. Coloque aqui o schema e seeds.
-- Credenciais e nome do banco vêm das variáveis `MYSQL_*` definidas no
-  `docker-compose.yml` / `.env` (ver `.env.example`).
-- Os dados persistem no volume `db_data` declarado no `docker-compose.yml`.
+- O **schema é gerenciado pelo backend** (Prisma): ao subir, o serviço `backend`
+  roda `prisma db push`, instala os triggers de auditoria (`setup-triggers.js`) e
+  popula dados iniciais (`seed.js`). Por isso não há DDL aqui no `init/`.
+- `init/00-auth.sql` — ajusta o root remoto para `mysql_native_password` (o MySQL
+  8.4 desativa esse plugin por padrão; o serviço sobe com `--mysql-native-password=ON`).
+- Os dados persistem no volume `db_data` (ver `docker-compose.yml`).
+- `reference/01-schema.sql` — **modelagem normalizada de referência** (não é
+  executada). Documenta o modelo-alvo discutido em `ANALISE-MODELAGEM.md`.
 
-> Para reexecutar os scripts de `init/`, é preciso remover o volume:
-> `docker compose down -v`.
+> Para reinicializar do zero (re-rodar `init/` e recriar tabelas): `docker compose down -v`.
