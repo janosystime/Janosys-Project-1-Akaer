@@ -58,12 +58,13 @@ export default function useNormas() {
       } else {
         adicionarToast("erro", "Erro ao buscar normas do servidor.");
       }
-    } catch (err) {
+    } catch (_) {
       adicionarToast("erro", "Erro de conexão ao buscar normas.");
     }
   }, [adicionarToast]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchNormas();
   }, [fetchNormas]);
 
@@ -96,6 +97,7 @@ export default function useNormas() {
     url: string;
     nome: string;
   } | null>(null);
+
   const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
 
@@ -403,7 +405,7 @@ export default function useNormas() {
             const errorData = await response.json();
             adicionarToast("erro", errorData.error || "Erro ao excluir norma.");
           }
-        } catch (err) {
+        } catch (_) {
           adicionarToast("erro", "Erro de conexão ao excluir norma.");
         }
       },

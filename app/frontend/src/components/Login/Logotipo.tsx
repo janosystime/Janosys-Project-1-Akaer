@@ -1,4 +1,4 @@
-import logoJanoSigna from '../../assets/JanoSys.signa.nome.png';
+import logoJanoSigna from '../../assets/Logo.signa_nome.png';
 
 function Logotipo() {
   return (

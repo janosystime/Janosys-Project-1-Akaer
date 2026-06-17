@@ -15,13 +15,17 @@
 import { useNavigate, Outlet } from 'react-router-dom'
 import { obterUsuarioAtual, limparSessao } from '../auth/session'
 import Sidebar from './Sidebar'
-import logoJano from '../assets/JanoSys.signa.png';
+import logoJano from '../assets/Logo.signa.png';
 
 // Layout não recebe mais `children` via props.
 // O conteúdo da página ativa é injetado pelo <Outlet /> abaixo.
 export default function Layout() {
-  const usuario = obterUsuarioAtual()!  // "!" diz ao TypeScript: pode confiar, não é null aqui
   const navegar  = useNavigate()         // hook do React Router para trocar de página via código
+  const usuario = obterUsuarioAtual()
+  if (!usuario) {
+    navegar('/login')
+    return null
+  }  // "!" diz ao TypeScript: pode confiar, não é null aqui
 
   // Chamada quando o usuário clica em "Sair"
   function sair() {
