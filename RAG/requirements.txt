@@ -1,0 +1,10 @@
+# Dependências do microserviço RAG - SIGNA/Akaer
+fastapi
+uvicorn[standard]
+python-dotenv
+PyMuPDF
+chromadb
+langchain-text-splitters
+huggingface-hub
+rank-bm25
+sentence-transformers
