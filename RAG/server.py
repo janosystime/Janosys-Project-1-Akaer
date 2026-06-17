@@ -9,10 +9,15 @@ Uso:
     uvicorn server:app --reload --port 8000
 """
 
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from rag_engine import generate_answer
+
+load_dotenv()
 
 # ============================================================
 # Inicialização do FastAPI
@@ -23,9 +28,18 @@ app = FastAPI(
     version="0.1.0",
 )
 
+origens_cors = [
+    origem.strip()
+    for origem in os.getenv(
+        "RAG_CORS_ORIGINS",
+        "http://localhost:5173,http://localhost:8080",
+    ).split(",")
+    if origem.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=origens_cors,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

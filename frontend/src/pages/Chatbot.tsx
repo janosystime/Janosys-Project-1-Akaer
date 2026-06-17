@@ -15,6 +15,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, Send, FileText, ChevronDown, ChevronRight } from 'lucide-react'
 import ReactMarkdown from 'react-markdown' // <-- NOVO: Importando o renderizador de Markdown
+import { RAG_API_BASE_URL } from '../config/api'
 import '../styles/chatbot.css'
 
 // ------------------------------------------------------------
@@ -168,7 +169,7 @@ export default function Chatbot() {
     setCarregando(true)
 
     try {
-      const resposta = await fetch('http://localhost:8000/api/chat', {
+      const resposta = await fetch(`${RAG_API_BASE_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: textoLimpo }),

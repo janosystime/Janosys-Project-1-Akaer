@@ -1,16 +1,17 @@
 # Akaer / Signa
 
-Refactor do projeto. Nesta etapa mantemos apenas o **frontend** (o que o cliente
-aprovou) e preparamos a estrutura para entrega via Docker Compose.
+Sistema interno para gestão e consulta de normas aeronáuticas, com frontend,
+backend, banco MySQL e microserviço RAG para o chatbot de consulta inteligente.
 
 ## Arquitetura (alvo)
 
-Três serviços, cada um com sua imagem:
+Quatro serviços, cada um com sua imagem:
 
 | Serviço    | Pasta        | Imagem           | Estado            |
 |------------|--------------|------------------|-------------------|
 | `frontend` | `frontend/`  | React + Vite (nginx) | ✅ funcionando |
-| `backend`  | `backend/`   | API (a definir)  | 🚧 stub (a refazer) |
+| `backend`  | `backend/`   | API Node/Express + Prisma | ✅ funcionando |
+| `rag`      | `RAG/`       | FastAPI + Chroma | ✅ integrado |
 | `db`       | `database/`  | MySQL 8.4        | ✅ pronto p/ schema |
 
 ```
@@ -18,12 +19,15 @@ Três serviços, cada um com sua imagem:
 ├─ docker-compose.yml
 ├─ .env.example
 ├─ frontend/      # app que o cliente vê (UI)
-├─ backend/       # API — stub, será reconstruída
+├─ backend/       # API principal
+├─ RAG/           # microserviço do chatbot IA
 └─ database/      # MySQL + scripts de init
 ```
 
-> O frontend ainda aponta para `http://localhost:3001` (a API). Essas telas
-> ficarão sem dados até o backend ser reconstruído.
+No Docker, o Nginx do frontend encaminha:
+
+- `/api` para o backend principal.
+- `/rag-api` para o microserviço RAG.
 
 ## Rodar o frontend em desenvolvimento
 
@@ -31,6 +35,17 @@ Três serviços, cada um com sua imagem:
 cd frontend
 npm install
 npm run dev
+```
+
+Para o chatbot funcionar em desenvolvimento, rode o RAG em outro terminal:
+
+```bash
+cd RAG
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn server:app --reload --port 8000
 ```
 
 ## Subir com Docker Compose
@@ -41,7 +56,9 @@ docker compose up --build
 ```
 
 - Frontend: http://localhost:8080
+- Backend: http://localhost:3001
+- RAG: http://localhost:8000/api/health
 - MySQL: localhost:3306
 
-O serviço `backend` está comentado no `docker-compose.yml` até a API ser
-implementada (ver `backend/README.md`).
+O chatbot usa `/rag-api` pelo frontend, então não precisa chamar o RAG direto
+do navegador no uso padrão com Docker.

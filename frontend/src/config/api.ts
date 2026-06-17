@@ -10,3 +10,15 @@
  *   VITE_API_URL=http://localhost:3001
  */
 export const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+
+/**
+ * URL base da API do microserviço RAG.
+ *
+ * - Em produção / Docker: o Nginx faz proxy reverso de /rag-api → rag:8000/api.
+ * - Em desenvolvimento local: o proxy do Vite redireciona /rag-api →
+ *   http://localhost:8000/api.
+ *
+ * Se precisar apontar direto para o RAG, defina VITE_RAG_API_URL:
+ *   VITE_RAG_API_URL=http://localhost:8000/api
+ */
+export const RAG_API_BASE_URL = import.meta.env.VITE_RAG_API_URL || "/rag-api";
