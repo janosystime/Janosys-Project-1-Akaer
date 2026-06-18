@@ -10,28 +10,10 @@
   --branco: #FFFFFF;
 }
 
-/* --- Página de Login --- */
-.pagina-login {
-  height: 100vh;
-  overflow-y: hidden;
-  background: linear-gradient(-45deg, #AFA0A5, #E6E1E3, #AFA0A5, #D1C9CB);
-  animation: gradienteFundo 15s ease infinite;
-  background-size: 400% 400%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 10px 20px;
-  box-sizing: border-box;
-}
-
 @keyframes gradienteFundo {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
-}
-
-.container-logotipo-wrapper {
-  flex-shrink: 0;
 }
 
 .conteudo-login {
@@ -48,10 +30,163 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 24px 40px;
+}
+
+.pagina-login {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+  background: #050b18;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2vh 20px;
+  box-sizing: border-box;
+}
+
+/* ── Contenedor do fundo ────────────────────────────────────────── */
+.fundo-colagem {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  background: #050b18;
+  overflow: hidden;
+}
+
+/* ── As 4 imagens ── */
+.fundo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* Dessatura e escurece para o estilo "blueprint noturno" */
+  filter: grayscale(40%) brightness(0.55) sepia(20%) hue-rotate(190deg) saturate(150%);
+}
+
+/* ================= ESTRUTURA GERAL DOS QUADRANTES (2x2) COM FUSÃO DUPLA ================= */
+
+/* --- COLUNA DA ESQUERDA (Ocupa um pouco mais da metade esquerda) --- */
+.fundo-tr {
+  width: 52vw; /* Aumentado de 50 para 52 para criar sobreposição lateral */
+  height: 52vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  /* Esfumaça para baixo (encontro com bl) E para a direita (encontro com tr) */
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+              linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+                      linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+  -webkit-mask-composite: destination-in;
+}
+
+.fundo-bl {
+  width: 52vw; /* Aumentado para criar sobreposição lateral */
+  height: 52vh;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  margin-top: -4vh;
+  z-index: 1;
+  /* Esfumaça para cima (encontro com tl) E para a direita (encontro com br) */
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%),
+              linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%),
+                      linear-gradient(to right, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+  -webkit-mask-composite: destination-in;
+}
+
+/* --- COLUNA DA DIREITA (Ocupa a metade direita e invade sutilmente a esquerda) --- */
+.fundo-tl {
+  width: 52vw;
+  height: 52vh;
+  position: absolute;
+  top: 0;
+  left: 50vw;
+  margin-left: -2vw; /* Força a imagem da direita a entrar por trás da esquerda */
+  z-index: 2;
+  /* Esfumaça para baixo (encontro com br) E para a esquerda (encontro com tl) */
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+              linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%),
+                      linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%);
+  -webkit-mask-composite: destination-in;
+}
+
+.fundo-br {
+  width: 52vw;
+  height: 52vh;
+  position: absolute;
+  bottom: 0;
+  left: 50vw;
+  margin-left: -2vw; /* Força a imagem da direita a entrar por trás da esquerda */
+  margin-top: -4vh;
+  z-index: 2;
+  /* Esfumaça para cima (encontro com tr) E para a esquerda (encontro com bl) */
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%),
+              linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%);
+  mask-composite: intersect;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%),
+                      linear-gradient(to right, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 20%);
+  -webkit-mask-composite: destination-in;
+}
+
+/* ── Grid técnico (linhas finas blueprint) ── */
+.fundo-colagem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(130, 180, 230, 0.06) 0px 1px,
+      transparent              1px 52px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(130, 180, 230, 0.06) 0px 1px,
+      transparent              1px 52px
+    );
+}
+
+/* ── Vignette radial — escurece bordas, abre o centro ── */
+.fundo-colagem::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent         20%,
+    rgba(5, 11, 24, 0.82) 70%,
+    rgba(5, 11, 24, 0.97) 100%
+  );
+}
+
+/* ── Garante que conteúdo fique acima do fundo ── */
+.container-logotipo-wrapper,
+.conteudo-login,
+.rodape-login {
+  position: relative;
+  z-index: 10;
 }
 
 .logo-jano-signa {
-  height: 170px;
+  filter:
+    drop-shadow(0 0 25px rgb(255, 255, 255))
+    drop-shadow(0 0 25px rgb(255, 254, 254));
+  height: 160px;
   width: auto;
   margin-bottom: 10px;
 }
@@ -59,13 +194,16 @@
 .cartao-login {
   background-color: var(--cor-cartao);
   border-radius: 16px;
-  padding: 28px 56px;
-  width: 420px;
+  padding: 28px 36px;
+  width: 320px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
   opacity: 0;
   transform: translateY(30px);
   animation: entradaCartao 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  margin-top: -40px;
+  z-index: 3;
 }
 
 @keyframes entradaCartao {
@@ -77,11 +215,11 @@
 
 .titulo-cartao-login {
   font-family: 'Inter', sans-serif;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--cor-primaria);
   text-align: center;
-  margin: 0 0 18px 0;
+  margin: 0 0 13px 0;
   letter-spacing: 2px;
 }
 
@@ -106,7 +244,7 @@
 
 .link-esqueci-senha {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--cor-primaria);
   text-decoration: none;
   margin-bottom: 10px;
@@ -121,7 +259,7 @@
 
 .acesso-restrito {
   font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--cor-texto);
   text-align: center;
   margin: 10px 0 -10px 0;
@@ -132,7 +270,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  margin-bottom: 10px; 
+  margin-bottom: 8px; 
 }
 
 .rotulo-campo {
@@ -162,13 +300,13 @@
 
 .campo-entrada {
   width: 100%;
-  height: 45px;
-  padding: 0 16px;
+  height: 36px;
+  padding: 0 14px;
   border: 2px solid transparent; 
   border-radius: 6px;
   background-color: var(--branco);
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   color: var(--cor-texto);
   box-sizing: border-box;
   transition: all 0.3s ease;
@@ -218,13 +356,13 @@
 
 .botao-login {
   width: 100%;
-  height: 46px;
+  height: 35px;
   background-color: var(--cor-primaria);
   border: none;
   border-radius: 6px;
   color: var(--branco);
   font-family: 'Inter', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 1px;
   cursor: pointer;
@@ -271,6 +409,21 @@
   padding: 16px;
   font-size: 12px;
   color: var(--cor-texto);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 18px;
+}
+
+.rodape-login-texto {
+  font-size: 13px;
+  color: var(--cor-texto);
+}
+
+.rodape-login-marca {
+  color: var(--cor-texto-claro);
+  font-weight: 700;
 }
 
 /* --- Responsividade --- */
@@ -318,5 +471,34 @@
     width: 100%;
     max-width: calc(95vw - 32px);
     object-fit: contain;
+  }
+
+    /* 1. Esconde as duas imagens da direita (TR e BR) */
+  .fundo-tr,
+  .fundo-br {
+    display: none !important;
+  }
+
+  /* 2. Ajusta a imagem de CIMA (TL) para ocupar a largura inteira */
+  .fundo-tl {
+    width: 100vw !important;
+    left: 0 !important;
+    margin-left: 0 !important;
+    /* Remove o esfumaçado lateral (direita), mantém apenas o de baixo */
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%) !important;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0) 100%) !important;
+    /* Reseta o recorte geométrico para preencher a tela cheia no mobile se preferir, ou comente a linha abaixo */
+    clip-path: none !important; 
+  }
+
+  /* 3. Ajusta a imagem de BAIXO (BL) para ocupar a largura inteira */
+  .fundo-bl {
+    width: 100vw !important;
+    left: 0 !important;
+    /* Remove o esfumaçado lateral (direita), mantém apenas o de cima */
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%) !important;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 40%) !important;
+    /* Reseta o recorte geométrico para preencher a tela cheia no mobile */
+    clip-path: none !important;
   }
 }

@@ -1,27 +1,37 @@
-/**
- * Login — página de login do sistema SIGNA.
- *
- * Contrato com o restante do projeto (para integrar sem quebrar):
- * - Esta tela é montada na rota `/login` (ver App.tsx).
- * - Após autenticação com sucesso (API futura): gravar sessão com `salvarSessao` em `./session`
- *   e redirecionar, por exemplo, para `/dashboard` (ex.: `useNavigate` do react-router-dom).
- */
 import CartaoLogin from '../components/Login/CardLogin';
 import Logotipo from '../components/Login/Logotipo';
 import Rodape from '../components/Login/Rodape';
 
-function Login() {
+import imgBlindado from '../assets/blindado.png';
+import imgAviao1   from '../assets/aviao1.png';
+import imgAviao2   from '../assets/aviao2.png';
+import imgCamera   from '../assets/camera.png';
+
+function PaginaLogin() {
   return (
     <div className="pagina-login">
+
+      {/* ── FUNDO COLAGEM ─────────────────────────────────────────── */}
+      <div className="fundo-colagem" aria-hidden="true">
+
+        {/* 4 imagens nos quadrantes */}
+        <img src={imgAviao1}   alt="" className="fundo-img fundo-tr" />
+        <img src={imgCamera}   alt="" className="fundo-img fundo-br" />
+        <img src={imgBlindado} alt="" className="fundo-img fundo-tl" />
+        <img src={imgAviao2}   alt="" className="fundo-img fundo-bl" />
+      </div>
+
       <div className="container-logotipo-wrapper">
         <Logotipo />
       </div>
+
       <main className="conteudo-login">
         <CartaoLogin />
       </main>
+
       <Rodape />
     </div>
   );
 }
 
-export default Login
+export default PaginaLogin;
