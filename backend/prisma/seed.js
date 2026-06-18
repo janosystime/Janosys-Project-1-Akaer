@@ -268,6 +268,89 @@ async function main() {
     console.log('Solicitations table not empty. Skipping solicitation seed.');
   }
 
+  // 4. Seed Categorias + Subcategorias (antes hardcoded no frontend)
+  const categoriasCount = await prisma.categoria.count();
+  if (categoriasCount === 0) {
+    console.log('Seeding categorias e subcategorias...');
+    const categoriasDef = [
+      { nome: 'Peça', icone: 'fa-gear', tema: 'theme-cat-peça', subs: ['Metálica', 'Não Metálica'] },
+      { nome: 'Conjunto', icone: 'fa-gears', tema: 'theme-cat-conjunto', subs: ['Instalação de Acessórios', 'União de Peças', 'Cablagem'] },
+      { nome: 'Instalação', icone: 'fa-screwdriver-wrench', tema: 'theme-cat-instalação', subs: ['Estrutura', 'Hidromecânicos', 'Elétrica', 'Geral', 'Teste'] },
+      { nome: 'Geral', icone: 'fa-layer-group', tema: 'theme-cat-geral', subs: ['Basic Notes', 'Identificação'] },
+    ];
+    for (const cat of categoriasDef) {
+      await prisma.categoria.create({
+        data: {
+          nome: cat.nome,
+          icone: cat.icone,
+          tema: cat.tema,
+          padrao: true,
+          subcategorias: { create: cat.subs.map((nome) => ({ nome })) },
+        },
+      });
+    }
+  } else {
+    console.log('Categorias table not empty. Skipping categoria seed.');
+  }
+
+  // 4b. Garante (idempotente) que as 4 categorias padrão estejam marcadas como
+  //     protegidas — inclusive em bancos que já existiam antes deste campo.
+  await prisma.categoria.updateMany({
+    where: { nome: { in: ['Peça', 'Conjunto', 'Instalação', 'Geral'] } },
+    data: { padrao: true },
+  });
+
+  // 5. Seed Peças (itens) — antes em localStorage no frontend
+  const pecasCount = await prisma.peca.count();
+  if (pecasCount === 0) {
+    console.log('Seeding peças...');
+    const pecasBase = [
+      { nome: "Tubo", categoria: "Peça", subcategoria: "Metálica", normas: ["FAR 25.571"] },
+      { nome: "Usinado", categoria: "Peça", subcategoria: "Metálica", normas: ["ISO 9001:2015"] },
+      { nome: "Chapa", categoria: "Peça", subcategoria: "Metálica", normas: [] },
+      { nome: "Extrudado", categoria: "Peça", subcategoria: "Metálica", normas: ["FAR 25.571"] },
+      { nome: "Fundido", categoria: "Peça", subcategoria: "Metálica", normas: ["FAR 25.571", "ISO 9001:2015"] },
+      { nome: "Tratamento Superficial", categoria: "Peça", subcategoria: "Metálica", normas: ["ISO 9001:2015"] },
+      { nome: "Teste", categoria: "Peça", subcategoria: "Metálica", normas: ["FAR 25.571"] },
+      { nome: "Material Composto", categoria: "Peça", subcategoria: "Não Metálica", normas: ["FAR 25.571", "ISO 9001:2015"] },
+      { nome: "Tubo com Acessório", categoria: "Conjunto", subcategoria: "Instalação de Acessórios", normas: ["RBAC 25.1309"] },
+      { nome: "Soldagem", categoria: "Conjunto", subcategoria: "União de Peças", normas: ["ISO 9001:2015"] },
+      { nome: "Proteção", categoria: "Conjunto", subcategoria: "Cablagem", normas: ["RBAC 25.1309"] },
+      { nome: "Bota", categoria: "Conjunto", subcategoria: "Cablagem", normas: [] },
+      { nome: "Conector", categoria: "Conjunto", subcategoria: "Cablagem", normas: ["ISO 9001:2015"] },
+      { nome: "Conjunto Estrutural", categoria: "Instalação", subcategoria: "Estrutura", normas: ["FAR 25.571"] },
+      { nome: "Válvula Hidromecânica", categoria: "Instalação", subcategoria: "Hidromecânicos", normas: ["RBAC 25.1309"] },
+      { nome: "Chicote Elétrico Principal", categoria: "Instalação", subcategoria: "Elétrica", normas: ["RBAC 25.1309"] },
+      { nome: "Selante", categoria: "Instalação", subcategoria: "Geral", normas: ["ISO 9001:2015"] },
+      { nome: "Metalização", categoria: "Instalação", subcategoria: "Geral", normas: [] },
+      { nome: "Rebite", categoria: "Instalação", subcategoria: "Geral", normas: ["ISO 9001:2015"] },
+      { nome: "Parafuso", categoria: "Instalação", subcategoria: "Geral", normas: ["ISO 9001:2015"] },
+      { nome: "Arruela", categoria: "Instalação", subcategoria: "Geral", normas: [] },
+      { nome: "Inserto", categoria: "Instalação", subcategoria: "Geral", normas: [] },
+      { nome: "Frenagem", categoria: "Instalação", subcategoria: "Geral", normas: ["ISO 9001:2015"] },
+      { nome: "Shim", categoria: "Instalação", subcategoria: "Geral", normas: ["FAR 25.571"] },
+      { nome: "Primer", categoria: "Instalação", subcategoria: "Geral", normas: ["ISO 9001:2015"] },
+      { nome: "Corpo de Prova de Vibração", categoria: "Instalação", subcategoria: "Teste", normas: ["FAR 25.571"] },
+      { nome: "Nota de Desenho Padrão", categoria: "Geral", subcategoria: "Basic Notes", normas: ["ISO 9001:2015"] },
+      { nome: "Plaqueta de Identificação", categoria: "Geral", subcategoria: "Identificação", normas: ["ISO 9001:2015"] },
+    ];
+    // só conecta normas que existem no banco
+    const idsExistentes = new Set((await prisma.norma.findMany({ select: { id: true } })).map((n) => n.id));
+    for (const p of pecasBase) {
+      const normasValidas = p.normas.filter((id) => idsExistentes.has(id));
+      await prisma.peca.create({
+        data: {
+          nome: p.nome,
+          categoria: p.categoria,
+          subcategoria: p.subcategoria,
+          normas: { connect: normasValidas.map((id) => ({ id })) },
+        },
+      });
+    }
+  } else {
+    console.log('Peças table not empty. Skipping peça seed.');
+  }
+
   console.log('Seed completed successfully!');
 }
 

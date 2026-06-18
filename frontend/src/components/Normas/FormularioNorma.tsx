@@ -1,13 +1,12 @@
 import type { ChangeEvent, Dispatch, SetStateAction } from "react";
 import {
-  CATEGORIAS,
   ITENS_POR_SUBCATEGORIA,
   ORGANIZACOES,
   ORG_ORIGENS,
-  SUBCATEGORIAS,
   type Norma,
 } from "./NormasViewModel";
 import { safeParseArray } from "../../utils/NormasUtils";
+import { useCategorias } from "../../hooks/useCategorias";
 
 type PropsFormularioNorma = {
   visivel: boolean;
@@ -46,6 +45,9 @@ export default function FormularioNorma({
   handlePdfChange,
   handleImgChange,
 }: PropsFormularioNorma) {
+  // categorias/subcategorias agora vêm do backend (fonte única)
+  const { nomes: CATEGORIAS, subPorCategoria: SUBCATEGORIAS } = useCategorias();
+
   if (!visivel) return null;
 
   return (
@@ -484,11 +486,11 @@ export default function FormularioNorma({
                 <label className="form-label">
                   <i className="fas fa-file-pdf"></i> Arquivo PDF
                 </label>
-                {form.urlPdf && !arquivoPdf ? (
+                {(form.temPdf || form.urlPdf) && !arquivoPdf ? (
                   <div className="attachment-pdf">
                     <i className="fas fa-file-pdf"></i>
                     <span className="attachment-pdf-name">{form.nomePdf}</span>
-                    <button type="button" className="btn-remove-file" onClick={() => { updateForm("urlPdf", undefined); updateForm("nomePdf", undefined); }}>
+                    <button type="button" className="btn-remove-file" onClick={() => { updateForm("urlPdf", undefined); updateForm("nomePdf", undefined); updateForm("temPdf", false); }}>
                       <i className="fas fa-trash"></i>
                     </button>
                   </div>

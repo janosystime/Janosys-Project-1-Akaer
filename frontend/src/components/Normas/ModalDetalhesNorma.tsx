@@ -30,7 +30,7 @@ type PropsModalDetalhesNorma = {
   onClose: () => void;
   onEdit?: (normaSelecionada: Norma) => void;
   onDelete?: (id: string) => void;
-  onViewPdf: (url: string, nome: string) => void;
+  onViewPdf: (id: string, nome: string) => void;
   onViewImages: (imagens: string[], indice: number) => void;
 };
 
@@ -214,13 +214,13 @@ export default function ModalDetalhesNorma({
             <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{safeParseArray(norma.referencias).map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
           )}
 
-          {(norma.urlPdf || (safeParseArray(norma.imagens).length > 0)) && (
+          {(norma.temPdf || (safeParseArray(norma.imagens).length > 0)) && (
             <>
               <hr className="divider" />
               <div className="view-item">
                 <span className="view-label"><i className="fas fa-paperclip"></i> Anexos</span>
-                {norma.urlPdf && (
-                  <button type="button" className="attachment-pdf attachment-link btn-pdf-view" onClick={() => onViewPdf(norma.urlPdf!, norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`)}>
+                {norma.temPdf && (
+                  <button type="button" className="attachment-pdf attachment-link btn-pdf-view" onClick={() => onViewPdf(norma.id, norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`)}>
                     <i className="fas fa-file-pdf icon-pdf-red"></i><span className="attachment-pdf-name">{norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`}</span>
                   </button>
                 )}
@@ -242,7 +242,7 @@ export default function ModalDetalhesNorma({
           {safeParseArray(norma.notas).length === 0 &&
             safeParseArray(norma.referencias).length === 0 &&
             safeParseArray(norma.palavrasChave).length === 0 &&
-            !norma.urlPdf && safeParseArray(norma.imagens).length === 0 && (
+            !norma.temPdf && safeParseArray(norma.imagens).length === 0 && (
               <div className="empty-state compact">
                 <i className="fas fa-folder-open"></i>
                 <p>Nenhuma nota ou anexo.</p>

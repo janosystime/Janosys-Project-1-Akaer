@@ -1,4 +1,5 @@
-import { CAT_ICONES, CATEGORIAS, STATUS_OPCOES } from "./NormasViewModel";
+import { CAT_ICONES, STATUS_OPCOES } from "./NormasViewModel";
+import { useCategorias } from "../../hooks/useCategorias";
 
 type PropsFiltrosNormas = {
   termoPesquisa: string;
@@ -33,6 +34,9 @@ export default function FiltrosNormas({
   onItemChange,
   onStatusChange,
 }: PropsFiltrosNormas) {
+  // categorias do backend (fonte única)
+  const { nomes: CATEGORIAS } = useCategorias();
+
   return (
     <div className="filtros-container">
       <div className="filtros-header">

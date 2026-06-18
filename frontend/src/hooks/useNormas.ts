@@ -3,16 +3,17 @@ import { API_BASE_URL } from "../config/api";
 import { obterUsuarioAtual } from "../auth/session";
 import {
   FORM_INICIAL,
-  SUBCATEGORIAS,
   type ConfirmacaoState,
   type Norma,
   type ToastMsg,
 } from "../components/Normas/NormasViewModel";
-import { carregarPecas, listarPecasRelacionadas, type Peca } from "../utils/pecas";
+import { listarPecasRelacionadas, type Peca } from "../utils/pecas";
 import { converterParaBase64, safeParseArray } from "../utils/NormasUtils";
+import { useCategorias } from "./useCategorias";
 
 export default function useNormas() {
-  const [pecas] = useState<Peca[]>(() => carregarPecas());
+  const { subPorCategoria: SUBCATEGORIAS } = useCategorias();
+  const [pecas, setPecas] = useState<Peca[]>([]);
   const [normas, setNormas] = useState<Norma[]>([]);
   const usuario = obterUsuarioAtual();
   const podeEditar = usuario?.perfil === "administrador";
@@ -64,10 +65,21 @@ export default function useNormas() {
     }
   }, [adicionarToast]);
 
+  // Fetch peças from API (peças agora vivem no banco)
+  const fetchPecas = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/pecas`);
+      if (response.ok) setPecas(await response.json());
+    } catch (_) {
+      /* silencioso: peças relacionadas só ficam vazias */
+    }
+  }, []);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchNormas();
-  }, [fetchNormas]);
+    fetchPecas();
+  }, [fetchNormas, fetchPecas]);
 
   useEffect(() => {
     const bloquearAtalhos = (eventoTeclado: KeyboardEvent) => {
@@ -95,7 +107,7 @@ export default function useNormas() {
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
   const [pdfAberto, setPdfAberto] = useState<{
-    url: string;
+    id: string;
     nome: string;
   } | null>(null);
 
@@ -263,7 +275,11 @@ export default function useNormas() {
 
   const handleSave = async () => {
     try {
-      let stringBase64Pdf = form.urlPdf;
+      // Resolução do PDF a enviar:
+      //  - undefined => não envia o campo (backend mantém o PDF existente na edição)
+      //  - null      => limpa o PDF (usuário removeu, ou criação sem arquivo)
+      //  - string    => novo arquivo (base64)
+      let urlPdfPayload: string | null | undefined;
       let nomeArquivoPdf = form.nomePdf;
 
       if (arquivoPdf) {
@@ -274,8 +290,15 @@ export default function useNormas() {
           );
           return;
         }
-        stringBase64Pdf = await converterParaBase64(arquivoPdf);
+        urlPdfPayload = await converterParaBase64(arquivoPdf);
         nomeArquivoPdf = arquivoPdf.name;
+      } else if (!form.nomePdf && !form.temPdf) {
+        // sem arquivo novo e sem PDF existente => garante limpo
+        urlPdfPayload = null;
+        nomeArquivoPdf = undefined;
+      } else {
+        // mantém o PDF que já existe no backend (não reenviamos o binário)
+        urlPdfPayload = undefined;
       }
 
       let stringsBase64Imagens = form.imagens || [];
@@ -293,8 +316,11 @@ export default function useNormas() {
         stringsBase64Imagens = [...stringsBase64Imagens, ...novasImagensBase64];
       }
 
-      const normaSalva = {
-        ...form,
+      // remove urlPdf/temPdf do spread: urlPdf é controlado abaixo e temPdf é só do frontend
+      const { urlPdf: _urlPdfIgnorado, temPdf: _temPdfIgnorado, ...formSemPdf } = form;
+
+      const normaSalva: Record<string, unknown> = {
+        ...formSemPdf,
         notas: (form.notas || []).filter((notaAtual) => typeof notaAtual === "string" && notaAtual.trim() !== ""),
         referencias: (form.referencias || []).filter(
           (referenciaAtual) => typeof referenciaAtual === "string" && referenciaAtual.trim() !== "",
@@ -303,9 +329,14 @@ export default function useNormas() {
           (palavraAtual) => typeof palavraAtual === "string" && palavraAtual.trim() !== "",
         ),
         nomePdf: nomeArquivoPdf || null,
-        urlPdf: stringBase64Pdf || null,
         imagens: stringsBase64Imagens,
       };
+
+      // só inclui urlPdf quando há algo a definir (novo arquivo ou limpeza);
+      // undefined => omite o campo e o backend preserva o PDF atual.
+      if (urlPdfPayload !== undefined) {
+        normaSalva.urlPdf = urlPdfPayload;
+      }
 
       const headers: HeadersInit = {
         "Content-Type": "application/json",

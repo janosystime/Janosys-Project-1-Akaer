@@ -6,7 +6,7 @@ type PropsCartaoNorma = {
   onEdit?: (normaAtual: Norma) => void;
   onDelete?: (idParaDeletar: string) => void;
   onShowDetails: (normaAtual: Norma) => void;
-  onViewPdf: (urlPdf: string, nomePdf: string) => void;
+  onViewPdf: (id: string, nomePdf: string) => void;
   onViewImages: (listaImagens: string[]) => void;
   ehFavorito?: boolean;
   onToggleFavorito?: (idNorma: string) => void;
@@ -23,7 +23,7 @@ export default function CartaoNorma({
   onToggleFavorito,
 }: PropsCartaoNorma) {
   const classeCorTema = `theme-cat-${norma.categoria.toLowerCase()}`;
-  const possuiAnexos = norma.urlPdf || (norma.imagens && norma.imagens.length > 0);
+  const possuiAnexos = norma.temPdf || (norma.imagens && norma.imagens.length > 0);
 
   return (
     <div
@@ -105,12 +105,12 @@ export default function CartaoNorma({
           </button>
         )}
 
-        {norma.urlPdf && (
+        {norma.temPdf && (
           <button
             className="btn btn-info btn-icon"
             onClick={(eventoClique) => {
               eventoClique.stopPropagation();
-              onViewPdf(norma.urlPdf!, norma.nomePdf || "documento.pdf");
+              onViewPdf(norma.id, norma.nomePdf || "documento.pdf");
             }}
             title="Visualizar PDF"
           >

@@ -1,0 +1,4 @@
+# Scripts de shell DEVEM usar LF, senão quebram dentro dos containers Linux
+# (erro "set: Illegal option -" no docker-entrypoint.sh).
+*.sh text eol=lf
+docker-entrypoint.sh text eol=lf

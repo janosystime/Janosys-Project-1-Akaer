@@ -7,6 +7,9 @@ import { authRoutes } from './routes/auth.routes';
 import { solicitacoesRoutes } from './routes/solicitacoes.routes';
 import { historicoRoutes } from './routes/historico.routes';
 import { favoritosRoutes } from './routes/favoritos.routes';
+import { categoriasRoutes } from './routes/categorias.routes';
+import { subcategoriasRoutes } from './routes/subcategorias.routes';
+import { pecasRoutes } from './routes/pecas.routes';
 
 dotenv.config();
 
@@ -26,6 +29,9 @@ app.use('/usuarios', usuariosRoutes);
 app.use('/solicitacoes', solicitacoesRoutes);
 app.use('/historico', historicoRoutes);
 app.use('/favoritos', favoritosRoutes);
+app.use('/categorias', categoriasRoutes);
+app.use('/subcategorias', subcategoriasRoutes);
+app.use('/pecas', pecasRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

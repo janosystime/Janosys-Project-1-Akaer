@@ -2,6 +2,8 @@
 // não sabia onde colocar isso, então tirei as peças do Home.tsx e coloquei nesse helper pra facilitar a organização e deixar a exibição de peças centralizado em um arquivo só
 
 export interface Peca {
+  /** id no backend (peças agora persistem no banco). Pode faltar em dados antigos/mock. */
+  id?: number;
   nome: string;
   categoria: string;
   subcategoria: string;

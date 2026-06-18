@@ -11,9 +11,9 @@ type PropsModaisNorma = {
   onFecharDetalhes: () => void;
   onEditar: (norma: Norma) => void;
   onExcluir: (id: string) => void;
-  onAbrirPdf: (url: string, nome: string) => void;
+  onAbrirPdf: (id: string, nome: string) => void;
   onAbrirImagens: (imagens: string[], indice: number) => void;
-  pdfAberto: { url: string; nome: string } | null;
+  pdfAberto: { id: string; nome: string } | null;
   onFecharPdf: () => void;
   imagensAbertas: string[] | null;
   indiceImagemAberta: number | null;
@@ -51,7 +51,7 @@ export default function ModaisNorma({
 
       {pdfAberto && (
         <VisualizadorPdf
-          url={pdfAberto.url}
+          id={pdfAberto.id}
           nome={pdfAberto.nome}
           onClose={onFecharPdf}
         />

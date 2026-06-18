@@ -1,5 +1,65 @@
 import { Request, Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { prisma } from '../lib/prisma';
+
+// Pasta onde ficam os PDFs estáticos das normas semeadas (não mais públicos no frontend).
+const PDF_DIR = path.join(__dirname, '..', '..', 'pdfs');
+
+// Remove o conteúdo bruto do PDF (urlPdf) das respostas e expõe apenas um flag
+// `temPdf`, para que o binário/base64 nunca trafegue no JSON das listagens.
+function sanitizarNorma(norma: any) {
+  const { urlPdf, ...resto } = norma;
+  return { ...resto, temPdf: !!urlPdf };
+}
+
+// Resolve os bytes do PDF de uma norma, seja base64 embutido (upload) ou
+// arquivo estático em backend/pdfs (normas semeadas).
+function carregarBytesPdf(norma: any): Buffer | null {
+  const url: string | null = norma?.urlPdf ?? null;
+  if (!url) return null;
+
+  if (url.startsWith('data:')) {
+    const virgula = url.indexOf(',');
+    const base64 = virgula >= 0 ? url.substring(virgula + 1) : url;
+    return Buffer.from(base64, 'base64');
+  }
+
+  // caminho do tipo "/pdf/far-25-571.pdf" -> backend/pdfs/far-25-571.pdf
+  const nomeArquivo = path.basename(url);
+  const caminho = path.join(PDF_DIR, nomeArquivo);
+  if (!fs.existsSync(caminho)) return null;
+  return fs.readFileSync(caminho);
+}
+
+// Carimba uma marca d'água em mosaico diagonal em todas as páginas do PDF.
+async function aplicarMarcaDagua(pdfBytes: Buffer, texto: string): Promise<Uint8Array> {
+  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+  const fonte = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const tamanho = 11;
+
+  for (const pagina of pdfDoc.getPages()) {
+    const { width, height } = pagina.getSize();
+    const passoX = 240;
+    const passoY = 150;
+    for (let y = -passoY; y < height + passoY; y += passoY) {
+      for (let x = -passoX; x < width + passoX; x += passoX) {
+        pagina.drawText(texto, {
+          x,
+          y,
+          size: tamanho,
+          font: fonte,
+          color: rgb(0.45, 0.45, 0.45),
+          opacity: 0.18,
+          rotate: degrees(35),
+        });
+      }
+    }
+  }
+
+  return pdfDoc.save();
+}
 
 // Monta o snapshot dos campos versionáveis a partir de uma norma.
 function montarSnapshot(norma: any) {
@@ -42,7 +102,7 @@ export class NormasController {
         include: { pecas: true },
         orderBy: { dataCriacao: 'desc' }
       });
-      return res.json(normas);
+      return res.json(normas.map(sanitizarNorma));
     } catch (error) {
       console.error('Erro ao buscar normas:', error);
       return res.status(500).json({ error: 'Erro ao buscar normas' });
@@ -86,7 +146,7 @@ export class NormasController {
         return criada;
       });
 
-      return res.status(201).json(norma);
+      return res.status(201).json(sanitizarNorma(norma));
     } catch (error) {
       console.error('Erro ao criar norma:', error);
       return res.status(500).json({ error: 'Erro ao criar norma' });
@@ -101,7 +161,7 @@ export class NormasController {
         include: { pecas: true }
       });
       if (!norma) return res.status(404).json({ error: 'Norma não encontrada' });
-      return res.json(norma);
+      return res.json(sanitizarNorma(norma));
     } catch (error) {
       console.error('Erro ao buscar norma:', error);
       return res.status(500).json({ error: 'Erro ao buscar norma' });
@@ -150,7 +210,7 @@ export class NormasController {
         return atualizada;
       });
 
-      return res.json(norma);
+      return res.json(sanitizarNorma(norma));
     } catch (error) {
       console.error('Erro ao atualizar norma:', error);
       return res.status(500).json({ error: 'Erro ao atualizar norma' });
@@ -169,6 +229,55 @@ export class NormasController {
     } catch (error) {
       console.error('Erro ao buscar versões da norma:', error);
       return res.status(500).json({ error: 'Erro ao buscar versões da norma' });
+    }
+  }
+
+  // Serve o PDF para visualização inline (usado pelo visualizador protegido).
+  async view(req: Request, res: Response) {
+    const id = req.params.id as string;
+    try {
+      const norma = await prisma.norma.findUnique({ where: { id } });
+      if (!norma) return res.status(404).json({ error: 'Norma não encontrada' });
+
+      const bytes = carregarBytesPdf(norma);
+      if (!bytes) return res.status(404).json({ error: 'PDF não disponível' });
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline');
+      return res.end(bytes);
+    } catch (error) {
+      console.error('Erro ao exibir PDF:', error);
+      return res.status(500).json({ error: 'Erro ao exibir PDF' });
+    }
+  }
+
+  // Devolve o PDF com marca d'água (nome do usuário + data/hora + CONFIDENCIAL)
+  // gravada no arquivo, para download. Medida de segurança/rastreabilidade.
+  async download(req: Request, res: Response) {
+    const id = req.params.id as string;
+    try {
+      const norma = await prisma.norma.findUnique({ where: { id } });
+      if (!norma) return res.status(404).json({ error: 'Norma não encontrada' });
+
+      const bytes = carregarBytesPdf(norma);
+      if (!bytes) return res.status(404).json({ error: 'PDF não disponível' });
+
+      const usuarioNome = (req.headers['x-usuario-nome'] as string) || 'Usuário';
+      const dataHora = new Date().toLocaleString('pt-BR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+      });
+      const texto = `${usuarioNome}  -  ${dataHora}  -  CONFIDENCIAL`;
+
+      const marcado = await aplicarMarcaDagua(bytes, texto);
+
+      const nomeDownload = (norma.nomePdf || `${id}.pdf`).replace(/"/g, '');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${nomeDownload}"`);
+      return res.end(Buffer.from(marcado));
+    } catch (error) {
+      console.error('Erro ao gerar PDF com marca d\'água:', error);
+      return res.status(500).json({ error: 'Erro ao gerar PDF para download' });
     }
   }
 

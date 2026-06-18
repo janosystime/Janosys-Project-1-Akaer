@@ -1,55 +1,107 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "../styles/Normas.css";
 import "../styles/Home.css";
-import { salvarPecas, carregarPecas, type Peca } from "../utils/pecas";
+import { type Peca } from "../utils/pecas";
 import { obterUsuarioAtual } from '../auth/session'
+import { API_BASE_URL } from "../config/api";
 
 import type { Norma } from "../components/Normas/NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "../components/Normas/NormasViewModel";
-import { NORMAS_BASE } from "../components/Normas/mocks";
 import VisualizadorPdf from "../components/Normas/VisualizadorPdf";
 import ModalConfirmacao from "../components/Normas/ModalConfirmacao";
 import LightboxImagens from "../components/Normas/LightboxImagens";
 import ModalDetalhesNorma from "../components/Normas/ModalDetalhesNorma";
 
-type CategoriaRaiz = "Peça" | "Conjunto" | "Instalação" | "Geral";
+// Categoria/Subcategoria agora vêm do backend (antes eram hardcoded).
+interface Subcategoria {
+  id: number;
+  nome: string;
+}
+interface Categoria {
+  id: number;
+  nome: string;
+  icone: string;
+  tema: string;
+  padrao: boolean;
+  subcategorias: Subcategoria[];
+}
 
-const CATEGORIAS_DEF: Record<CategoriaRaiz, { icone: string, tema: string }> = {
-  "Peça": { icone: CAT_ICONES["Peça"] || "fa-gear", tema: "theme-cat-peça" },
-  "Conjunto": { icone: CAT_ICONES["Conjunto"] || "fa-gears", tema: "theme-cat-conjunto" },
-  "Instalação": { icone: CAT_ICONES["Instalação"] || "fa-screwdriver-wrench", tema: "theme-cat-instalação" },
-  "Geral": { icone: CAT_ICONES["Geral"] || "fa-layer-group", tema: "theme-cat-geral" },
-};
-
-const ESTRUTURA_PASTAS_BASE: Record<CategoriaRaiz, string[]> = {
-  "Peça": ["Metálica", "Não Metálica"],
-  "Conjunto": ["Instalação de Acessórios", "União de Peças", "Cablagem"],
-  "Instalação": ["Estrutura", "Hidromecânicos", "Elétrica", "Geral", "Teste"],
-  "Geral": ["Basic Notes", "Identificação"],
-};
+// Ícones sugeridos ao criar uma categoria nova.
+const ICONES_CATEGORIA = [
+  "fa-folder", "fa-gear", "fa-gears", "fa-screwdriver-wrench", "fa-layer-group",
+  "fa-microchip", "fa-bolt", "fa-plane", "fa-flask", "fa-cube",
+];
 
 export default function Home() {
-  const [normas] = useState<Norma[]>(() => {
-    const normasSalvas = localStorage.getItem("biblioteca_normas");
-    return normasSalvas ? JSON.parse(normasSalvas) : NORMAS_BASE;
-  });
-
   const usuario = obterUsuarioAtual()
   const podeEditar = usuario?.perfil === 'administrador'
-  
-  const [pecas, setPecas] = useState<Peca[]>(() => carregarPecas());
-  const [estruturaPastas, setEstruturaPastas] = useState<Record<string, string[]>>(ESTRUTURA_PASTAS_BASE);
+
+  const cabecalhoJson = {
+    "Content-Type": "application/json",
+    "x-usuario-nome": usuario?.nome || "Administrador",
+  };
+
+  // ── Dados do backend ────────────────────────────────────────────────────
+  const [normas, setNormas] = useState<Norma[]>([]);
+  const [pecas, setPecas] = useState<Peca[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  const recarregarCategorias = useCallback(async () => {
+    const resp = await fetch(`${API_BASE_URL}/categorias`);
+    if (resp.ok) setCategorias(await resp.json());
+  }, []);
+
+  const recarregarPecas = useCallback(async () => {
+    const resp = await fetch(`${API_BASE_URL}/pecas`);
+    if (resp.ok) setPecas(await resp.json());
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setCarregando(true);
+      try {
+        const [rc, rp, rn] = await Promise.all([
+          fetch(`${API_BASE_URL}/categorias`),
+          fetch(`${API_BASE_URL}/pecas`),
+          fetch(`${API_BASE_URL}/normas`),
+        ]);
+        if (rc.ok) setCategorias(await rc.json());
+        if (rp.ok) setPecas(await rp.json());
+        if (rn.ok) setNormas(await rn.json());
+      } catch {
+        // silencioso: a UI mostra estado vazio
+      } finally {
+        setCarregando(false);
+      }
+    })();
+  }, []);
+
+  // ── Helpers derivados das categorias ────────────────────────────────────
+  const catPorNome = (nome: string | null) => categorias.find((c) => c.nome === nome);
+  const iconeDe = (nome: string | null) => catPorNome(nome)?.icone || "fa-folder";
+  const temaDe = (nome: string | null) => catPorNome(nome)?.tema || "theme-cat-geral";
+  const subsDe = (nome: string | null) => catPorNome(nome)?.subcategorias || [];
+  const subIdDe = (catNome: string | null, subNome: string) =>
+    subsDe(catNome).find((s) => s.nome === subNome)?.id;
+
+  // ── Estado de navegação / modais ────────────────────────────────────────
   const [pecaVisualizar, setPecaVisualizar] = useState<Peca | null>(null);
   const [normaDetalheVisualizar, setNormaDetalheVisualizar] = useState<Norma | null>(null);
-  const [pdfVisualizar, setPdfVisualizar] = useState<{ url: string, nome: string } | null>(null);
+  const [pdfVisualizar, setPdfVisualizar] = useState<{ id: string, nome: string } | null>(null);
 
   const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
 
-  const [navCategoria, setNavCategoria] = useState<CategoriaRaiz | null>(null);
+  const [navCategoria, setNavCategoria] = useState<string | null>(null);
   const [navSubcategoria, setNavSubcategoria] = useState<string | null>(null);
 
   const [showManageSubcategorias, setShowManageSubcategorias] = useState(false);
+
+  const [showAddCategoria, setShowAddCategoria] = useState(false);
+  const [nomeNovaCategoria, setNomeNovaCategoria] = useState("");
+  const [iconeNovaCategoria, setIconeNovaCategoria] = useState(ICONES_CATEGORIA[0]);
+  const [categoriaExcluindo, setCategoriaExcluindo] = useState<Categoria | null>(null);
 
   const [showAddSubcategoria, setShowAddSubcategoria] = useState(false);
   const [nomeNovaSubcategoria, setNomeNovaSubcategoria] = useState("");
@@ -67,10 +119,6 @@ export default function Home() {
   const [normasEditadasPeca, setNormasEditadasPeca] = useState<string[]>([]);
   const [pecaExcluindo, setPecaExcluindo] = useState<Peca | null>(null);
 
-  useEffect(() => {
-    salvarPecas(pecas);
-  }, [pecas]);
-
   const pecasDaSubcategoria = pecas.filter(
     (pecaAtual) => pecaAtual.categoria === navCategoria && pecaAtual.subcategoria === navSubcategoria
   );
@@ -80,66 +128,176 @@ export default function Home() {
     setNavSubcategoria(null);
   };
 
-  const handleAddSubcategoria = (evento: React.FormEvent) => {
+  // ── Handlers (API) ──────────────────────────────────────────────────────
+  const handleAddCategoria = async (evento: React.FormEvent) => {
     evento.preventDefault();
-    if (!nomeNovaSubcategoria.trim() || !navCategoria) return;
-    setEstruturaPastas(prev => ({ ...prev, [navCategoria]: [...prev[navCategoria], nomeNovaSubcategoria.trim()] }));
-    setNomeNovaSubcategoria("");
-    setShowAddSubcategoria(false);
+    const nome = nomeNovaCategoria.trim();
+    if (!nome) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/categorias`, {
+        method: "POST",
+        headers: cabecalhoJson,
+        body: JSON.stringify({ nome, icone: iconeNovaCategoria, tema: "theme-cat-geral" }),
+      });
+      if (!resp.ok) {
+        const erro = await resp.json().catch(() => ({}));
+        alert(erro.error || "Erro ao criar categoria.");
+        return;
+      }
+      await recarregarCategorias();
+      setNomeNovaCategoria("");
+      setIconeNovaCategoria(ICONES_CATEGORIA[0]);
+      setShowAddCategoria(false);
+    } catch {
+      alert("Erro de conexão ao criar categoria.");
+    }
   };
 
-  const handleEditSubcategoria = (evento: React.FormEvent) => {
+  const handleDeleteCategoria = async () => {
+    if (!categoriaExcluindo) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/categorias/${categoriaExcluindo.id}`, {
+        method: "DELETE",
+        headers: cabecalhoJson,
+      });
+      if (!resp.ok) {
+        const erro = await resp.json().catch(() => ({}));
+        alert(erro.error || "Erro ao excluir categoria.");
+        return;
+      }
+      await Promise.all([recarregarCategorias(), recarregarPecas()]);
+      if (navCategoria === categoriaExcluindo.nome) resetNavegacao();
+    } catch {
+      alert("Erro de conexão ao excluir categoria.");
+    } finally {
+      setCategoriaExcluindo(null);
+    }
+  };
+
+  const handleAddSubcategoria = async (evento: React.FormEvent) => {
+    evento.preventDefault();
+    const cat = catPorNome(navCategoria);
+    if (!nomeNovaSubcategoria.trim() || !cat) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/subcategorias`, {
+        method: "POST",
+        headers: cabecalhoJson,
+        body: JSON.stringify({ categoriaId: cat.id, nome: nomeNovaSubcategoria.trim() }),
+      });
+      if (!resp.ok) {
+        const erro = await resp.json().catch(() => ({}));
+        alert(erro.error || "Erro ao criar subcategoria.");
+        return;
+      }
+      await recarregarCategorias();
+      setNomeNovaSubcategoria("");
+      setShowAddSubcategoria(false);
+    } catch {
+      alert("Erro de conexão ao criar subcategoria.");
+    }
+  };
+
+  const handleEditSubcategoria = async (evento: React.FormEvent) => {
     evento.preventDefault();
     if (!nomeEditadoSubcategoria.trim() || !navCategoria || !subcategoriaEditando) return;
+    const id = subIdDe(navCategoria, subcategoriaEditando);
+    if (!id) return;
     const novoNome = nomeEditadoSubcategoria.trim();
-
-    setEstruturaPastas(prev => {
-      const novasPastas = prev[navCategoria].map(subcategoriaAtual => subcategoriaAtual === subcategoriaEditando ? novoNome : subcategoriaAtual);
-      return { ...prev, [navCategoria]: novasPastas };
-    });
-
-    setPecas(prev => prev.map(pecaAtual => (pecaAtual.categoria === navCategoria && pecaAtual.subcategoria === subcategoriaEditando) ? { ...pecaAtual, subcategoria: novoNome } : pecaAtual));
-    if (navSubcategoria === subcategoriaEditando) setNavSubcategoria(novoNome);
-    setSubcategoriaEditando(null);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/subcategorias/${id}`, {
+        method: "PUT",
+        headers: cabecalhoJson,
+        body: JSON.stringify({ nome: novoNome }),
+      });
+      if (!resp.ok) {
+        const erro = await resp.json().catch(() => ({}));
+        alert(erro.error || "Erro ao renomear subcategoria.");
+        return;
+      }
+      await Promise.all([recarregarCategorias(), recarregarPecas()]);
+      if (navSubcategoria === subcategoriaEditando) setNavSubcategoria(novoNome);
+      setSubcategoriaEditando(null);
+    } catch {
+      alert("Erro de conexão ao renomear subcategoria.");
+    }
   };
 
-  const handleDeleteSubcategoria = () => {
+  const handleDeleteSubcategoria = async () => {
     if (!navCategoria || !subcategoriaExcluindo) return;
-    setEstruturaPastas(prev => ({ ...prev, [navCategoria]: prev[navCategoria].filter(subcategoriaAtual => subcategoriaAtual !== subcategoriaExcluindo) }));
-    setPecas(prev => prev.filter(pecaAtual => !(pecaAtual.categoria === navCategoria && pecaAtual.subcategoria === subcategoriaExcluindo)));
-    if (navSubcategoria === subcategoriaExcluindo) setNavSubcategoria(null);
-    setSubcategoriaExcluindo(null);
+    const id = subIdDe(navCategoria, subcategoriaExcluindo);
+    if (!id) { setSubcategoriaExcluindo(null); return; }
+    try {
+      await fetch(`${API_BASE_URL}/subcategorias/${id}`, { method: "DELETE", headers: cabecalhoJson });
+      await Promise.all([recarregarCategorias(), recarregarPecas()]);
+      if (navSubcategoria === subcategoriaExcluindo) setNavSubcategoria(null);
+    } catch {
+      alert("Erro de conexão ao excluir subcategoria.");
+    } finally {
+      setSubcategoriaExcluindo(null);
+    }
   };
 
-  const handleAddPeca = (evento: React.FormEvent) => {
+  const handleAddPeca = async (evento: React.FormEvent) => {
     evento.preventDefault();
     if (!nomeNovaPeca.trim() || !navCategoria || !navSubcategoria) return;
-    setPecas(prev => [...prev, { nome: nomeNovaPeca.trim(), categoria: navCategoria, subcategoria: navSubcategoria, normasVinculadas: normasNovaPeca }]);
-    setNomeNovaPeca("");
-    setNormasNovaPeca([]);
-    setShowAddPeca(false);
+    try {
+      const resp = await fetch(`${API_BASE_URL}/pecas`, {
+        method: "POST",
+        headers: cabecalhoJson,
+        body: JSON.stringify({
+          nome: nomeNovaPeca.trim(),
+          categoria: navCategoria,
+          subcategoria: navSubcategoria,
+          normasVinculadas: normasNovaPeca,
+        }),
+      });
+      if (!resp.ok) { alert("Erro ao criar item."); return; }
+      await recarregarPecas();
+      setNomeNovaPeca("");
+      setNormasNovaPeca([]);
+      setShowAddPeca(false);
+    } catch {
+      alert("Erro de conexão ao criar item.");
+    }
   };
 
-  const handleEditPeca = (evento: React.FormEvent) => {
+  const handleEditPeca = async (evento: React.FormEvent) => {
     evento.preventDefault();
-    if (!nomeEditadoPeca.trim() || !pecaEditando) return;
-    setPecas(prev => prev.map(pecaAtual => pecaAtual === pecaEditando ? { ...pecaAtual, nome: nomeEditadoPeca.trim(), normasVinculadas: normasEditadasPeca } : pecaAtual));
-    setPecaEditando(null);
+    if (!nomeEditadoPeca.trim() || !pecaEditando?.id) return;
+    try {
+      const resp = await fetch(`${API_BASE_URL}/pecas/${pecaEditando.id}`, {
+        method: "PUT",
+        headers: cabecalhoJson,
+        body: JSON.stringify({ nome: nomeEditadoPeca.trim(), normasVinculadas: normasEditadasPeca }),
+      });
+      if (!resp.ok) { alert("Erro ao editar item."); return; }
+      await recarregarPecas();
+      setPecaEditando(null);
+    } catch {
+      alert("Erro de conexão ao editar item.");
+    }
   };
 
-  const handleDeletePeca = () => {
-    if (!pecaExcluindo) return;
-    setPecas(prev => prev.filter(pecaAtual => pecaAtual !== pecaExcluindo));
-    setPecaExcluindo(null);
+  const handleDeletePeca = async () => {
+    if (!pecaExcluindo?.id) { setPecaExcluindo(null); return; }
+    try {
+      await fetch(`${API_BASE_URL}/pecas/${pecaExcluindo.id}`, { method: "DELETE", headers: cabecalhoJson });
+      await recarregarPecas();
+    } catch {
+      alert("Erro de conexão ao excluir item.");
+    } finally {
+      setPecaExcluindo(null);
+    }
   };
 
-  const renderPecaCard = (pecaAtual: Peca, indicePeca: number) => {
-    const configCategoria = CATEGORIAS_DEF[pecaAtual.categoria as CategoriaRaiz];
+  const renderPecaCard = (pecaAtual: Peca) => {
+    const tema = temaDe(pecaAtual.categoria);
+    const icone = iconeDe(pecaAtual.categoria);
     return (
-      <div key={`peca-${indicePeca}`} className={`peca-card ${configCategoria.tema}`} onClick={() => setPecaVisualizar(pecaAtual)}>
+      <div key={`peca-${pecaAtual.id}`} className={`peca-card ${tema}`} onClick={() => setPecaVisualizar(pecaAtual)}>
         <div className="peca-card-header">
-          <div className={`peca-icon-wrapper ${configCategoria.tema}`}>
-            <i className={`fas ${configCategoria.icone}`}></i>
+          <div className={`peca-icon-wrapper ${tema}`}>
+            <i className={`fas ${icone}`}></i>
           </div>
           <div className="peca-info"><h3>{pecaAtual.nome}</h3></div>
         </div>
@@ -169,7 +327,7 @@ export default function Home() {
             <>
               <i className="fas fa-chevron-right breadcrumb-separator"></i>
               <div className={`breadcrumb-item ${!navSubcategoria ? "active" : ""}`} onClick={() => setNavSubcategoria(null)}>
-                <i className={`fas ${CATEGORIAS_DEF[navCategoria].icone}`}></i> {navCategoria}
+                <i className={`fas ${iconeDe(navCategoria)}`}></i> {navCategoria}
               </div>
             </>
           )}
@@ -182,24 +340,43 @@ export default function Home() {
         </div>
 
         <div className="conteudo-dinamico">
+          {carregando ? (
+            <div className="empty-state"><i className="fas fa-spinner fa-spin"></i><p>Carregando catálogo...</p></div>
+          ) : (
+          <>
           {!navCategoria && (
             <div className="folder-grid">
-              {(Object.keys(CATEGORIAS_DEF) as CategoriaRaiz[]).map((categoriaRaiz) => (
-                <div key={categoriaRaiz} className={`folder-card ${CATEGORIAS_DEF[categoriaRaiz].tema}`} onClick={() => setNavCategoria(categoriaRaiz)}>
-                  <div className="folder-icon"><i className={`fas ${CATEGORIAS_DEF[categoriaRaiz].icone}`}></i></div>
+              {categorias.map((categoriaAtual) => (
+                <div key={categoriaAtual.id} className={`folder-card ${categoriaAtual.tema}`} onClick={() => setNavCategoria(categoriaAtual.nome)}>
+                  <div className="folder-icon"><i className={`fas ${categoriaAtual.icone}`}></i></div>
                   <div className="folder-info">
-                    <span className="folder-title">{categoriaRaiz}</span>
-                    <span className="folder-subtitle">{estruturaPastas[categoriaRaiz]?.length || 0} subcategorias</span>
+                    <span className="folder-title">{categoriaAtual.nome}</span>
+                    <span className="folder-subtitle">{categoriaAtual.subcategorias.length} subcategorias</span>
                   </div>
+                  {podeEditar && !categoriaAtual.padrao && (
+                    <button
+                      className="btn btn-danger btn-icon folder-delete-btn"
+                      onClick={(evento) => { evento.stopPropagation(); setCategoriaExcluindo(categoriaAtual); }}
+                      title="Excluir categoria"
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
+                  )}
                 </div>
               ))}
+              {podeEditar && (
+                <div className="folder-card add-card" onClick={() => { setNomeNovaCategoria(""); setIconeNovaCategoria(ICONES_CATEGORIA[0]); setShowAddCategoria(true); }}>
+                  <div className="folder-icon"><i className="fas fa-plus"></i></div>
+                  <div className="folder-info"><span className="folder-title">Nova Categoria</span></div>
+                </div>
+              )}
             </div>
           )}
 
           {navCategoria && !navSubcategoria && (
             <div className="category-view-container">
               <div className="category-header-actions">
-                <h2 className="category-title"><i className={`fas ${CATEGORIAS_DEF[navCategoria].icone}`}></i> {navCategoria}</h2>
+                <h2 className="category-title"><i className={`fas ${iconeDe(navCategoria)}`}></i> {navCategoria}</h2>
                 {podeEditar && (
                   <button className="btn btn-ghost" onClick={() => setShowManageSubcategorias(true)}>
                     <i className="fas fa-sliders"></i> Gerenciar Pastas</button>
@@ -207,13 +384,13 @@ export default function Home() {
               </div>
 
               <div className="folder-grid">
-                {(estruturaPastas[navCategoria] || []).map((subcategoriaAtual) => {
-                  const qtdItens = pecas.filter((pecaAtual) => pecaAtual.categoria === navCategoria && pecaAtual.subcategoria === subcategoriaAtual).length;
+                {subsDe(navCategoria).map((subcategoriaAtual) => {
+                  const qtdItens = pecas.filter((pecaAtual) => pecaAtual.categoria === navCategoria && pecaAtual.subcategoria === subcategoriaAtual.nome).length;
                   return (
-                    <div key={subcategoriaAtual} className={`folder-card ${CATEGORIAS_DEF[navCategoria].tema}`} onClick={() => setNavSubcategoria(subcategoriaAtual)}>
+                    <div key={subcategoriaAtual.id} className={`folder-card ${temaDe(navCategoria)}`} onClick={() => setNavSubcategoria(subcategoriaAtual.nome)}>
                       <div className="folder-icon"><i className={`fas ${qtdItens > 0 ? "fa-folder-open" : "fa-folder"}`}></i></div>
                       <div className="folder-info">
-                        <span className="folder-title" title={subcategoriaAtual}>{subcategoriaAtual}</span>
+                        <span className="folder-title" title={subcategoriaAtual.nome}>{subcategoriaAtual.nome}</span>
                         <span className="folder-subtitle">{qtdItens === 0 ? "Vazia" : `${qtdItens} ${qtdItens === 1 ? "item" : "itens"}`}</span>
                       </div>
                     </div>
@@ -236,7 +413,7 @@ export default function Home() {
                 <h2 className="subcategory-title"><i className="fas fa-folder-open"></i> {navSubcategoria}</h2>
               </div>
               <div className="pecas-lista">
-                {pecasDaSubcategoria.map((pecaAtual, indicePeca) => renderPecaCard(pecaAtual, indicePeca))}
+                {pecasDaSubcategoria.map((pecaAtual) => renderPecaCard(pecaAtual))}
                 {podeEditar && (
                   <div className="peca-card add-card" onClick={() => { setNomeNovaPeca(""); setNormasNovaPeca([]); setShowAddPeca(true); }}>
                     <div className="peca-card-header centralizado">
@@ -249,12 +426,18 @@ export default function Home() {
 
             </div>
           )}
+          </>
+          )}
         </div>
 
-        {pdfVisualizar && <VisualizadorPdf url={pdfVisualizar.url} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
+        {pdfVisualizar && <VisualizadorPdf id={pdfVisualizar.id} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
 
         {indiceImagemAberta !== null && imagensAbertas && (
           <LightboxImagens imagens={imagensAbertas} indiceInicial={indiceImagemAberta} onClose={() => { setIndiceImagemAberta(null); setImagensAbertas(null); }} />
+        )}
+
+        {categoriaExcluindo && (
+          <ModalConfirmacao titulo="Excluir Categoria" mensagem={`Tem certeza que deseja excluir a categoria ${categoriaExcluindo.nome}? Todas as subcategorias e peças dentro dela serão deletadas.`} onConfirmar={handleDeleteCategoria} onCancelar={() => setCategoriaExcluindo(null)} />
         )}
 
         {subcategoriaExcluindo && (
@@ -281,7 +464,7 @@ export default function Home() {
                 <div className="view-grid">
                   <div className="view-item">
                     <span className="view-label"><i className="fas fa-sitemap"></i> Categoria Raiz</span>
-                    <div className="view-badges"><span className={`badge ${CATEGORIAS_DEF[pecaVisualizar.categoria as CategoriaRaiz].tema}`}><i className={`fas ${CATEGORIAS_DEF[pecaVisualizar.categoria as CategoriaRaiz].icone} badge-icon`}></i> {pecaVisualizar.categoria}</span></div>
+                    <div className="view-badges"><span className={`badge ${temaDe(pecaVisualizar.categoria)}`}><i className={`fas ${iconeDe(pecaVisualizar.categoria)} badge-icon`}></i> {pecaVisualizar.categoria}</span></div>
                   </div>
                   <div className="view-item">
                     <span className="view-label"><i className="fas fa-folder-open"></i> Subcategoria</span>
@@ -324,14 +507,14 @@ export default function Home() {
                                 </div>
 
                                 <div className="vinculo-norma-actions">
-                                  {normaDetalhes.urlPdf && (
+                                  {normaDetalhes.temPdf && (
                                     <button
                                       type="button"
                                       className="btn btn-info btn-icon"
                                       onClick={(evento) => {
                                         evento.stopPropagation();
                                         setPdfVisualizar({
-                                          url: normaDetalhes.urlPdf!,
+                                          id: normaDetalhes.id,
                                           nome: normaDetalhes.nomePdf || `${normaDetalhes.id.replace(" ", "_")}.pdf`
                                         });
                                       }}
@@ -385,12 +568,45 @@ export default function Home() {
           <ModalDetalhesNorma
             norma={normaDetalheVisualizar}
             onClose={() => setNormaDetalheVisualizar(null)}
-            onViewPdf={(urlVisualizada, nomePdfVisualizado) => setPdfVisualizar({ url: urlVisualizada, nome: nomePdfVisualizado })}
+            onViewPdf={(idNorma, nomePdfVisualizado) => setPdfVisualizar({ id: idNorma, nome: nomePdfVisualizado })}
             onViewImages={(imagensParaVisualizar, indiceImagemSelecionada) => {
               setImagensAbertas(imagensParaVisualizar);
               setIndiceImagemAberta(indiceImagemSelecionada);
             }}
           />
+        )}
+
+        {showAddCategoria && (
+          <div className="modal-overlay" onClick={() => setShowAddCategoria(false)}>
+            <div className="modal modal-scroll-fit" onClick={evento => evento.stopPropagation()}>
+              <form onSubmit={handleAddCategoria}>
+                <div className="modal-header">
+                  <h2><i className="fas fa-folder-plus"></i> Nova Categoria</h2>
+                  <button type="button" className="btn-close" onClick={() => setShowAddCategoria(false)}><i className="fas fa-xmark"></i></button>
+                </div>
+                <div className="view-details modal-pad form-body-scroll">
+                  <label className="view-label">Nome da Categoria</label>
+                  <input type="text" className="form-input" autoFocus value={nomeNovaCategoria} onChange={evento => setNomeNovaCategoria(evento.target.value)} placeholder="Ex: Eletrônica" />
+
+                  <label className="view-label margem-top"><i className="fas fa-icons"></i> Ícone</label>
+                  <div className="checkbox-list" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {ICONES_CATEGORIA.map((ic) => (
+                      <button
+                        type="button"
+                        key={ic}
+                        className={`btn btn-icon ${iconeNovaCategoria === ic ? "btn-primary" : "btn-ghost"}`}
+                        onClick={() => setIconeNovaCategoria(ic)}
+                        title={ic}
+                      >
+                        <i className={`fas ${ic}`}></i>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="modal-footer"><button type="submit" className="btn btn-primary"><i className="fas fa-check"></i> Criar</button></div>
+              </form>
+            </div>
+          </div>
         )}
 
         {showManageSubcategorias && navCategoria && (
@@ -401,14 +617,14 @@ export default function Home() {
                 <button type="button" className="btn-close" onClick={() => setShowManageSubcategorias(false)}><i className="fas fa-xmark"></i></button>
               </div>
               <div className="view-details modal-pad manage-modal-body form-body-scroll">
-                {(estruturaPastas[navCategoria] || []).length > 0 ? (
+                {subsDe(navCategoria).length > 0 ? (
                   <div className="manage-list">
-                    {estruturaPastas[navCategoria].map((subcategoriaAtual) => (
-                      <div key={`manage-${subcategoriaAtual}`} className="manage-row">
-                        <div className="manage-row-info"><i className="fas fa-folder manage-row-icon"></i> <span className="manage-row-name">{subcategoriaAtual}</span></div>
+                    {subsDe(navCategoria).map((subcategoriaAtual) => (
+                      <div key={`manage-${subcategoriaAtual.id}`} className="manage-row">
+                        <div className="manage-row-info"><i className="fas fa-folder manage-row-icon"></i> <span className="manage-row-name">{subcategoriaAtual.nome}</span></div>
                         <div className="card-actions inline">
-                          <button className="btn btn-warning btn-icon" onClick={() => { setSubcategoriaEditando(subcategoriaAtual); setNomeEditadoSubcategoria(subcategoriaAtual); setShowManageSubcategorias(false); }} title="Editar"><i className="fas fa-pen"></i></button>
-                          <button className="btn btn-danger btn-icon" onClick={() => { setSubcategoriaExcluindo(subcategoriaAtual); setShowManageSubcategorias(false); }} title="Excluir"><i className="fas fa-trash"></i></button>
+                          <button className="btn btn-warning btn-icon" onClick={() => { setSubcategoriaEditando(subcategoriaAtual.nome); setNomeEditadoSubcategoria(subcategoriaAtual.nome); setShowManageSubcategorias(false); }} title="Editar"><i className="fas fa-pen"></i></button>
+                          <button className="btn btn-danger btn-icon" onClick={() => { setSubcategoriaExcluindo(subcategoriaAtual.nome); setShowManageSubcategorias(false); }} title="Excluir"><i className="fas fa-trash"></i></button>
                         </div>
                       </div>
                     ))}

@@ -114,6 +114,35 @@ model Peca {
   @@map("pecas")
 }
 
+// Categoria raiz da Home (explorador de pastas). Antes hardcoded no frontend.
+model Categoria {
+  id            Int            @id @default(autoincrement())
+  nome          String         @unique
+  icone         String         @default("fa-folder")
+  tema          String         @default("theme-cat-geral")
+  // categorias padrão (Peça/Conjunto/Instalação/Geral) não podem ser excluídas
+  padrao        Boolean        @default(false)
+  dataCriacao   DateTime       @default(now())
+
+  subcategorias Subcategoria[]
+
+  @@map("categorias")
+}
+
+// Subcategoria (pasta) de uma categoria. Antes hardcoded/efêmera no frontend.
+model Subcategoria {
+  id          Int       @id @default(autoincrement())
+  nome        String
+  categoriaId Int
+  dataCriacao DateTime  @default(now())
+
+  categoria   Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@unique([categoriaId, nome])
+  @@index([categoriaId])
+  @@map("subcategorias")
+}
+
 model Solicitacao {
   id           Int               @id @default(autoincrement())
   codigo       String?

@@ -73,6 +73,7 @@
   margin-top: 12px;
 }
 .folder-card {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -85,6 +86,17 @@
   box-shadow: var(--shadow-sm);
   transition: all var(--transition);
   animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+/* Botão de excluir categoria: aparece no canto do card, só ao passar o mouse */
+.folder-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.folder-card:hover .folder-delete-btn {
+  opacity: 1;
 }
 .folder-card:active {
   transform: translateY(0);
