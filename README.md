@@ -48,6 +48,35 @@ cp .env.example .env
 uvicorn server:app --reload --port 8000
 ```
 
+## Testes regressivos do RAG
+
+O microserviço RAG tem uma suíte regressiva isolada de rede e banco vetorial real.
+Ela valida expansão de consulta, busca híbrida, reranking e montagem final da
+resposta com fontes.
+
+```bash
+cd RAG
+python -m pytest
+```
+
+No Docker, esses testes rodam automaticamente durante o build da imagem do RAG:
+
+```bash
+docker compose build rag
+```
+
+Para subir tudo e validar o RAG no build:
+
+```bash
+docker compose up --build
+```
+
+Se precisar construir a imagem sem rodar os testes:
+
+```bash
+RAG_RUN_TESTS=false docker compose build rag
+```
+
 ## Subir com Docker Compose
 
 ```bash

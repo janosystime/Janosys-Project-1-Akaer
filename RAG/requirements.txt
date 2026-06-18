@@ -7,5 +7,5 @@ chromadb
 langchain-text-splitters
 huggingface-hub
 rank-bm25
-# O torch é instalado separadamente no Dockerfile com wheel CPU-only.
 sentence-transformers
+pytest

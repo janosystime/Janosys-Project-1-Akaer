@@ -31,7 +31,10 @@ services:
     restart: unless-stopped
 
   rag:
-    build: ./RAG
+    build:
+      context: ./RAG
+      args:
+        RUN_TESTS: "${RAG_RUN_TESTS:-true}"
     image: akaer-rag
     environment:
       HF_TOKEN: "${HF_TOKEN:-}"
