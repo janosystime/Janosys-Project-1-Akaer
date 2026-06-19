@@ -12,7 +12,6 @@ import ModalConfirmacao from "../components/Normas/ModalConfirmacao";
 import LightboxImagens from "../components/Normas/LightboxImagens";
 import ModalDetalhesNorma from "../components/Normas/ModalDetalhesNorma";
 
-// Categoria/Subcategoria agora vêm do backend (antes eram hardcoded).
 interface Subcategoria {
   id: number;
   nome: string;
@@ -26,7 +25,6 @@ interface Categoria {
   subcategorias: Subcategoria[];
 }
 
-// Ícones sugeridos ao criar uma categoria nova.
 const ICONES_CATEGORIA = [
   "fa-folder", "fa-gear", "fa-gears", "fa-screwdriver-wrench", "fa-layer-group",
   "fa-microchip", "fa-bolt", "fa-plane", "fa-flask", "fa-cube",
@@ -41,7 +39,6 @@ export default function Home() {
     "x-usuario-nome": usuario?.nome || "Administrador",
   };
 
-  // ── Dados do backend ────────────────────────────────────────────────────
   const [normas, setNormas] = useState<Norma[]>([]);
   const [pecas, setPecas] = useState<Peca[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -70,14 +67,12 @@ export default function Home() {
         if (rp.ok) setPecas(await rp.json());
         if (rn.ok) setNormas(await rn.json());
       } catch {
-        // silencioso: a UI mostra estado vazio
       } finally {
         setCarregando(false);
       }
     })();
   }, []);
 
-  // ── Helpers derivados das categorias ────────────────────────────────────
   const catPorNome = (nome: string | null) => categorias.find((c) => c.nome === nome);
   const iconeDe = (nome: string | null) => catPorNome(nome)?.icone || "fa-folder";
   const temaDe = (nome: string | null) => catPorNome(nome)?.tema || "theme-cat-geral";
@@ -85,7 +80,6 @@ export default function Home() {
   const subIdDe = (catNome: string | null, subNome: string) =>
     subsDe(catNome).find((s) => s.nome === subNome)?.id;
 
-  // ── Estado de navegação / modais ────────────────────────────────────────
   const [pecaVisualizar, setPecaVisualizar] = useState<Peca | null>(null);
   const [normaDetalheVisualizar, setNormaDetalheVisualizar] = useState<Norma | null>(null);
   const [pdfVisualizar, setPdfVisualizar] = useState<{ id: string, nome: string } | null>(null);
@@ -128,7 +122,6 @@ export default function Home() {
     setNavSubcategoria(null);
   };
 
-  // ── Handlers (API) ──────────────────────────────────────────────────────
   const handleAddCategoria = async (evento: React.FormEvent) => {
     evento.preventDefault();
     const nome = nomeNovaCategoria.trim();

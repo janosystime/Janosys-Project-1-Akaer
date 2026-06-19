@@ -9,12 +9,11 @@ export class UsuariosController {
         orderBy: { nome: 'asc' }
       });
 
-      // Map profiles to lowercase for frontend compatibility
       const usuarios = dbUsuarios.map(u => ({
         id: u.id,
         nome: u.nome,
         login: u.login,
-        senha: '', // Don't return password hashes to frontend
+        senha: '', 
         perfil: u.perfil.toLowerCase(),
         telefone: u.telefone || '',
         departamento: u.departamento || '',
@@ -36,7 +35,6 @@ export class UsuariosController {
         return res.status(400).json({ error: 'Nome, login, senha e perfil são obrigatórios' });
       }
 
-      // Check if login already exists
       const loginExistente = await prisma.usuario.findUnique({
         where: { login }
       });
@@ -83,7 +81,6 @@ export class UsuariosController {
         return res.status(400).json({ error: 'Nome, login e perfil são obrigatórios' });
       }
 
-      // Check if user exists
       const usuarioExistente = await prisma.usuario.findUnique({
         where: { id: Number(id) }
       });
@@ -91,7 +88,6 @@ export class UsuariosController {
         return res.status(404).json({ error: 'Usuário não encontrado' });
       }
 
-      // Check if new login conflicts with another user
       const loginConflito = await prisma.usuario.findFirst({
         where: {
           login,
@@ -102,7 +98,6 @@ export class UsuariosController {
         return res.status(400).json({ error: 'Este login já está em uso' });
       }
 
-      // Build data payload
       const dataUpdate: any = {
         nome,
         login,
@@ -111,7 +106,6 @@ export class UsuariosController {
         departamento: departamento || null
       };
 
-      // Only update password if a new one is provided (and it's not a dummy blank password from frontend)
       if (senha && senha.trim() !== '') {
         dataUpdate.senha = senha;
       }

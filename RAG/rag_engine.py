@@ -9,13 +9,10 @@ from sentence_transformers import CrossEncoder
 
 load_dotenv()
 
-# ============================================================
-# Configurações
-# ============================================================
 HF_TOKEN = os.getenv("HF_TOKEN")
 MODELO_EMBEDDINGS = "sentence-transformers/all-MiniLM-L6-v2"
 MODELO_LLM = "meta-llama/Llama-3.1-8B-Instruct"
-MODELO_RERANKER = "cross-encoder/ms-marco-MiniLM-L-6-v2"  # Leve e extremamente preciso
+MODELO_RERANKER = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 CHROMA_DIR = os.path.join(os.path.dirname(__file__), "chroma_data")
 NOME_COLECAO = "normas_aeronauticas"
 
@@ -38,9 +35,6 @@ def get_reranker():
     return _RERANKER_INSTANCE
 
 
-# ============================================================
-# Função de Embedding customizada para o db vetorial
-# ============================================================
 class HuggingFaceEmbeddingFunction(EmbeddingFunction):
     def __init__(self, token: str, modelo: str = MODELO_EMBEDDINGS):
         self.client = InferenceClient(provider="auto", token=token)
@@ -64,9 +58,6 @@ def get_chroma_collection():
     return colecao
 
 
-# ============================================================
-# Query expansion
-# ============================================================
 def expand_query_safely(query: str, client: InferenceClient) -> str:
     query_lower = query.lower()
     expansões_estaticas = []
@@ -102,9 +93,6 @@ Termos extraídos:"""
     return query_expandida
 
 
-# ============================================================
-# Retrieval com busca híbrida
-# ============================================================
 def hybrid_retrieve(query_expandida: str, top_k_dense: int = 15, top_k_sparse: int = 15, final_candidates: int = 10) -> tuple[list, list]:
     colecao = get_chroma_collection()
     
@@ -128,7 +116,6 @@ def hybrid_retrieve(query_expandida: str, top_k_dense: int = 15, top_k_sparse: i
     scores_bm25 = bm25.get_scores(tokenized_query)
     indices_ordenados = sorted(range(len(scores_bm25)), key=lambda i: scores_bm25[i], reverse=True)[:top_k_sparse]
     
-    # Reciprocal Rank Fusion
     rrf_scores = {}
     id_mapeado = {}
 
@@ -150,9 +137,6 @@ def hybrid_retrieve(query_expandida: str, top_k_dense: int = 15, top_k_sparse: i
     return docs_hibridos, metas_hibridos
 
 
-# ============================================================
-# Reranker
-# ============================================================
 def rerank_candidates(query_original: str, documentos: list, metadados: list, top_n: int = 4) -> tuple[list, list]:
     if not documentos:
         return [], []
@@ -177,9 +161,6 @@ def listar_documentos() -> list[str]:
     return sorted(list(nomes))
 
 
-# ============================================================
-# Geração de resposta via LLM
-# ============================================================
 
 SYSTEM_PROMPT = """Você é um assistente técnico da Akaer, especialista em normas aeronáuticas para o sistema SIGNA.
 Sua missão é fornecer respostas ultra-objetivas, diretas e amplamente espaçadas para engenheiros.

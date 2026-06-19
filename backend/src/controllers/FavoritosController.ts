@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
 export class FavoritosController {
-  // GET /favoritos?usuarioId=1  -> lista os normaId favoritados pelo usuário
   async index(req: Request, res: Response) {
     const usuarioId = Number(req.query.usuarioId);
     if (!usuarioId) {
@@ -21,7 +20,6 @@ export class FavoritosController {
     }
   }
 
-  // POST /favoritos { usuarioId, normaId } -> favorita (idempotente)
   async store(req: Request, res: Response) {
     const { usuarioId, normaId } = req.body;
     if (!usuarioId || !normaId) {
@@ -40,7 +38,6 @@ export class FavoritosController {
     }
   }
 
-  // DELETE /favoritos/:usuarioId/:normaId -> desfavorita
   async destroy(req: Request, res: Response) {
     const usuarioId = Number(req.params.usuarioId);
     const normaId = req.params.normaId as string;

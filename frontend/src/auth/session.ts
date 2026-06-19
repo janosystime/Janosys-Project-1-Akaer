@@ -1,9 +1,3 @@
-/**
- * Sessão MOCK (falsa) — até o backend devolver login real.
- *
- * Guardamos um objeto { nome, perfil } no localStorage do navegador.
- * É parecido com “lembrar que o usuário entrou”, só que sem servidor ainda.
- */
 const SESSION_KEY = 'signa_usuario'
 
 export type Perfil = 'administrador' | 'usuario' | 'checker'
@@ -31,13 +25,11 @@ export function limparSessao(): void {
   localStorage.removeItem(SESSION_KEY)
 }
 
-/** Só em `npm run dev`: mesmo “usuário fictício” usado no App quando não há sessão. */
 export const USUARIO_DEV: UsuarioSessao = {
   nome: 'Dev local (sem sessão)',
   perfil: 'administrador',
 }
 
-/** Sessão real obtida do localStorage. */
 export function obterUsuarioAtual(): UsuarioSessao | null {
   return obterSessao();
 }

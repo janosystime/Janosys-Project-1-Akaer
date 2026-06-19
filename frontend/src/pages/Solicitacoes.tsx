@@ -80,7 +80,6 @@ export default function Solicitacoes() {
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
 
-  {/* ── States: Modal de Análise de Solicitação ── */}
   const [solicitacaoAnalise, setSolicitacaoAnalise] = useState<Solicitacao | null>(null);
   const [motivoRecusa, setMotivoRecusa] = useState("");
   const [confirmacaoInsercao, setConfirmacaoInsercao] = useState(false);
@@ -94,7 +93,6 @@ export default function Solicitacoes() {
   const removerToast = (id: number) =>
     setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  // Carregar solicitações da API
   const fetchSolicitacoes = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/solicitacoes`);
@@ -179,7 +177,6 @@ export default function Solicitacoes() {
     return null;
   };
 
-  /* Atualiza status do card */
   const abrirModalAnalise = async (s: Solicitacao) => {
     setSolicitacaoAnalise(s);
     setMotivoRecusa("");
@@ -203,11 +200,9 @@ const solicitacoesFiltradas = solicitacoes
     return matchBusca && matchStatus;
   })
   .sort((a, b) => {
-    // Primeiro ordena por status
     if (STATUS_ORDEM[a.status] !== STATUS_ORDEM[b.status]) {
       return STATUS_ORDEM[a.status] - STATUS_ORDEM[b.status];
     }
-    // Depois por data — mais recente primeiro
     return new Date(b.data).getTime() - new Date(a.data).getTime();
   });
 
@@ -231,7 +226,6 @@ const solicitacoesFiltradas = solicitacoes
           )}
         </div>
 
-        {/* Filtros */}
         <div className="filtros-container">
           <div className="filtros-header">
             <div className="form-group search-group">
@@ -271,7 +265,6 @@ const solicitacoesFiltradas = solicitacoes
           {solicitacoesFiltradas.length === total ? totalTexto : filtradoTexto}
         </p>
 
-        {/* ── Lista de Solicitações ── */}
         <div className="normas-lista">
           {solicitacoesFiltradas.map((s) => (
             <div key={s.id} className="norma-card solicitacao-card"
@@ -279,7 +272,6 @@ const solicitacoesFiltradas = solicitacoes
               style={{ cursor: "pointer" }}>
               <div className="norma-card-body solicitacao-body">
                 
-                {/* Lado esquerdo — status, código e título */}
                 <div className="badges-container" style={{ flex: 1 }}>
                   <span className={STATUS_ESTILO[s.status]}>
                     <i className={`fas ${STATUS_ICONE[s.status]}`}></i> {s.status}
@@ -294,7 +286,6 @@ const solicitacoesFiltradas = solicitacoes
                   </span>
                 </div>
 
-                {/* Lado direito — solicitante e data (só admin) empilhados */}
                 <div className="card-info-lateral">
                   <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--c-text-muted)" }}>
                     <i className="fas fa-user" style={{ marginRight: 4 }}></i>{s.solicitante}
@@ -323,7 +314,6 @@ const solicitacoesFiltradas = solicitacoes
           )}
         </div>
 
-        {/* ── Modal: Nova Solicitação ── */}
         {showModal && (
           <div className="modal-overlay" onClick={() => setShowModal(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -392,7 +382,6 @@ const solicitacoesFiltradas = solicitacoes
           </div>
         )}
 
-        {/* ── Modal: Analisar Solicitação (checker) ── */}
         {solicitacaoAnalise && (
           <div className="modal-overlay" onClick={() => setSolicitacaoAnalise(null)}>
             <div className="modal modal-large modal-analisar" onClick={(e) => e.stopPropagation()}>

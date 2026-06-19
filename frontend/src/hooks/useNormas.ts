@@ -43,7 +43,6 @@ export default function useNormas() {
       ),
     );
 
-  // Fetch norms from API
   const fetchNormas = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/normas`);
@@ -65,18 +64,15 @@ export default function useNormas() {
     }
   }, [adicionarToast]);
 
-  // Fetch peças from API (peças agora vivem no banco)
   const fetchPecas = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/pecas`);
       if (response.ok) setPecas(await response.json());
     } catch (_) {
-      /* silencioso: peças relacionadas só ficam vazias */
     }
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchNormas();
     fetchPecas();
   }, [fetchNormas, fetchPecas]);
@@ -275,10 +271,6 @@ export default function useNormas() {
 
   const handleSave = async () => {
     try {
-      // Resolução do PDF a enviar:
-      //  - undefined => não envia o campo (backend mantém o PDF existente na edição)
-      //  - null      => limpa o PDF (usuário removeu, ou criação sem arquivo)
-      //  - string    => novo arquivo (base64)
       let urlPdfPayload: string | null | undefined;
       let nomeArquivoPdf = form.nomePdf;
 
@@ -293,11 +285,9 @@ export default function useNormas() {
         urlPdfPayload = await converterParaBase64(arquivoPdf);
         nomeArquivoPdf = arquivoPdf.name;
       } else if (!form.nomePdf && !form.temPdf) {
-        // sem arquivo novo e sem PDF existente => garante limpo
         urlPdfPayload = null;
         nomeArquivoPdf = undefined;
       } else {
-        // mantém o PDF que já existe no backend (não reenviamos o binário)
         urlPdfPayload = undefined;
       }
 
@@ -316,7 +306,6 @@ export default function useNormas() {
         stringsBase64Imagens = [...stringsBase64Imagens, ...novasImagensBase64];
       }
 
-      // remove urlPdf/temPdf do spread: urlPdf é controlado abaixo e temPdf é só do frontend
       const { urlPdf: _urlPdfIgnorado, temPdf: _temPdfIgnorado, ...formSemPdf } = form;
 
       const normaSalva: Record<string, unknown> = {
@@ -332,8 +321,6 @@ export default function useNormas() {
         imagens: stringsBase64Imagens,
       };
 
-      // só inclui urlPdf quando há algo a definir (novo arquivo ou limpeza);
-      // undefined => omite o campo e o backend preserva o PDF atual.
       if (urlPdfPayload !== undefined) {
         normaSalva.urlPdf = urlPdfPayload;
       }

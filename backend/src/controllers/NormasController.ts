@@ -4,18 +4,13 @@ import * as path from 'path';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { prisma } from '../lib/prisma';
 
-// Pasta onde ficam os PDFs estáticos das normas semeadas (não mais públicos no frontend).
 const PDF_DIR = path.join(__dirname, '..', '..', 'pdfs');
 
-// Remove o conteúdo bruto do PDF (urlPdf) das respostas e expõe apenas um flag
-// `temPdf`, para que o binário/base64 nunca trafegue no JSON das listagens.
 function sanitizarNorma(norma: any) {
   const { urlPdf, ...resto } = norma;
   return { ...resto, temPdf: !!urlPdf };
 }
 
-// Resolve os bytes do PDF de uma norma, seja base64 embutido (upload) ou
-// arquivo estático em backend/pdfs (normas semeadas).
 function carregarBytesPdf(norma: any): Buffer | null {
   const url: string | null = norma?.urlPdf ?? null;
   if (!url) return null;
@@ -26,14 +21,12 @@ function carregarBytesPdf(norma: any): Buffer | null {
     return Buffer.from(base64, 'base64');
   }
 
-  // caminho do tipo "/pdf/far-25-571.pdf" -> backend/pdfs/far-25-571.pdf
   const nomeArquivo = path.basename(url);
   const caminho = path.join(PDF_DIR, nomeArquivo);
   if (!fs.existsSync(caminho)) return null;
   return fs.readFileSync(caminho);
 }
 
-// Carimba uma marca d'água em mosaico diagonal em todas as páginas do PDF.
 async function aplicarMarcaDagua(pdfBytes: Buffer, texto: string): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
   const fonte = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -61,7 +54,6 @@ async function aplicarMarcaDagua(pdfBytes: Buffer, texto: string): Promise<Uint8
   return pdfDoc.save();
 }
 
-// Monta o snapshot dos campos versionáveis a partir de uma norma.
 function montarSnapshot(norma: any) {
   return {
     codigo: norma.codigo ?? null,
@@ -82,7 +74,6 @@ function montarSnapshot(norma: any) {
   };
 }
 
-// Grava uma nova versão (snapshot) da norma dentro da transação `tx`.
 async function registrarVersao(tx: any, norma: any, evento: 'CADASTRO' | 'EDICAO', usuarioNome: string) {
   const ultima = await tx.versaoNorma.findFirst({
     where: { normaId: norma.id },
@@ -141,7 +132,6 @@ export class NormasController {
             criadoPor: usuarioNome
           }
         });
-        // versionamento: cadastro = versão 1
         await registrarVersao(tx, criada, 'CADASTRO', usuarioNome);
         return criada;
       });
@@ -205,7 +195,6 @@ export class NormasController {
             criadoPor: normaExistente.criadoPor
           }
         });
-        // versionamento: cada edição gera uma nova versão (snapshot do novo estado)
         await registrarVersao(tx, atualizada, 'EDICAO', usuarioNome);
         return atualizada;
       });
@@ -217,7 +206,18 @@ export class NormasController {
     }
   }
 
-  // Histórico de versões (snapshots) de uma norma, mais recente primeiro.
+  async todasVersoes(_req: Request, res: Response) {
+    try {
+      const versoes = await prisma.versaoNorma.findMany({
+        orderBy: { data: 'desc' },
+      });
+      return res.json(versoes);
+    } catch (error) {
+      console.error('Erro ao buscar todas as versões:', error);
+      return res.status(500).json({ error: 'Erro ao buscar versões' });
+    }
+  }
+
   async versoes(req: Request, res: Response) {
     const normaId = req.params.id as string;
     try {
@@ -232,7 +232,6 @@ export class NormasController {
     }
   }
 
-  // Serve o PDF para visualização inline (usado pelo visualizador protegido).
   async view(req: Request, res: Response) {
     const id = req.params.id as string;
     try {
@@ -251,8 +250,6 @@ export class NormasController {
     }
   }
 
-  // Devolve o PDF com marca d'água (nome do usuário + data/hora + CONFIDENCIAL)
-  // gravada no arquivo, para download. Medida de segurança/rastreabilidade.
   async download(req: Request, res: Response) {
     const id = req.params.id as string;
     try {

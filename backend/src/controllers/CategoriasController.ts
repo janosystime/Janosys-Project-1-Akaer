@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
 export class CategoriasController {
-  // Lista categorias com suas subcategorias.
   async index(req: Request, res: Response) {
     try {
       const categorias = await prisma.categoria.findMany({
@@ -54,7 +53,6 @@ export class CategoriasController {
       const novoNome = nome !== undefined ? String(nome).trim() : categoria.nome;
       if (!novoNome) return res.status(400).json({ error: 'Nome inválido' });
 
-      // se renomeou, propaga o novo nome para as peças daquela categoria
       if (novoNome !== categoria.nome) {
         const duplicada = await prisma.categoria.findUnique({ where: { nome: novoNome } });
         if (duplicada) return res.status(409).json({ error: 'Já existe uma categoria com esse nome' });
@@ -90,7 +88,6 @@ export class CategoriasController {
         return res.status(403).json({ error: 'Categoria padrão não pode ser excluída' });
       }
 
-      // remove as peças dessa categoria (subcategorias caem por cascade no banco)
       await prisma.peca.deleteMany({ where: { categoria: categoria.nome } });
       await prisma.categoria.delete({ where: { id } });
 

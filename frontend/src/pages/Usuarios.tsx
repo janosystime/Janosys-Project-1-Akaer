@@ -1,16 +1,9 @@
-/*
- * Usuarios.tsx — gerenciamento de usuários do sistema.
- * Acessível somente pelo administrador (proteção feita no App.tsx).
- */
 
 import { useState, useCallback, useEffect } from "react";
 import { API_BASE_URL } from "../config/api";
 import "../styles/Normas.css";
 import "../styles/Usuarios.css";
 
-// ============================================
-// SIGNA — Tipos e Interface de Usuário
-// ============================================
 export type PerfilUsuario = "administrador" | "usuario" | "checker";
 
 export interface Usuario {
@@ -23,9 +16,6 @@ export interface Usuario {
   departamento: string;
   dataCriacao: string;
 }
-// ============================================
-// SIGNA — Toast
-// ============================================
 interface ToastMsg {
   id: number;
   tipo: "sucesso" | "erro";
@@ -48,9 +38,6 @@ function ToastContainer({ toasts, onRemover }: { toasts: ToastMsg[]; onRemover: 
   );
 }
 
-// ============================================
-// SIGNA — Badge de perfil
-// ============================================
 const PERFIL_ESTILO: Record<PerfilUsuario, string> = {
   administrador: "badge theme-cat-instalação",
   usuario:    "badge theme-cat-conjunto",
@@ -75,9 +62,6 @@ const PERFIL_LABEL: Record<PerfilUsuario, string> = {
   checker: "CHK",
 };
 
-// ============================================
-// SIGNA — Formulário vazio
-// ============================================
 const FORM_VAZIO = {
   nome: "",
   login: "",
@@ -87,9 +71,6 @@ const FORM_VAZIO = {
   departamento: "",
 };
 
-// ============================================
-// SIGNA — Componente Principal
-// ============================================
 export default function Usuarios() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [termoPesquisa, setTermoPesquisa] = useState("");
@@ -100,16 +81,13 @@ export default function Usuarios() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<Usuario | null>(null);
 
-  // Modal de cadastro/edição
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [form, setForm] = useState(FORM_VAZIO);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
 
-  // Modal de confirmação de exclusão
   const [usuarioExcluindo, setUsuarioExcluindo] = useState<Usuario | null>(null);
 
-  // ── Toast ──
   const adicionarToast = useCallback((tipo: ToastMsg["tipo"], mensagem: string) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, tipo, mensagem }]);
@@ -118,7 +96,6 @@ export default function Usuarios() {
 
   const removerToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  // Carregar dados da API
   useEffect(() => {
     async function fetchUsuarios() {
       try {
@@ -142,7 +119,6 @@ export default function Usuarios() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Filtro ──
   const departamentos = ["Todos", ...Array.from(new Set(usuarios.map(u => u.departamento).filter(Boolean)))];
 
   const usuariosFiltrados = usuarios.filter((u) => {
@@ -161,7 +137,6 @@ export default function Usuarios() {
   );
   
 
-  // ── Abrir modal novo ──
   function abrirModalNovo() {
     setUsuarioEditando(null);
     setForm(FORM_VAZIO);
@@ -169,13 +144,12 @@ export default function Usuarios() {
     setModalAberto(true);
   }
 
-  // ── Abrir modal edição ──
   function abrirModalEdicao(u: Usuario) {
     setUsuarioEditando(u);
     setForm({
       nome: u.nome,
       login: u.login,
-      senha: "", // Don't autofill hashed password
+      senha: "", 
       perfil: u.perfil,
       telefone: u.telefone,
       departamento: u.departamento,
@@ -184,7 +158,6 @@ export default function Usuarios() {
     setModalAberto(true);
   }
 
-  // ── Salvar (criar ou editar) ──
   async function handleSalvar() {
     if (!form.nome.trim() || !form.login.trim()) {
       adicionarToast("erro", "Nome e login são obrigatórios.");
@@ -241,7 +214,6 @@ export default function Usuarios() {
     }
   }
 
-  // ── Excluir ──
   async function handleExcluir() {
     if (!usuarioExcluindo) return;
     
@@ -263,14 +235,12 @@ export default function Usuarios() {
     }
   }
 
-  // ── Render ──
   return (
     <div className="app-container">
       <ToastContainer toasts={toasts} onRemover={removerToast} />
 
       <main className="page">
 
-        {/* ── Header ── */}
         <div className="page-header">
           <h1 className="page-title">
             <i className="fas fa-users"></i> Gerenciamento de Usuários
@@ -280,7 +250,6 @@ export default function Usuarios() {
           </button>
         </div>
 
-        {/* ── Busca ── */}
         <div className="filtros-container">
           <div className="filtros-header">
             <div className="form-group search-group">
@@ -332,7 +301,6 @@ export default function Usuarios() {
             : `${usuariosFiltrados.length} de ${usuarios.length} usuários`}
         </p>
 
-        {/* ── Tabela / Cards ── */}
         {isMobile ? (
           <div className="usuarios-cards">
             <button className="btn-sort btn-sort-mobile" onClick={() => setOrdemAsc((v) => !v)}>
@@ -428,7 +396,6 @@ export default function Usuarios() {
           </div>
         )}
 
-        {/* ── Modal: Cadastro / Edição ── */}
         {modalAberto && (
           <div className="modal-overlay" onClick={() => setModalAberto(false)}>
             <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
@@ -443,7 +410,6 @@ export default function Usuarios() {
               </div>
 
               <div className="view-details">
-                {/* Data de criação — só na edição */}
                 {usuarioEditando && (
                   <div className="view-item">
                     <span className="view-label"><i className="fas fa-calendar"></i> Data de Cadastro</span>
@@ -552,7 +518,6 @@ export default function Usuarios() {
           </div>
         )}
 
-        {/* ── Modal: Confirmação de Exclusão ── */}
         {usuarioExcluindo && (
           <div className="modal-overlay" onClick={() => setUsuarioExcluindo(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -600,7 +565,6 @@ export default function Usuarios() {
           </div>
         )}
 
-        {/* ── Modal: Detalhes Mobile ── */}
         {usuarioSelecionado && (
           <div className="modal-overlay" onClick={() => setUsuarioSelecionado(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>

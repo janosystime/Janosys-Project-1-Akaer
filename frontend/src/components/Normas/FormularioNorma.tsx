@@ -45,7 +45,6 @@ export default function FormularioNorma({
   handlePdfChange,
   handleImgChange,
 }: PropsFormularioNorma) {
-  // categorias/subcategorias agora vêm do backend (fonte única)
   const { nomes: CATEGORIAS, subPorCategoria: SUBCATEGORIAS } = useCategorias();
 
   if (!visivel) return null;

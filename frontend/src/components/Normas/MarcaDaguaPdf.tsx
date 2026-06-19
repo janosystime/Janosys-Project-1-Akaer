@@ -1,23 +1,10 @@
-/**
- * MarcaDaguaPdf.tsx
- *
- * Overlay de marca d'água em mosaico diagonal, posicionado sobre cada <Page>
- * do react-pdf. Usa SVG data-URI como background-image para máxima performance
- * e sem dependências adicionais.
- *
- * Uso:
- *   <MarcaDaguaPdf nomeUsuario="João Silva" largura={800} altura={1131} />
- */
 
 interface PropsMarcaDagua {
   nomeUsuario: string;
-  /** Largura em px do <Page> renderizado (mesmo valor passado para `width` no <Page>) */
   largura: number;
-  /** Altura em px do <Page> renderizado — pode vir de onRenderSuccess ou ser estimada */
   altura: number;
 }
 
-/** Formata data/hora no padrão "dd/mm/aaaa HH:MM" */
 function formatarDataHora(data: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
@@ -26,13 +13,7 @@ function formatarDataHora(data: Date): string {
   );
 }
 
-/**
- * Gera um SVG em linha com duas linhas de texto (nome + data/hora)
- * e retorna como data-URI para uso em background-image.
- * O tile tem 320×120 px e o texto fica rotacionado −35°.
- */
 function gerarSvgTile(nomeUsuario: string, dataHora: string): string {
-  // Escapa caracteres que quebrariam o SVG inline
   const escapar = (s: string) =>
     s
       .replace(/&/g, "&amp;")
@@ -80,7 +61,6 @@ export default function MarcaDaguaPdf({
         backgroundRepeat: "repeat",
         backgroundSize: "320px 120px",
         zIndex: 10,
-        // Dificulta seleção via DevTools / print
         WebkitUserSelect: "none",
         MozUserSelect: "none",
       }}

@@ -58,13 +58,10 @@ model Norma {
   @@map("normas")
 }
 
-// Snapshot completo de uma norma a cada criação/edição (versionamento).
-// v1 nasce no cadastro; cada edição cria numero+1, preservando as anteriores.
 model VersaoNorma {
   id            Int      @id @default(autoincrement())
   normaId       String
   numero        Int
-  // snapshot dos campos da norma naquele momento
   codigo        String?
   titulo        String
   organizacao   String
@@ -80,9 +77,8 @@ model VersaoNorma {
   nomePdf       String?
   urlPdf        String?  @db.MediumText
   imagens       Json?
-  // metadados da versão
   usuarioNome   String?
-  evento        String   // 'CADASTRO' | 'EDICAO'
+  evento        String
   data          DateTime @default(now())
 
   @@unique([normaId, numero])
@@ -90,7 +86,6 @@ model VersaoNorma {
   @@map("versoes_norma")
 }
 
-// Favoritos: norma marcada por um usuário (N:N usuario <-> norma).
 model Favorito {
   id          Int      @id @default(autoincrement())
   usuarioId   Int
@@ -114,13 +109,11 @@ model Peca {
   @@map("pecas")
 }
 
-// Categoria raiz da Home (explorador de pastas). Antes hardcoded no frontend.
 model Categoria {
   id            Int            @id @default(autoincrement())
   nome          String         @unique
   icone         String         @default("fa-folder")
   tema          String         @default("theme-cat-geral")
-  // categorias padrão (Peça/Conjunto/Instalação/Geral) não podem ser excluídas
   padrao        Boolean        @default(false)
   dataCriacao   DateTime       @default(now())
 
@@ -129,7 +122,6 @@ model Categoria {
   @@map("categorias")
 }
 
-// Subcategoria (pasta) de uma categoria. Antes hardcoded/efêmera no frontend.
 model Subcategoria {
   id          Int       @id @default(autoincrement())
   nome        String
@@ -163,7 +155,7 @@ model HistoricoAlteracao {
   codigoNorma   String?
   tituloNorma   String
   usuarioNome   String
-  tipoAlteracao String   // 'CADASTRO' | 'EDICAO' | 'EXCLUSAO'
+  tipoAlteracao String
   detalhes      String   @db.Text
   data          DateTime @default(now())
 

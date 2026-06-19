@@ -11,10 +11,8 @@ function PaginaLogin() {
   return (
     <div className="pagina-login">
 
-      {/* ── FUNDO COLAGEM ─────────────────────────────────────────── */}
       <div className="fundo-colagem" aria-hidden="true">
 
-        {/* 4 imagens nos quadrantes */}
         <img src={imgAviao1}   alt="" className="fundo-img fundo-tr" />
         <img src={imgCamera}   alt="" className="fundo-img fundo-br" />
         <img src={imgBlindado} alt="" className="fundo-img fundo-tl" />

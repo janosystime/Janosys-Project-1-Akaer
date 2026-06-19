@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 
-// Converte a peça do banco (relação `normas`) para o formato do frontend
-// (`normasVinculadas` = array de ids de norma).
 function paraFrontend(peca: any) {
   const { normas, ...resto } = peca;
   return { ...resto, normasVinculadas: (normas ?? []).map((n: any) => n.id) };
@@ -59,7 +57,6 @@ export class PecasController {
         categoria: categoria !== undefined ? categoria : existente.categoria,
         subcategoria: subcategoria !== undefined ? subcategoria : existente.subcategoria,
       };
-      // se vier a lista de normas, redefine o vínculo por completo
       if (Array.isArray(normasVinculadas)) {
         data.normas = { set: normasVinculadas.map((nid: string) => ({ id: nid })) };
       }

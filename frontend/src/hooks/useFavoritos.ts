@@ -4,18 +4,11 @@ import { API_BASE_URL } from "../config/api";
 
 const API = API_BASE_URL;
 
-/**
- * Favoritos por usuário, persistidos no backend.
- *
- * Como o login ainda é mock (a sessão guarda só { nome, perfil }, sem id),
- * resolvemos o id do usuário casando o nome da sessão com a lista de /usuarios.
- */
 export default function useFavoritos() {
   const [usuarioId, setUsuarioId] = useState<number | null>(null);
   const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
   const [soFavoritos, setSoFavoritos] = useState(false);
 
-  // resolve o id do usuário logado
   useEffect(() => {
     const sessao = obterUsuarioAtual();
     if (!sessao) return;
@@ -32,7 +25,6 @@ export default function useFavoritos() {
     })();
   }, []);
 
-  // carrega os favoritos quando souber o usuário
   useEffect(() => {
     if (usuarioId == null) return;
     (async () => {
@@ -49,7 +41,6 @@ export default function useFavoritos() {
 
   const ehFavorito = useCallback((normaId: string) => favoritos.has(normaId), [favoritos]);
 
-  // alterna com atualização otimista (reverte se a API falhar)
   const alternarFavorito = useCallback(
     async (normaId: string) => {
       if (usuarioId == null) return;

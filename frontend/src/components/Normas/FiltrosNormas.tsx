@@ -34,7 +34,6 @@ export default function FiltrosNormas({
   onItemChange,
   onStatusChange,
 }: PropsFiltrosNormas) {
-  // categorias do backend (fonte única)
   const { nomes: CATEGORIAS } = useCategorias();
 
   return (

@@ -14,7 +14,6 @@ export interface Norma {
   palavrasChave: string[];
   nomePdf?: string;
   urlPdf?: string;
-  /** Flag vindo do backend indicando que existe um PDF associado (o binário não trafega no JSON). */
   temPdf?: boolean;
   imagens?: string[];
   criadoPor?: string;

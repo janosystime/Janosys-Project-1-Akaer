@@ -37,7 +37,6 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
   console.log('Seeding initial data...');
 
-  // 1. Seed Users
   const userCount = await prisma.usuario.count();
   if (userCount === 0) {
     console.log('Seeding users...');
@@ -74,7 +73,6 @@ async function main() {
     console.log('Users table not empty. Skipping user seed.');
   }
 
-  // 2. Seed Norms
   const normsCount = await prisma.norma.count();
   if (normsCount === 0) {
     console.log('Seeding norms...');
@@ -156,8 +154,6 @@ async function main() {
     console.log('Norms table not empty. Skipping norm seed.');
   }
 
-  // 2b. Backfill da versão 1 (snapshot inicial) das normas, para o
-  //     "Histórico de Versões" já mostrar conteúdo no demo.
   const versoesCount = await prisma.versaoNorma.count();
   if (versoesCount === 0) {
     console.log('Seeding initial versions (v1) for existing norms...');
@@ -179,7 +175,6 @@ async function main() {
     console.log('Versions table not empty. Skipping version backfill.');
   }
 
-  // 3. Seed Solicitations
   const solicitationsCount = await prisma.solicitacao.count();
   if (solicitationsCount === 0) {
     console.log('Seeding solicitations...');
@@ -268,7 +263,6 @@ async function main() {
     console.log('Solicitations table not empty. Skipping solicitation seed.');
   }
 
-  // 4. Seed Categorias + Subcategorias (antes hardcoded no frontend)
   const categoriasCount = await prisma.categoria.count();
   if (categoriasCount === 0) {
     console.log('Seeding categorias e subcategorias...');
@@ -293,14 +287,11 @@ async function main() {
     console.log('Categorias table not empty. Skipping categoria seed.');
   }
 
-  // 4b. Garante (idempotente) que as 4 categorias padrão estejam marcadas como
-  //     protegidas — inclusive em bancos que já existiam antes deste campo.
   await prisma.categoria.updateMany({
     where: { nome: { in: ['Peça', 'Conjunto', 'Instalação', 'Geral'] } },
     data: { padrao: true },
   });
 
-  // 5. Seed Peças (itens) — antes em localStorage no frontend
   const pecasCount = await prisma.peca.count();
   if (pecasCount === 0) {
     console.log('Seeding peças...');
@@ -334,7 +325,6 @@ async function main() {
       { nome: "Nota de Desenho Padrão", categoria: "Geral", subcategoria: "Basic Notes", normas: ["ISO 9001:2015"] },
       { nome: "Plaqueta de Identificação", categoria: "Geral", subcategoria: "Identificação", normas: ["ISO 9001:2015"] },
     ];
-    // só conecta normas que existem no banco
     const idsExistentes = new Set((await prisma.norma.findMany({ select: { id: true } })).map((n) => n.id));
     for (const p of pecasBase) {
       const normasValidas = p.normas.filter((id) => idsExistentes.has(id));
@@ -360,7 +350,6 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    // o pool do adapter mantém o processo vivo; desconecta e encerra
     await prisma.$disconnect();
     process.exit(process.exitCode || 0);
   });

@@ -2,7 +2,6 @@
 set -e
 
 echo "[entrypoint] aguardando o banco e sincronizando o schema..."
-# prisma db push falha enquanto o MySQL não estiver pronto -> retenta
 until npx prisma db push; do
   echo "[entrypoint] banco indisponível, tentando de novo em 3s..."
   sleep 3

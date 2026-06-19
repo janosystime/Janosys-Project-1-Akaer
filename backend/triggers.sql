@@ -1,11 +1,9 @@
 USE janosys_db;
 
--- 1. Drop old triggers if exist
 DROP TRIGGER IF EXISTS tr_normas_insert;
 DROP TRIGGER IF EXISTS tr_normas_update;
 DROP TRIGGER IF EXISTS tr_normas_delete;
 
--- 2. Create INSERT trigger
 DELIMITER $$
 CREATE TRIGGER tr_normas_insert
 AFTER INSERT ON normas
@@ -24,7 +22,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- 3. Create UPDATE trigger
 DELIMITER $$
 CREATE TRIGGER tr_normas_update
 AFTER UPDATE ON normas
@@ -77,7 +74,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- 4. Create DELETE trigger
 DELIMITER $$
 CREATE TRIGGER tr_normas_delete
 BEFORE DELETE ON normas

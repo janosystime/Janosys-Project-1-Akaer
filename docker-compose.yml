@@ -2,7 +2,6 @@ services:
   db:
     build: ./database
     image: akaer-db
-    # MySQL 8.4 desativa o mysql_native_password por padrão; reativamos aqui.
     command: --mysql-native-password=ON
     environment:
       MYSQL_ROOT_PASSWORD: password
@@ -23,8 +22,6 @@ services:
     environment:
       DATABASE_URL: "mysql://root:password@db:3306/janosys_db"
       PORT: "3001"
-    ports:
-      - "${BACKEND_PORT:-3001}:3001"
     depends_on:
       db:
         condition: service_healthy
@@ -43,8 +40,6 @@ services:
     volumes:
       - ${RAG_CHROMA_PATH:-./RAG/chroma_data}:/app/chroma_data
       - ${RAG_DOCS_PATH:-./RAG/documentos}:/app/documentos:ro
-    ports:
-      - "${RAG_PORT:-8000}:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5).read()"]
       interval: 10s
@@ -56,7 +51,7 @@ services:
     build: ./frontend
     image: akaer-frontend
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_PORT:-8095}:80"
     depends_on:
       backend:
         condition: service_started

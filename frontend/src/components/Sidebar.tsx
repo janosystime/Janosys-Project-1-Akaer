@@ -7,10 +7,10 @@ import {
   Pin, 
   PinOff,
   BookOpen,
-  Menu, // Ícone para abrir no mobile
-  X,    // Ícone para fechar no mobile
+  Menu, 
+  X,    
   ClipboardList,
-  ShieldAlert,
+  GitBranch,
   MessageCircle
 } from 'lucide-react'
 import type { UsuarioSessao } from '../auth/session'
@@ -23,14 +23,11 @@ type PropsSidebar = {
 export default function Sidebar(props: PropsSidebar) {
   const { usuario, onLogout } = props
 
-  // Estados do Desktop
   const [fixada, setFixada] = useState(true)
   const [hover, setHover] = useState(false)
 
-  // Estado do Mobile
   const [mobileAberto, setMobileAberto] = useState(false)
 
-  // Função para fechar o menu no mobile ao clicar em um link
   function fecharMenuMobile() {
     setMobileAberto(false)
   }
@@ -39,7 +36,6 @@ export default function Sidebar(props: PropsSidebar) {
     setFixada(!fixada)
   }
 
-  // Monta as classes CSS
   let classeSidebar = 'sidebar'
   if (!fixada && hover) {
     classeSidebar = 'sidebar recolhida expandida-hover'
@@ -55,7 +51,6 @@ export default function Sidebar(props: PropsSidebar) {
 
   return (
     <>
-      {/* Botão flutuante para abrir a sidebar no mobile */}
       <button 
         className="mobile-menu-btn" 
         onClick={() => setMobileAberto(true)}
@@ -64,7 +59,6 @@ export default function Sidebar(props: PropsSidebar) {
         <Menu size={24} />
       </button>
 
-      {/* Overlay escuro que fica atrás da sidebar no mobile */}
       {mobileAberto && (
         <div 
           className="mobile-overlay" 
@@ -79,7 +73,6 @@ export default function Sidebar(props: PropsSidebar) {
       >
         <div className="sidebar-nav">
           <div className="sidebar-toggle">
-            {/* Botão de Fixar/Desafixar - Aparece apenas no Desktop */}
             <button 
               type="button" 
               onClick={alternarSidebar} 
@@ -89,7 +82,6 @@ export default function Sidebar(props: PropsSidebar) {
               {fixada ? <Pin size={20} color="white"/> : <PinOff size={20} color="white" />}
             </button>
 
-            {/* Botão de Fechar - Aparece apenas no Mobile */}
             <button 
               type="button" 
               onClick={() => setMobileAberto(false)} 
@@ -130,9 +122,9 @@ export default function Sidebar(props: PropsSidebar) {
                 <Users size={20} />
                 <span className="nav-label">Usuários</span>
               </NavLink>
-              <NavLink to="/auditoria" className="nav-item" onClick={fecharMenuMobile}>
-                <ShieldAlert size={20} />
-                <span className="nav-label">Auditoria (Logs)</span>
+              <NavLink to="/versionamento" className="nav-item" onClick={fecharMenuMobile}>
+                <GitBranch size={20} />
+                <span className="nav-label">Versionamento</span>
               </NavLink>
             </>
           )}

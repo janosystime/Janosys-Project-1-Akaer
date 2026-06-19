@@ -1,34 +1,16 @@
-/**
- * Chatbot.tsx — Página de chat com IA para consulta de normas aeronáuticas.
- *
- * Funcionalidades:
- * - Interface de chat com histórico de mensagens
- * - Envio de perguntas para a API (POST /api/chat)
- * - Exibição de fontes/documentos usados na resposta
- * - Estado de boas-vindas com perguntas-exemplo clicáveis
- * - Indicador de carregamento com pontos animados
- * - Tratamento de erros (backend offline, etc.)
- * - Auto-scroll para a última mensagem
- * - Envio com tecla Enter
- */
 
 import { useState, useRef, useEffect } from 'react'
 import { Bot, Send, FileText, ChevronDown, ChevronRight } from 'lucide-react'
-import ReactMarkdown from 'react-markdown' // <-- NOVO: Importando o renderizador de Markdown
+import ReactMarkdown from 'react-markdown' 
 import { RAG_API_BASE_URL } from '../config/api'
 import '../styles/chatbot.css'
 
-// ------------------------------------------------------------
-// Tipos das estruturas de dados
-// ------------------------------------------------------------
 
-/** Documento fonte retornado pela API */
 type FonteDocumento = {
   filename: string
   page: number
 }
 
-/** Uma mensagem no histórico do chat */
 type Mensagem = {
   id: number
   tipo: 'usuario' | 'bot' | 'erro'
@@ -37,9 +19,6 @@ type Mensagem = {
   fontes?: FonteDocumento[]
 }
 
-// ------------------------------------------------------------
-// Perguntas-exemplo para o estado de boas-vindas
-// ------------------------------------------------------------
 const PERGUNTAS_EXEMPLO = [
   'Quais normas se aplicam a materiais compostos?',
   'O que diz a norma sobre ensaios não destrutivos?',
@@ -47,9 +26,6 @@ const PERGUNTAS_EXEMPLO = [
   'Como funciona o processo de qualificação de fornecedores?',
 ]
 
-// ------------------------------------------------------------
-// Função auxiliar: retorna a hora atual formatada (HH:MM)
-// ------------------------------------------------------------
 function horaAtual(): string {
   return new Date().toLocaleTimeString('pt-BR', {
     hour: '2-digit',
@@ -57,10 +33,6 @@ function horaAtual(): string {
   })
 }
 
-// ------------------------------------------------------------
-// Componente: IndicadorCarregamento
-// Três pontos animados enquanto aguarda resposta da IA
-// ------------------------------------------------------------
 function IndicadorCarregamento() {
   return (
     <div className="chatbot-carregando">
@@ -71,10 +43,6 @@ function IndicadorCarregamento() {
   )
 }
 
-// ------------------------------------------------------------
-// Componente: FontesMensagem
-// Lista colapsável de documentos fonte abaixo da resposta do bot
-// ------------------------------------------------------------
 function FontesMensagem({ fontes }: { fontes: FonteDocumento[] }) {
   const [aberto, setAberto] = useState(false)
 
@@ -104,14 +72,9 @@ function FontesMensagem({ fontes }: { fontes: FonteDocumento[] }) {
   )
 }
 
-// ------------------------------------------------------------
-// Componente principal: Chatbot
-// ------------------------------------------------------------
 export default function Chatbot() {
-  // Estado do input de texto
   const [inputTexto, setInputTexto] = useState('')
 
-  // Histórico de mensagens — carrega do localStorage se existir
   const [mensagens, setMensagens] = useState<Mensagem[]>(() => {
     try {
       const salvas = localStorage.getItem('chatbot-mensagens')
@@ -121,16 +84,12 @@ export default function Chatbot() {
     }
   })
 
-  // Flag de carregamento (aguardando resposta da API)
   const [carregando, setCarregando] = useState(false)
 
-  // Contador para IDs únicos das mensagens
   const contadorId = useRef(0)
 
-  // Referência para auto-scroll
   const refFimMensagens = useRef<HTMLDivElement>(null)
 
-  // Sincroniza o contador de ID com as mensagens salvas
   useEffect(() => {
     if (mensagens.length > 0) {
       const maiorId = Math.max(...mensagens.map((m) => m.id))
@@ -138,19 +97,14 @@ export default function Chatbot() {
     }
   }, [])
 
-  // Salva mensagens no localStorage sempre que mudam
   useEffect(() => {
     localStorage.setItem('chatbot-mensagens', JSON.stringify(mensagens))
   }, [mensagens])
 
-  // Auto-scroll sempre que mensagens mudam ou carregando muda
   useEffect(() => {
     refFimMensagens.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensagens, carregando])
 
-  // ----------------------------------------------------------
-  // Envia a pergunta para a API e processa a resposta
-  // ----------------------------------------------------------
   async function enviarPergunta(pergunta: string) {
     const textoLimpo = pergunta.trim()
     if (!textoLimpo || carregando) return
@@ -212,9 +166,6 @@ export default function Chatbot() {
     }
   }
 
-  // ----------------------------------------------------------
-  // Handler do teclado: enviar com Enter
-  // ----------------------------------------------------------
   function handleTecla(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -222,14 +173,10 @@ export default function Chatbot() {
     }
   }
 
-  // ----------------------------------------------------------
-  // Renderização
-  // ----------------------------------------------------------
   const chatVazio = mensagens.length === 0
 
   return (
     <div className="chatbot-container">
-      {/* Cabeçalho do chat */}
       <div className="chatbot-cabecalho">
         <div className="chatbot-cabecalho-icone">
           <Bot size={20} />
@@ -240,7 +187,6 @@ export default function Chatbot() {
         </div>
       </div>
 
-      {/* Área de mensagens ou boas-vindas */}
       {chatVazio ? (
         <div className="chatbot-boas-vindas">
           <div className="chatbot-boas-vindas-icone">
@@ -267,12 +213,10 @@ export default function Chatbot() {
         <div className="chatbot-mensagens">
           {mensagens.map((msg) => (
             <div key={msg.id} className={`chatbot-msg ${msg.tipo}`}>
-              {/* NOVO: Usando ReactMarkdown para renderizar os estilos e tópicos da resposta */}
               <div className="chatbot-msg-bolha">
                 <ReactMarkdown>{msg.texto}</ReactMarkdown>
               </div>
               
-              {/* Fontes: só aparecem em mensagens do bot */}
               {msg.tipo === 'bot' && msg.fontes && (
                 <FontesMensagem fontes={msg.fontes} />
               )}
@@ -280,15 +224,12 @@ export default function Chatbot() {
             </div>
           ))}
 
-          {/* Indicador de carregamento */}
           {carregando && <IndicadorCarregamento />}
 
-          {/* Div invisível para auto-scroll */}
           <div ref={refFimMensagens} />
         </div>
       )}
 
-      {/* Área de input */}
       <div className="chatbot-input-area">
         <input
           type="text"

@@ -19,9 +19,6 @@ from rag_engine import generate_answer
 
 load_dotenv()
 
-# ============================================================
-# Inicialização do FastAPI
-# ============================================================
 app = FastAPI(
     title="SIGNA RAG API",
     description="API de consulta inteligente a normas aeronáuticas — Akaer",
@@ -46,9 +43,6 @@ app.add_middleware(
 )
 
 
-# ============================================================
-# Modelos de request/response
-# ============================================================
 class PerguntaRequest(BaseModel):
     """Corpo da requisição POST /api/chat"""
     question: str
@@ -60,9 +54,6 @@ class RespostaResponse(BaseModel):
     sources: list[dict]
 
 
-# ============================================================
-# Endpoints
-# ============================================================
 @app.get("/api/health")
 def health():
     """Healthcheck — retorna status do serviço."""
@@ -90,9 +81,6 @@ def chat(req: PerguntaRequest):
         )
 
 
-# ============================================================
-# Execução direta: python server.py
-# ============================================================
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

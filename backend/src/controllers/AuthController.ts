@@ -10,7 +10,6 @@ export class AuthController {
         return res.status(400).json({ error: 'Login e senha são obrigatórios' });
       }
 
-      // Find user
       const usuario = await prisma.usuario.findUnique({
         where: { login }
       });
@@ -19,13 +18,11 @@ export class AuthController {
         return res.status(401).json({ error: 'Login ou senha incorretos' });
       }
 
-      // Check password
       const senhaValida = senha === usuario.senha;
       if (!senhaValida) {
         return res.status(401).json({ error: 'Login ou senha incorretos' });
       }
 
-      // Return user info in frontend format
       return res.json({
         nome: usuario.nome,
         perfil: usuario.perfil.toLowerCase(),

@@ -35,12 +35,10 @@ const adapter = new PrismaMariaDb({
 const prisma = new PrismaClient({ adapter });
 
 const statements = [
-  // 1. Drop old triggers if exist
   "DROP TRIGGER IF EXISTS tr_normas_insert",
   "DROP TRIGGER IF EXISTS tr_normas_update",
   "DROP TRIGGER IF EXISTS tr_normas_delete",
 
-  // 2. Create tr_normas_insert
   `CREATE TRIGGER tr_normas_insert
    AFTER INSERT ON normas
    FOR EACH ROW
@@ -57,7 +55,6 @@ const statements = [
        );
    END`,
 
-  // 3. Create tr_normas_update
   `CREATE TRIGGER tr_normas_update
    AFTER UPDATE ON normas
    FOR EACH ROW
@@ -108,7 +105,6 @@ const statements = [
        END IF;
    END`,
 
-  // 4. Create tr_normas_delete
   `CREATE TRIGGER tr_normas_delete
    BEFORE DELETE ON normas
    FOR EACH ROW
@@ -146,7 +142,6 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    // o pool do adapter mantém o processo vivo; desconecta e encerra
     await prisma.$disconnect();
     process.exit(process.exitCode || 0);
   });

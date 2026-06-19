@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { API_BASE_URL } from "../config/api";
-import { History, ShieldAlert, Search, RefreshCw, Layers, Calendar, User, FileText } from "lucide-react";
+import { GitBranch, Search, RefreshCw, Layers, Calendar, User, FileText, CircleDot } from "lucide-react";
 import "../styles/Normas.css";
 
-interface LogAuditoria {
+interface VersaoNorma {
   id: number;
   normaId: string;
-  codigoNorma: string | null;
-  tituloNorma: string;
-  usuarioNome: string;
-  tipoAlteracao: "CADASTRO" | "EDICAO" | "EXCLUSAO";
-  detalhes: string;
+  numero: number;
+  evento: "CADASTRO" | "EDICAO";
+  titulo: string;
+  status: string;
+  revisao: string | null;
+  usuarioNome: string | null;
   data: string;
 }
 
@@ -36,23 +37,21 @@ function ToastContainer({ toasts, onRemover }: { toasts: ToastMsg[]; onRemover: 
   );
 }
 
-const TIPO_ESTILO: Record<LogAuditoria["tipoAlteracao"], string> = {
+const EVENTO_ESTILO: Record<VersaoNorma["evento"], string> = {
   CADASTRO: "badge vigente",
   EDICAO: "badge theme-subcategoria",
-  EXCLUSAO: "badge revogada",
 };
 
-const TIPO_ICONE: Record<LogAuditoria["tipoAlteracao"], string> = {
-  CADASTRO: "fa-plus-circle",
-  EDICAO: "fa-pen-to-square",
-  EXCLUSAO: "fa-trash-can",
+const EVENTO_LABEL: Record<VersaoNorma["evento"], string> = {
+  CADASTRO: "Cadastro inicial",
+  EDICAO: "Edição",
 };
 
-export default function Auditoria() {
-  const [logs, setLogs] = useState<LogAuditoria[]>([]);
+export default function Versionamento() {
+  const [versoes, setVersoes] = useState<VersaoNorma[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [termoPesquisa, setTermoPesquisa] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState("Todos");
+  const [filtroEvento, setFiltroEvento] = useState("Todos");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
 
   const adicionarToast = useCallback((tipo: ToastMsg["tipo"], mensagem: string) => {
@@ -63,18 +62,17 @@ export default function Auditoria() {
 
   const removerToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  // Fetch auditoria logs
-  const fetchLogs = useCallback(async () => {
+  const fetchVersoes = useCallback(async () => {
     setCarregando(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/historico`);
+      const response = await fetch(`${API_BASE_URL}/normas/versoes`);
       if (response.ok) {
         const data = await response.json();
-        setLogs(data);
+        setVersoes(data);
       } else {
-        adicionarToast("erro", "Erro ao carregar logs de auditoria.");
+        adicionarToast("erro", "Erro ao carregar o versionamento.");
       }
-    } catch (err) {
+    } catch {
       adicionarToast("erro", "Não foi possível conectar com o servidor.");
     } finally {
       setCarregando(false);
@@ -82,22 +80,19 @@ export default function Auditoria() {
   }, [adicionarToast]);
 
   useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+    fetchVersoes();
+  }, [fetchVersoes]);
 
-  // Filtragem dos logs
   const termoMinusculo = termoPesquisa.toLowerCase();
-  const logsFiltrados = logs.filter((log) => {
+  const versoesFiltradas = versoes.filter((v) => {
     const matchBusca =
-      log.normaId.toLowerCase().includes(termoMinusculo) ||
-      (log.codigoNorma && log.codigoNorma.toLowerCase().includes(termoMinusculo)) ||
-      log.tituloNorma.toLowerCase().includes(termoMinusculo) ||
-      log.usuarioNome.toLowerCase().includes(termoMinusculo) ||
-      log.detalhes.toLowerCase().includes(termoMinusculo);
+      v.normaId.toLowerCase().includes(termoMinusculo) ||
+      v.titulo.toLowerCase().includes(termoMinusculo) ||
+      (v.usuarioNome && v.usuarioNome.toLowerCase().includes(termoMinusculo));
 
-    const matchTipo = filtroTipo === "Todos" || log.tipoAlteracao === filtroTipo;
+    const matchEvento = filtroEvento === "Todos" || v.evento === filtroEvento;
 
-    return matchBusca && matchTipo;
+    return matchBusca && matchEvento;
   });
 
   return (
@@ -105,23 +100,22 @@ export default function Auditoria() {
       <ToastContainer toasts={toasts} onRemover={removerToast} />
 
       <main className="page">
-        {/* Header da Página */}
         <div className="page-header">
           <h1 className="page-title">
-            <ShieldAlert style={{ marginRight: 8, color: "var(--c-theme)" }} /> 
-            Auditoria & Logs do Sistema
+            <GitBranch style={{ marginRight: 8, color: "var(--c-theme)" }} />
+            Versionamento de Normas
           </h1>
-          <button className="btn btn-ghost" onClick={fetchLogs} disabled={carregando} title="Recarregar logs">
+          <button className="btn btn-ghost" onClick={fetchVersoes} disabled={carregando} title="Recarregar versões">
             <RefreshCw size={16} className={carregando ? "fa-spin" : ""} style={{ marginRight: 6 }} />
             Atualizar
           </button>
         </div>
 
         <p style={{ color: "var(--c-text-muted)", fontSize: "0.9rem", marginTop: "-10px", marginBottom: "25px" }}>
-          Painel administrativo de segurança. Monitora nativamente em tempo real as operações de inclusão, alteração e exclusão acionadas via Triggers no banco de dados MySQL.
+          Histórico de versões das normas. Cada cadastro gera a versão 1 e cada edição cria uma nova versão,
+          preservando o estado anterior (título, status, revisão e autor de cada momento).
         </p>
 
-        {/* Filtros e Busca */}
         <div className="filtros-container">
           <div className="filtros-header">
             <div className="form-group search-group">
@@ -129,7 +123,7 @@ export default function Auditoria() {
               <input
                 type="text"
                 className="form-input search-input"
-                placeholder="Pesquisar por norma, código, usuário ou detalhes da alteração..."
+                placeholder="Pesquisar por norma, título ou autor da versão..."
                 value={termoPesquisa}
                 onChange={(e) => setTermoPesquisa(e.target.value)}
               />
@@ -143,25 +137,24 @@ export default function Auditoria() {
 
           <div className="filter-badges-row">
             <span className="filter-label">
-              <Layers size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> Tipo de Log:
+              <Layers size={16} style={{ marginRight: 4, verticalAlign: "middle" }} /> Tipo:
             </span>
-            {["Todos", "CADASTRO", "EDICAO", "EXCLUSAO"].map((t) => (
+            {["Todos", "CADASTRO", "EDICAO"].map((t) => (
               <button
                 key={t}
-                className={`filter-badge ${filtroTipo === t ? "active theme-all" : ""}`}
-                onClick={() => setFiltroTipo(t)}
+                className={`filter-badge ${filtroEvento === t ? "active theme-all" : ""}`}
+                onClick={() => setFiltroEvento(t)}
               >
-                {t === "Todos" ? "Todos" : t.charAt(0) + t.slice(1).toLowerCase()}
+                {t === "Todos" ? "Todos" : t === "CADASTRO" ? "Cadastro" : "Edição"}
               </button>
             ))}
           </div>
         </div>
 
         <p className="results-count">
-          {carregando ? "Carregando logs..." : `${logsFiltrados.length} registros de auditoria encontrados`}
+          {carregando ? "Carregando versões..." : `${versoesFiltradas.length} versões encontradas`}
         </p>
 
-        {/* Tabela de Logs */}
         {carregando ? (
           <div style={{ display: "flex", justifyContent: "center", padding: "3rem" }}>
             <RefreshCw size={32} className="fa-spin" color="var(--c-theme)" />
@@ -172,54 +165,57 @@ export default function Auditoria() {
               <thead>
                 <tr>
                   <th style={{ width: "15%" }}><Calendar size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Data / Hora</th>
-                  <th style={{ width: "12%" }}><Layers size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Ação</th>
-                  <th style={{ width: "18%" }}><User size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Executor</th>
-                  <th style={{ width: "18%" }}><FileText size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Norma</th>
-                  <th>Detalhes da Operação</th>
+                  <th style={{ width: "10%" }}><GitBranch size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Versão</th>
+                  <th style={{ width: "15%" }}><FileText size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Norma</th>
+                  <th>Título</th>
+                  <th style={{ width: "12%" }}><CircleDot size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Status</th>
+                  <th style={{ width: "16%" }}><User size={16} style={{ marginRight: 6, verticalAlign: "middle" }} /> Autor</th>
                 </tr>
               </thead>
               <tbody>
-                {logsFiltrados.map((log) => (
-                  <tr key={log.id} className="row-hover-animation" style={{ transition: "all 0.2s" }}>
+                {versoesFiltradas.map((v) => (
+                  <tr key={v.id} className="row-hover-animation" style={{ transition: "all 0.2s" }}>
                     <td style={{ fontSize: "0.82rem", color: "var(--c-text-2)" }}>
-                      {new Date(log.data).toLocaleString("pt-BR")}
+                      {new Date(v.data).toLocaleString("pt-BR")}
                     </td>
                     <td>
-                      <span className={TIPO_ESTILO[log.tipoAlteracao]} style={{ fontSize: "0.7rem", fontWeight: 700 }}>
-                        <i className={`fas ${TIPO_ICONE[log.tipoAlteracao]} badge-icon`}></i>
-                        {log.tipoAlteracao}
+                      <span className={EVENTO_ESTILO[v.evento]} style={{ fontSize: "0.7rem", fontWeight: 700 }}>
+                        v{v.numero} · {EVENTO_LABEL[v.evento]}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: "0.82rem" }}>
+                      <div style={{ fontWeight: 700, color: "var(--c-text-1)" }}>{v.normaId}</div>
+                      {v.revisao && (
+                        <span style={{ fontSize: "0.72rem", color: "var(--c-text-muted)" }}>
+                          rev. {v.revisao}
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ fontSize: "0.82rem", color: "var(--c-text-2)", lineHeight: "1.4" }}>
+                      {v.titulo}
+                    </td>
+                    <td>
+                      <span className={`badge ${v.status.toLowerCase()}`} style={{ fontSize: "0.72rem" }}>
+                        {v.status}
                       </span>
                     </td>
                     <td>
                       <div className="td-nome" style={{ fontWeight: 600, fontSize: "0.85rem" }}>
                         <div className="usuario-avatar-mini" style={{ width: 24, height: 24, fontSize: "0.65rem" }}>
-                          {log.usuarioNome.slice(0, 2).toUpperCase()}
+                          {(v.usuarioNome ?? "—").slice(0, 2).toUpperCase()}
                         </div>
-                        {log.usuarioNome}
+                        {v.usuarioNome ?? "—"}
                       </div>
-                    </td>
-                    <td style={{ fontSize: "0.82rem" }}>
-                      <div style={{ fontWeight: 700, color: "var(--c-text-1)" }}>
-                        {log.normaId}
-                      </div>
-                      {log.codigoNorma && (
-                        <span style={{ fontSize: "0.72rem", color: "var(--c-text-muted)" }}>
-                          ({log.codigoNorma})
-                        </span>
-                      )}
-                    </td>
-                    <td style={{ fontSize: "0.82rem", color: "var(--c-text-2)", lineHeight: "1.4" }}>
-                      {log.detalhes}
                     </td>
                   </tr>
                 ))}
 
-                {logsFiltrados.length === 0 && (
+                {versoesFiltradas.length === 0 && (
                   <tr>
-                    <td colSpan={5}>
+                    <td colSpan={6}>
                       <div className="empty-state compact">
-                        <History size={40} color="var(--c-text-muted)" />
-                        <p>Nenhum registro de auditoria encontrado.</p>
+                        <GitBranch size={40} color="var(--c-text-muted)" />
+                        <p>Nenhuma versão encontrada.</p>
                       </div>
                     </td>
                   </tr>

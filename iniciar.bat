@@ -8,7 +8,6 @@ echo    JANOSYS - Iniciando a aplicacao
 echo ============================================================
 echo.
 
-REM --- 1. Verifica se o Docker esta rodando -------------------
 docker info >nul 2>&1
 if errorlevel 1 (
   echo [ERRO] O Docker nao esta em execucao.
@@ -23,7 +22,6 @@ if errorlevel 1 (
 echo [OK] Docker em execucao.
 echo.
 
-REM --- 2. Sobe os servicos ------------------------------------
 echo [1/2] Subindo os servicos...
 echo       ^(Na PRIMEIRA vez demora alguns minutos para baixar e montar tudo^)
 echo.
@@ -36,13 +34,12 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM --- 3. Aguarda a aplicacao responder ----------------------
 echo.
 echo [2/2] Aguardando a aplicacao ficar pronta...
 set /a tentativas=0
 :aguardar
 set /a tentativas+=1
-curl -sf -o nul http://localhost:8080/api/normas >nul 2>&1
+curl -sf -o nul http://localhost:8095/api/normas >nul 2>&1
 if not errorlevel 1 goto pronto
 if %tentativas% geq 60 goto pronto
 timeout /t 3 /nobreak >nul
@@ -53,9 +50,9 @@ echo.
 echo ============================================================
 echo    Pronto! Abrindo no navegador...
 echo ============================================================
-start "" http://localhost:8080
+start "" http://localhost:8095
 echo.
-echo    Endereco : http://localhost:8080
+echo    Endereco : http://localhost:8095
 echo    Login    : admin  /  123
 echo.
 echo    Para DESLIGAR a aplicacao, rode o arquivo "parar.bat".

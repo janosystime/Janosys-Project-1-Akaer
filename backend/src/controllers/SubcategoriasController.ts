@@ -43,7 +43,6 @@ export class SubcategoriasController {
         });
         if (duplicada) return res.status(409).json({ error: 'Já existe uma subcategoria com esse nome nesta categoria' });
 
-        // propaga o novo nome para as peças daquela categoria/subcategoria
         await prisma.peca.updateMany({
           where: { categoria: sub.categoria.nome, subcategoria: sub.nome },
           data: { subcategoria: novoNome },
@@ -64,7 +63,6 @@ export class SubcategoriasController {
       const sub = await prisma.subcategoria.findUnique({ where: { id }, include: { categoria: true } });
       if (!sub) return res.status(404).json({ error: 'Subcategoria não encontrada' });
 
-      // remove as peças dessa subcategoria
       await prisma.peca.deleteMany({ where: { categoria: sub.categoria.nome, subcategoria: sub.nome } });
       await prisma.subcategoria.delete({ where: { id } });
 

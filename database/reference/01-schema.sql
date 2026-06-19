@@ -1,18 +1,7 @@
--- =====================================================================
--- Schema inicial do banco (MySQL 8.4) — Projeto SIGNA / Akaer
--- Roda automaticamente na PRIMEIRA subida do container (volume vazio),
--- já dentro do banco definido por MYSQL_DATABASE.
--- Convenção: snake_case, sem acento; InnoDB; utf8mb4.
--- =====================================================================
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ---------------------------------------------------------------------
--- usuario
---   perfil controla os níveis de acesso do sistema (igual ao frontend).
---   login é por email; senha guarda HASH (bcrypt), nunca texto puro.
--- ---------------------------------------------------------------------
 CREATE TABLE usuario (
   id           INT AUTO_INCREMENT PRIMARY KEY,
   nome         VARCHAR(150) NOT NULL,
@@ -25,10 +14,6 @@ CREATE TABLE usuario (
   alterado_em  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- Taxonomia: categoria -> sub_categoria -> item
---   Categoria pode ser criada livremente (CRUD normal).
--- ---------------------------------------------------------------------
 CREATE TABLE categoria (
   id    INT AUTO_INCREMENT PRIMARY KEY,
   nome  VARCHAR(100) NOT NULL UNIQUE
@@ -53,12 +38,6 @@ CREATE TABLE item (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- norma
---   Identidade estável da norma. Os dados que mudam ficam em `versao`.
---   identificador = código de negócio (único). visibilidade = público/privado.
---   usuario_id = quem gerencia a norma.
--- ---------------------------------------------------------------------
 CREATE TABLE norma (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   identificador VARCHAR(100) NOT NULL UNIQUE,
@@ -71,8 +50,6 @@ CREATE TABLE norma (
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Auto-relacionamento N:N: uma norma referencia outras normas
--- ("esta norma referencia a norma X" no conteúdo).
 CREATE TABLE norma_referencia (
   norma_id              INT NOT NULL,
   norma_referenciada_id INT NOT NULL,
@@ -83,12 +60,8 @@ CREATE TABLE norma_referencia (
   CONSTRAINT fk_ref_destino
     FOREIGN KEY (norma_referenciada_id) REFERENCES norma(id)
     ON DELETE CASCADE ON UPDATE CASCADE
-  -- Regra "norma não pode referenciar a si mesma" (norma_id <> norma_referenciada_id)
-  -- deve ser validada na aplicação: o MySQL não aceita CHECK em coluna que
-  -- participa de FK com ação referencial (erro 3823).
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- N:N: peças (item) relacionadas a normas.
 CREATE TABLE norma_item (
   norma_id INT NOT NULL,
   item_id  INT NOT NULL,
@@ -101,12 +74,6 @@ CREATE TABLE norma_item (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- versao
---   Versionamento da norma: ao inserir a norma nasce a versao numero=1
---   com atual=TRUE. Ao alterar, a versao corrente vira atual=FALSE e
---   uma nova versao (numero+1, atual=TRUE) é criada — preservando o histórico.
--- ---------------------------------------------------------------------
 CREATE TABLE versao (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   norma_id   INT NOT NULL,
@@ -128,11 +95,6 @@ CREATE TABLE versao (
   KEY idx_versao_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- arquivo
---   Documento (PDF/TXT) de uma versão da norma, guardado como LONGBLOB
---   para ficar disponível a todos os usuários via banco.
--- ---------------------------------------------------------------------
 CREATE TABLE arquivo (
   id        INT AUTO_INCREMENT PRIMARY KEY,
   versao_id INT NOT NULL,
@@ -145,10 +107,6 @@ CREATE TABLE arquivo (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- nota
---   Comentário/observação em texto vinculado a uma versão da norma.
--- ---------------------------------------------------------------------
 CREATE TABLE nota (
   id        INT AUTO_INCREMENT PRIMARY KEY,
   versao_id INT NOT NULL,
@@ -159,9 +117,6 @@ CREATE TABLE nota (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- palavra_chave (busca por palavra-chave) — N:N com norma
--- ---------------------------------------------------------------------
 CREATE TABLE palavra_chave (
   id    INT AUTO_INCREMENT PRIMARY KEY,
   termo VARCHAR(100) NOT NULL UNIQUE
@@ -179,9 +134,6 @@ CREATE TABLE norma_palavra_chave (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- favorito — N:N usuario <-> norma
--- ---------------------------------------------------------------------
 CREATE TABLE favorito (
   usuario_id INT NOT NULL,
   norma_id   INT NOT NULL,
@@ -195,12 +147,6 @@ CREATE TABLE favorito (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ---------------------------------------------------------------------
--- solicitacao
---   Usuário pede a inclusão de uma norma (status=pendente). O checker
---   avalia e muda para aprovado/recusado. Ao aprovar, pode vincular a
---   norma criada (norma_id).
--- ---------------------------------------------------------------------
 CREATE TABLE solicitacao (
   id             INT AUTO_INCREMENT PRIMARY KEY,
   titulo         VARCHAR(255) NOT NULL,

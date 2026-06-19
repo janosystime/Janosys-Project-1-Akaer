@@ -13,15 +13,6 @@ export interface CategoriaApi {
   subcategorias: SubcategoriaApi[];
 }
 
-/**
- * Fonte única de categorias/subcategorias, vinda do backend (/categorias).
- * Substitui as constantes hardcoded CATEGORIAS/SUBCATEGORIAS.
- *
- * Retorna:
- *  - categorias: lista completa (com id/icone/tema/subcategorias)
- *  - nomes: nomes das categorias (string[])
- *  - subPorCategoria: mapa nomeCategoria -> nomes das subcategorias
- */
 export function useCategorias() {
   const [categorias, setCategorias] = useState<CategoriaApi[]>([]);
 
@@ -30,7 +21,7 @@ export function useCategorias() {
     fetch(`${API_BASE_URL}/categorias`)
       .then((r) => (r.ok ? r.json() : []))
       .then((dados: CategoriaApi[]) => { if (ativo) setCategorias(dados); })
-      .catch(() => { /* silencioso: cai pra lista vazia */ });
+      .catch(() => {  });
     return () => { ativo = false; };
   }, []);
 

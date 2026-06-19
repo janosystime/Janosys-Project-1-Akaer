@@ -5,7 +5,7 @@ ingest.py — Script de ingestão otimizado com Metadata Injection para o SIGNA 
 import os
 import sys
 import re
-import fitz  # PyMuPDF
+import fitz
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 import chromadb
@@ -99,7 +99,6 @@ def ingerir_documentos():
     chunks = dividir_em_chunks_com_contexto(todas_paginas)
     print(f"  Total: {len(chunks)} chunks enriquecidos gerados.\n")
 
-    # === Passo 3: Indexação ===
     print("Passo 3/3 — Indexando no ChromaDB...")
 
     funcao_embedding = HuggingFaceEmbeddingFunction(token=HF_TOKEN)

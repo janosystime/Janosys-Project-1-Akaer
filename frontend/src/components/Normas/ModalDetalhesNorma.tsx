@@ -5,18 +5,10 @@ import type { Norma } from "./NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "./NormasViewModel";
 import { safeParseArray } from "../../utils/NormasUtils";
 
-interface LogHistorico {
-  id: number;
-  tipoAlteracao: string; // 'CADASTRO' | 'EDICAO' | 'EXCLUSAO'
-  usuarioNome: string;
-  detalhes: string;
-  data: string;
-}
-
 interface VersaoNorma {
   id: number;
   numero: number;
-  evento: string; // 'CADASTRO' | 'EDICAO'
+  evento: string; 
   titulo: string;
   status: string;
   revisao: string | null;
@@ -34,7 +26,6 @@ type PropsModalDetalhesNorma = {
   onViewImages: (imagens: string[], indice: number) => void;
 };
 
-// ==== AQUI: onEdit e onDelete se tornaram OPCIONAIS (?) ====
 export default function ModalDetalhesNorma({
   norma,
   pecasRelacionadas,
@@ -44,27 +35,10 @@ export default function ModalDetalhesNorma({
   onViewPdf,
   onViewImages
 }: PropsModalDetalhesNorma) {
-  const [historico, setHistorico] = useState<LogHistorico[]>([]);
-  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
   const [versoes, setVersoes] = useState<VersaoNorma[]>([]);
   const [carregandoVersoes, setCarregandoVersoes] = useState(false);
 
   useEffect(() => {
-    async function fetchHistorico() {
-      setCarregandoHistorico(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/historico/${norma.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setHistorico(data);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar histórico:", err);
-      } finally {
-        setCarregandoHistorico(false);
-      }
-    }
-
     async function fetchVersoes() {
       setCarregandoVersoes(true);
       try {
@@ -80,7 +54,6 @@ export default function ModalDetalhesNorma({
       }
     }
 
-    fetchHistorico();
     fetchVersoes();
   }, [norma.id]);
 
@@ -90,7 +63,6 @@ export default function ModalDetalhesNorma({
         <div className="modal-header">
           <h2><i className="fas fa-magnifying-glass-chart"></i> Detalhes da Norma</h2>
           <div className="modal-header-actions">
-            {/* O Botão de Editar só aparece se onEdit for passado! */}
             {onEdit && (
               <button
                 className="btn btn-warning btn-icon"
@@ -100,7 +72,6 @@ export default function ModalDetalhesNorma({
                 <i className="fas fa-pen"></i>
               </button>
             )}
-            {/* O Botão de Excluir só aparece se onDelete for passado! */}
             {onDelete && (
               <button
                 className="btn btn-danger btn-icon"
@@ -289,43 +260,6 @@ export default function ModalDetalhesNorma({
             )}
           </div>
 
-          <hr className="divider" />
-          <div className="view-item">
-            <span className="view-label">
-              <i className="fas fa-history"></i> Histórico de Alterações (Auditoria)
-            </span>
-            {carregandoHistorico ? (
-              <div style={{ color: "var(--c-text-muted)", fontSize: "0.9rem" }}>Carregando histórico...</div>
-            ) : historico.length > 0 ? (
-              <div className="timeline-container" style={{ marginTop: "10px", padding: "10px 0" }}>
-                {historico.map((log) => (
-                  <div key={log.id} style={{ display: "flex", gap: "10px", marginBottom: "12px", fontSize: "0.85rem" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <span className={`badge ${log.tipoAlteracao === 'CADASTRO' ? 'vigente' : log.tipoAlteracao === 'EDICAO' ? 'theme-subcategoria' : 'revogada'}`} style={{ fontSize: "0.65rem", padding: "2px 6px" }}>
-                        {log.tipoAlteracao}
-                      </span>
-                      <div style={{ width: "2px", flex: 1, backgroundColor: "var(--c-border)", marginTop: "4px" }}></div>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, color: "var(--c-text-1)" }}>
-                        {log.usuarioNome} <span style={{ fontWeight: 400, color: "var(--c-text-muted)", float: "right", fontSize: "0.75rem" }}>
-                          {new Date(log.data).toLocaleString("pt-BR")}
-                        </span>
-                      </div>
-                      <div style={{ color: "var(--c-text-2)", marginTop: "3px", lineHeight: "1.3" }}>
-                        {log.detalhes}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state compact" style={{ border: "none", background: "none", padding: 0 }}>
-                <i className="fas fa-history"></i>
-                <p>Nenhuma alteração registrada para esta norma.</p>
-              </div>
-            )}
-          </div>
         </div>
         <div className="modal-footer">
           <button type="button" className="btn btn-primary" onClick={onClose}><i className="fas fa-arrow-left"></i> Voltar</button>

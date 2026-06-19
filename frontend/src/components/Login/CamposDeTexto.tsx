@@ -6,7 +6,7 @@ interface PropriedadesCamposDeTexto {
   aoAlterar: (valor: string) => void;
   tamanhoMaximo?: number;
   erro?: boolean;
-  icone?: string; // Nova prop para a classe do ícone FontAwesome
+  icone?: string; 
 }
 
 function CamposDeTexto({ 

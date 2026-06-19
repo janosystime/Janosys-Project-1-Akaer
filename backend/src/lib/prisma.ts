@@ -4,7 +4,6 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const databaseUrl = process.env.DATABASE_URL || 'mysql://root:password@localhost:3306/janosys_db';
 
-// Parse DATABASE_URL: mysql://user:password@host:port/database
 const regex = /^mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/;
 const match = databaseUrl.match(regex);
 
