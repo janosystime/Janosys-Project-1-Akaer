@@ -1,19 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
-import { API_BASE_URL } from "../config/api";
+// frontend/src/pages/Solicitacoes.tsx
+import { useState, useCallback } from "react";
 import "../styles/Normas.css";
 import { obterUsuarioAtual } from "../auth/session";
-
-interface Solicitacao {
-  id: number;
-  codigo: string;
-  titulo: string;
-  motivo?: string;
-  solicitante: string;
-  data: string;
-  status: "Aguardando análise" | "Em análise" | "Aceita" | "Indeferida";
-  motivoRecusa?: string;
-  avaliador?: string;
-}
+import { solicitacoesDb, type Solicitacao } from "../utils/storage";
 
 interface ToastMsg {
   id: number;
@@ -21,13 +10,7 @@ interface ToastMsg {
   mensagem: string;
 }
 
-function ToastContainer({
-  toasts,
-  onRemover,
-}: {
-  toasts: ToastMsg[];
-  onRemover: (id: number) => void;
-}) {
+function ToastContainer({ toasts, onRemover }: { toasts: ToastMsg[]; onRemover: (id: number) => void }) {
   return (
     <div className="toast-container">
       {toasts.map((t) => (
@@ -71,15 +54,14 @@ export default function Solicitacoes() {
   const isAdmin = usuario?.perfil === "administrador";
   const isChecker = usuario?.perfil === "checker";
 
-  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
+  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>(() => solicitacoesDb.list());
   const [showModal, setShowModal] = useState(false);
   const [codigo, setCodigo] = useState("");
   const [titulo, setTitulo] = useState("");
-  const [termoPesquisa, setTermoPesquisa] = useState("");
   const [motivo, setMotivo] = useState("");
+  const [termoPesquisa, setTermoPesquisa] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
-
   const [solicitacaoAnalise, setSolicitacaoAnalise] = useState<Solicitacao | null>(null);
   const [motivoRecusa, setMotivoRecusa] = useState("");
   const [confirmacaoInsercao, setConfirmacaoInsercao] = useState(false);
@@ -90,121 +72,72 @@ export default function Solicitacoes() {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
   }, []);
 
-  const removerToast = (id: number) =>
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+  const removerToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  const fetchSolicitacoes = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/solicitacoes`);
-      if (response.ok) {
-        const data = await response.json();
-        setSolicitacoes(data);
-      } else {
-        adicionarToast("erro", "Erro ao carregar solicitações do servidor.");
-      }
-    } catch (err) {
-      adicionarToast("erro", "Erro ao conectar com a API de solicitações.");
-    }
-  }, [adicionarToast]);
-
-  useEffect(() => {
-    fetchSolicitacoes();
-  }, [fetchSolicitacoes]);
-
-  const handleSolicitar = async () => {
+  const handleSolicitar = () => {
     if (!titulo.trim()) {
       adicionarToast("erro", "Preencha o campo de título antes de solicitar.");
       return;
-    }  
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/solicitacoes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          codigo: codigo.trim(),
-          titulo: titulo.trim(),
-          motivo: motivo.trim(),
-          solicitante: usuario?.nome ?? "Usuário"
-        })
-      });
-
-      if (response.ok) {
-        const nova = await response.json();
-        setSolicitacoes((prev) => [nova, ...prev]);
-        setCodigo("");
-        setTitulo("");
-        setShowModal(false);
-        setMotivo("");
-        adicionarToast("sucesso", "Solicitação enviada com sucesso!");
-      } else {
-        const errorData = await response.json();
-        adicionarToast("erro", errorData.error || "Erro ao criar solicitação.");
-      }
-    } catch (err) {
-      adicionarToast("erro", "Erro ao conectar com o servidor.");
     }
+    const nova = solicitacoesDb.create({
+      codigo: codigo.trim(),
+      titulo: titulo.trim(),
+      motivo: motivo.trim(),
+      solicitante: usuario?.nome ?? "Usuário",
+      data: new Date().toISOString().split("T")[0],
+      status: "Aguardando análise",
+    });
+    setSolicitacoes(solicitacoesDb.list());
+    setCodigo(""); setTitulo(""); setMotivo("");
+    setShowModal(false);
+    adicionarToast("sucesso", "Solicitação enviada com sucesso!");
+    return nova;
   };
 
-  const atualizarStatus = async (id: number, novoStatus: Solicitacao["status"], extras?: Partial<Solicitacao>) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/solicitacoes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: novoStatus,
-          motivoRecusa: extras?.motivoRecusa || "",
-          avaliador: novoStatus === "Aguardando análise" ? "" : (usuario?.nome || "Checker")
-        })
-      });
-
-      if (response.ok) {
-        const atualizada = await response.json();
-        setSolicitacoes(prev => prev.map(s => s.id === id ? atualizada : s));
-        setSolicitacaoAnalise(current => {
-          if (current && current.id === id) {
-            return atualizada;
-          }
-          return current;
-        });
-        return atualizada as Solicitacao;
-      } else {
-        adicionarToast("erro", "Erro ao atualizar status no servidor.");
-      }
-    } catch (err) {
-      adicionarToast("erro", "Erro de conexão ao atualizar status.");
-    }
-    return null;
+  const atualizarStatus = (
+    id: number,
+    novoStatus: Solicitacao["status"],
+    extras?: Partial<Solicitacao>,
+  ): Solicitacao => {
+    const lista = solicitacoesDb.list();
+    const atual = lista.find((s) => s.id === id)!;
+    const atualizada: Solicitacao = {
+      ...atual,
+      status: novoStatus,
+      motivoRecusa: extras?.motivoRecusa ?? "",
+      avaliador: novoStatus === "Aguardando análise" ? "" : (usuario?.nome ?? "Checker"),
+    };
+    solicitacoesDb.update(atualizada);
+    setSolicitacoes(solicitacoesDb.list());
+    setSolicitacaoAnalise((cur) => (cur?.id === id ? atualizada : cur));
+    return atualizada;
   };
 
-  const abrirModalAnalise = async (s: Solicitacao) => {
+  const abrirModalAnalise = (s: Solicitacao) => {
     setSolicitacaoAnalise(s);
     setMotivoRecusa("");
     setConfirmacaoInsercao(false);
     if (isChecker && s.status === "Aguardando análise") {
-      const atualizada = await atualizarStatus(s.id, "Em análise");
-      if (atualizada) {
-        setSolicitacaoAnalise(atualizada);
-      }
+      const atualizada = atualizarStatus(s.id, "Em análise");
+      setSolicitacaoAnalise(atualizada);
     }
   };
 
-const termoMinusculo = termoPesquisa.toLowerCase();
-const solicitacoesFiltradas = solicitacoes
-  .filter((s) => {
-    const matchBusca =
-      s.codigo.toLowerCase().includes(termoMinusculo) ||
-      s.titulo.toLowerCase().includes(termoMinusculo) ||
-      s.solicitante.toLowerCase().includes(termoMinusculo);
-    const matchStatus = filtroStatus === "Todos" || s.status === filtroStatus;
-    return matchBusca && matchStatus;
-  })
-  .sort((a, b) => {
-    if (STATUS_ORDEM[a.status] !== STATUS_ORDEM[b.status]) {
-      return STATUS_ORDEM[a.status] - STATUS_ORDEM[b.status];
-    }
-    return new Date(b.data).getTime() - new Date(a.data).getTime();
-  });
+  const termoMinusculo = termoPesquisa.toLowerCase();
+  const solicitacoesFiltradas = solicitacoes
+    .filter((s) => {
+      const matchBusca =
+        s.codigo.toLowerCase().includes(termoMinusculo) ||
+        s.titulo.toLowerCase().includes(termoMinusculo) ||
+        s.solicitante.toLowerCase().includes(termoMinusculo);
+      const matchStatus = filtroStatus === "Todos" || s.status === filtroStatus;
+      return matchBusca && matchStatus;
+    })
+    .sort((a, b) => {
+      if (STATUS_ORDEM[a.status] !== STATUS_ORDEM[b.status])
+        return STATUS_ORDEM[a.status] - STATUS_ORDEM[b.status];
+      return new Date(b.data).getTime() - new Date(a.data).getTime();
+    });
 
   const total = solicitacoes.length;
   const totalTexto = total === 1 ? "1 solicitação no total" : `${total} solicitações no total`;
@@ -213,7 +146,6 @@ const solicitacoesFiltradas = solicitacoes
   return (
     <div className="app-container">
       <ToastContainer toasts={toasts} onRemover={removerToast} />
-
       <main className="page">
         <div className="page-header">
           <h1 className="page-title">
@@ -244,7 +176,6 @@ const solicitacoesFiltradas = solicitacoes
               )}
             </div>
           </div>
-
           <div className="filter-badges-row">
             <span className="filter-label">
               <i className="fas fa-circle-dot"></i> Status:
@@ -267,11 +198,13 @@ const solicitacoesFiltradas = solicitacoes
 
         <div className="normas-lista">
           {solicitacoesFiltradas.map((s) => (
-            <div key={s.id} className="norma-card solicitacao-card"
+            <div
+              key={s.id}
+              className="norma-card solicitacao-card"
               onClick={() => abrirModalAnalise(s)}
-              style={{ cursor: "pointer" }}>
+              style={{ cursor: "pointer" }}
+            >
               <div className="norma-card-body solicitacao-body">
-                
                 <div className="badges-container" style={{ flex: 1 }}>
                   <span className={STATUS_ESTILO[s.status]}>
                     <i className={`fas ${STATUS_ICONE[s.status]}`}></i> {s.status}
@@ -285,13 +218,12 @@ const solicitacoesFiltradas = solicitacoes
                     {s.titulo || "Sem título"}
                   </span>
                 </div>
-
                 <div className="card-info-lateral">
                   <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--c-text-muted)" }}>
                     <i className="fas fa-user" style={{ marginRight: 4 }}></i>{s.solicitante}
                   </span>
                   {s.avaliador && (
-                    <span style={{ fontSize: "0.68rem", color: "var(--c-text-muted)", marginTop: 2 }} title={`Avaliado por ${s.avaliador}`}>
+                    <span style={{ fontSize: "0.68rem", color: "var(--c-text-muted)", marginTop: 2 }}>
                       <i className="fas fa-user-shield" style={{ marginRight: 4 }}></i>{s.avaliador}
                     </span>
                   )}
@@ -305,7 +237,6 @@ const solicitacoesFiltradas = solicitacoes
               </div>
             </div>
           ))}
-
           {solicitacoesFiltradas.length === 0 && (
             <div className="empty-state">
               <i className="fas fa-clipboard"></i>
@@ -314,65 +245,35 @@ const solicitacoesFiltradas = solicitacoes
           )}
         </div>
 
+        {/* Modal Nova Solicitação */}
         {showModal && (
           <div className="modal-overlay" onClick={() => setShowModal(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>
-                  <i className="fas fa-file-circle-plus"></i> Nova Solicitação
-                </h2>
+                <h2><i className="fas fa-file-circle-plus"></i> Nova Solicitação</h2>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)}>
                   <i className="fas fa-xmark"></i>
                 </button>
               </div>
-
               <p style={{ fontSize: "0.9rem", color: "var(--c-text-muted)", marginBottom: 20 }}>
-                Informe os dados da norma que deseja solicitar. Os campos não são obrigatórios.
+                Informe os dados da norma que deseja solicitar.
               </p>
-
               <div className="form-group">
-                <label className="form-label">
-                  <i className="fas fa-hashtag"></i> Código
-                </label>
-                <input
-                  className="form-input"
-                  value={codigo}
-                  onChange={(e) => setCodigo(e.target.value)}
-                  placeholder="Ex: AS9100, MIL-STD-810..."
-                />
+                <label className="form-label"><i className="fas fa-hashtag"></i> Código</label>
+                <input className="form-input" value={codigo} onChange={(e) => setCodigo(e.target.value)} placeholder="Ex: AS9100, MIL-STD-810..." />
               </div>
-
               <div className="form-group">
-                <label className="form-label">
-                  <i className="fas fa-heading"></i> Título
-                </label>
-                <input
-                  className="form-input"
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  placeholder="Nome ou descrição da norma..."
-                />
+                <label className="form-label"><i className="fas fa-heading"></i> Título</label>
+                <input className="form-input" value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Nome ou descrição da norma..." />
               </div>
-
               <div className="form-group">
-                <label className="form-label">
-                  <i className="fas fa-comment-alt"></i> Motivo da Solicitação
-                </label>
-                <textarea
-                  className="form-input"
-                  value={motivo}
-                  onChange={(e) => setMotivo(e.target.value)}
-                  placeholder="Descreva o motivo da solicitação..."
-                  rows={3}
-                />
+                <label className="form-label"><i className="fas fa-comment-alt"></i> Motivo da Solicitação</label>
+                <textarea className="form-input" value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Descreva o motivo da solicitação..." rows={3} />
               </div>
-
               <div className="modal-footer">
                 <div></div>
                 <div className="modal-footer-actions">
-                  <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)}>
-                    Cancelar
-                  </button>
+                  <button type="button" className="btn btn-ghost" onClick={() => setShowModal(false)}>Cancelar</button>
                   <button type="button" className="btn btn-primary" onClick={handleSolicitar}>
                     <i className="fas fa-paper-plane"></i> Enviar Solicitação
                   </button>
@@ -382,6 +283,7 @@ const solicitacoesFiltradas = solicitacoes
           </div>
         )}
 
+        {/* Modal Análise */}
         {solicitacaoAnalise && (
           <div className="modal-overlay" onClick={() => setSolicitacaoAnalise(null)}>
             <div className="modal modal-large modal-analisar" onClick={(e) => e.stopPropagation()}>
@@ -391,7 +293,6 @@ const solicitacoesFiltradas = solicitacoes
                   <i className="fas fa-xmark"></i>
                 </button>
               </div>
-
               <div className="view-details">
                 <div className="view-grid">
                   <div className="view-item">
@@ -415,19 +316,16 @@ const solicitacoesFiltradas = solicitacoes
                     </div>
                   )}
                 </div>
-
                 <div className="view-item">
                   <span className="view-label"><i className="fas fa-heading"></i> Título</span>
                   <span className="view-value">{solicitacaoAnalise.titulo || "—"}</span>
                 </div>
-
                 {solicitacaoAnalise.motivo && (
                   <div className="view-item">
                     <span className="view-label"><i className="fas fa-comment-alt"></i> Motivo da Solicitação</span>
                     <span className="view-value">{solicitacaoAnalise.motivo}</span>
                   </div>
                 )}
-
                 <div className="view-item">
                   <span className="view-label"><i className="fas fa-circle-dot"></i> Status Atual</span>
                   <div className="view-badges">
@@ -441,28 +339,16 @@ const solicitacoesFiltradas = solicitacoes
                   <>
                     <div className="view-item">
                       <label className={`checkbox-card ${confirmacaoInsercao ? "checked theme-cat-geral" : ""}`}>
-                        <input
-                          type="checkbox"
-                          className="custom-checkbox"
-                          checked={confirmacaoInsercao}
-                          onChange={(e) => setConfirmacaoInsercao(e.target.checked)}
-                        />
+                        <input type="checkbox" className="custom-checkbox" checked={confirmacaoInsercao} onChange={(e) => setConfirmacaoInsercao(e.target.checked)} />
                         <div className="checkbox-content">
                           <span className="checkbox-title">Confirmar inserção na biblioteca</span>
                           <span className="checkbox-desc">Confirmo que a norma foi inserida manualmente na Biblioteca de Normas.</span>
                         </div>
                       </label>
                     </div>
-
                     <div className="form-group">
                       <label className="form-label"><i className="fas fa-times-circle"></i> Motivo da Recusa</label>
-                      <textarea
-                        className="form-input"
-                        value={motivoRecusa}
-                        onChange={(e) => setMotivoRecusa(e.target.value)}
-                        placeholder="Obrigatório para indeferir..."
-                        rows={3}
-                      />
+                      <textarea className="form-input" value={motivoRecusa} onChange={(e) => setMotivoRecusa(e.target.value)} placeholder="Obrigatório para indeferir..." rows={3} />
                     </div>
                   </>
                 )}
@@ -476,79 +362,39 @@ const solicitacoesFiltradas = solicitacoes
               </div>
 
               <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setSolicitacaoAnalise(null)}>
-                  Fechar
-                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setSolicitacaoAnalise(null)}>Fechar</button>
                 {isChecker && solicitacaoAnalise.status !== "Aceita" && solicitacaoAnalise.status !== "Indeferida" && (
                   <div className="modal-footer-actions" style={{ display: "flex", gap: "10px" }}>
                     {solicitacaoAnalise.status === "Em análise" && (
-                      <button
-                        type="button"
-                        className="btn btn-warning"
-                        style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-                        onClick={async () => {
-                          const atualizada = await atualizarStatus(solicitacaoAnalise.id, "Aguardando análise");
-                          if (atualizada) {
-                            adicionarToast("sucesso", "Solicitação retornada para Aguardando análise.");
-                          }
-                        }}
-                      >
+                      <button type="button" className="btn btn-warning" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        onClick={() => { atualizarStatus(solicitacaoAnalise.id, "Aguardando análise"); adicionarToast("sucesso", "Solicitação retornada para Aguardando análise."); }}>
                         <i className="fas fa-clock"></i> Voltar para Fila
                       </button>
                     )}
                     {solicitacaoAnalise.status === "Aguardando análise" && (
-                      <button
-                        type="button"
-                        className="btn btn-warning"
-                        style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
-                        onClick={async () => {
-                          const atualizada = await atualizarStatus(solicitacaoAnalise.id, "Em análise");
-                          if (atualizada) {
-                            adicionarToast("sucesso", "Solicitação alterada para Em análise.");
-                          }
-                        }}
-                      >
+                      <button type="button" className="btn btn-warning" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        onClick={() => { atualizarStatus(solicitacaoAnalise.id, "Em análise"); adicionarToast("sucesso", "Solicitação alterada para Em análise."); }}>
                         <i className="fas fa-magnifying-glass"></i> Analisar
                       </button>
                     )}
-
-                    <button
-                      type="button"
-                      className="btn btn-danger-solid"
+                    <button type="button" className="btn btn-danger-solid"
                       onClick={() => {
-                        if (confirmacaoInsercao) {
-                          adicionarToast("erro", "Desmarque a confirmação de inserção antes de indeferir.");
-                          return;
-                        }
-                        if (!motivoRecusa.trim()) {
-                          adicionarToast("erro", "Preencha o motivo da recusa antes de indeferir.");
-                          return;
-                        }
+                        if (confirmacaoInsercao) { adicionarToast("erro", "Desmarque a confirmação de inserção antes de indeferir."); return; }
+                        if (!motivoRecusa.trim()) { adicionarToast("erro", "Preencha o motivo da recusa antes de indeferir."); return; }
                         atualizarStatus(solicitacaoAnalise.id, "Indeferida", { motivoRecusa: motivoRecusa.trim() });
                         setSolicitacaoAnalise(null);
                         adicionarToast("erro", "Solicitação indeferida.");
-                      }}
-                    >
+                      }}>
                       <i className="fas fa-times-circle"></i> Indeferir
                     </button>
-                    
-                    <button
-                      type="button"
-                      className="btn btn-primary"
+                    <button type="button" className="btn btn-primary"
                       onClick={() => {
-                        if (motivoRecusa.trim()) {
-                            adicionarToast("erro", "Limpe o motivo da recusa antes de aceitar.");
-                            return;
-                          }
-                          if (!confirmacaoInsercao) {
-                            adicionarToast("erro", "Marque a confirmação de inserção antes de aceitar.");
-                            return;
-                          }
-                          atualizarStatus(solicitacaoAnalise.id, "Aceita");
-                          setSolicitacaoAnalise(null);
-                          adicionarToast("sucesso", "Solicitação aceita.");
-                      }}
-                    >
+                        if (motivoRecusa.trim()) { adicionarToast("erro", "Limpe o motivo da recusa antes de aceitar."); return; }
+                        if (!confirmacaoInsercao) { adicionarToast("erro", "Marque a confirmação de inserção antes de aceitar."); return; }
+                        atualizarStatus(solicitacaoAnalise.id, "Aceita");
+                        setSolicitacaoAnalise(null);
+                        adicionarToast("sucesso", "Solicitação aceita.");
+                      }}>
                       <i className="fas fa-check-circle"></i> Aceitar
                     </button>
                   </div>

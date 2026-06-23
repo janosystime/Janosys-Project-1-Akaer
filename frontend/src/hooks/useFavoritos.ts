@@ -1,77 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+// frontend/src/hooks/useFavoritos.ts
+import { useCallback, useState } from "react";
 import { obterUsuarioAtual } from "../auth/session";
-import { API_BASE_URL } from "../config/api";
-
-const API = API_BASE_URL;
+import { favoritosDb, usuariosDb } from "../utils/storage";
 
 export default function useFavoritos() {
-  const [usuarioId, setUsuarioId] = useState<number | null>(null);
-  const [favoritos, setFavoritos] = useState<Set<string>>(new Set());
+  const sessao = obterUsuarioAtual();
+  const encontrado = sessao ? usuariosDb.findByLogin(sessao.email) : null;
+
+  const [usuarioId] = useState<number | null>(encontrado?.id ?? null);
+  const [favoritos, setFavoritos] = useState<Set<string>>(
+    () => new Set(encontrado ? favoritosDb.list(encontrado.id) : [])
+  );
   const [soFavoritos, setSoFavoritos] = useState(false);
-
-  useEffect(() => {
-    const sessao = obterUsuarioAtual();
-    if (!sessao) return;
-    (async () => {
-      try {
-        const resp = await fetch(`${API}/usuarios`);
-        if (!resp.ok) return;
-        const usuarios = await resp.json();
-        const encontrado = usuarios.find((u: { id: number; nome: string }) => u.nome === sessao.nome);
-        if (encontrado) setUsuarioId(encontrado.id);
-      } catch (err) {
-        console.error("Erro ao resolver usuário para favoritos:", err);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    if (usuarioId == null) return;
-    (async () => {
-      try {
-        const resp = await fetch(`${API}/favoritos?usuarioId=${usuarioId}`);
-        if (!resp.ok) return;
-        const lista: string[] = await resp.json();
-        setFavoritos(new Set(lista));
-      } catch (err) {
-        console.error("Erro ao carregar favoritos:", err);
-      }
-    })();
-  }, [usuarioId]);
 
   const ehFavorito = useCallback((normaId: string) => favoritos.has(normaId), [favoritos]);
 
   const alternarFavorito = useCallback(
-    async (normaId: string) => {
+    (normaId: string) => {
       if (usuarioId == null) return;
       const jaEra = favoritos.has(normaId);
-
-      setFavoritos((prev) => {
-        const novo = new Set(prev);
-        if (jaEra) novo.delete(normaId);
-        else novo.add(normaId);
-        return novo;
-      });
-
-      try {
-        if (jaEra) {
-          await fetch(`${API}/favoritos/${usuarioId}/${encodeURIComponent(normaId)}`, { method: "DELETE" });
-        } else {
-          await fetch(`${API}/favoritos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ usuarioId, normaId }),
-          });
-        }
-      } catch (err) {
-        console.error("Erro ao alternar favorito:", err);
-        setFavoritos((prev) => {
-          const novo = new Set(prev);
-          if (jaEra) novo.add(normaId);
-          else novo.delete(normaId);
-          return novo;
-        });
+      if (jaEra) {
+        favoritosDb.remove(usuarioId, normaId);
+      } else {
+        favoritosDb.add(usuarioId, normaId);
       }
+      setFavoritos(new Set(favoritosDb.list(usuarioId)));
     },
     [usuarioId, favoritos],
   );

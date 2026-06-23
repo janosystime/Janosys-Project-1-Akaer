@@ -1,12 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { initStorage } from "./utils/storage";
 
 import './styles/global.css'
 import './styles/sidebar.css'
 import './styles/login.css'
 
 import App from './App'
+
+initStorage();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

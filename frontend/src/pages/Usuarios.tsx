@@ -1,21 +1,11 @@
-
-import { useState, useCallback, useEffect } from "react";
-import { API_BASE_URL } from "../config/api";
+// frontend/src/pages/Usuarios.tsx
+import { useState, useCallback } from "react";
 import "../styles/Normas.css";
 import "../styles/Usuarios.css";
+import { usuariosDb, type Usuario } from "../utils/storage";
 
 export type PerfilUsuario = "administrador" | "usuario" | "checker";
 
-export interface Usuario {
-  id: number;
-  nome: string;
-  login: string;
-  senha: string;
-  perfil: PerfilUsuario;
-  telefone: string;
-  departamento: string;
-  dataCriacao: string;
-}
 interface ToastMsg {
   id: number;
   tipo: "sucesso" | "erro";
@@ -40,14 +30,14 @@ function ToastContainer({ toasts, onRemover }: { toasts: ToastMsg[]; onRemover: 
 
 const PERFIL_ESTILO: Record<PerfilUsuario, string> = {
   administrador: "badge theme-cat-instalação",
-  usuario:    "badge theme-cat-conjunto",
-  checker:      "badge theme-subcategoria",
+  usuario: "badge theme-cat-conjunto",
+  checker: "badge theme-subcategoria",
 };
 
 const PERFIL_ICONE: Record<PerfilUsuario, string> = {
   administrador: "fa-shield-halved",
-  usuario:    "fa-helmet-safety",
-  checker:      "fa-user",
+  usuario: "fa-helmet-safety",
+  checker: "fa-user",
 };
 
 const PERFIL_SIGLA: Record<PerfilUsuario, string> = {
@@ -72,7 +62,7 @@ const FORM_VAZIO = {
 };
 
 export default function Usuarios() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>(() => usuariosDb.list());
   const [termoPesquisa, setTermoPesquisa] = useState("");
   const [toasts, setToasts] = useState<ToastMsg[]>([]);
   const [filtroPerfil, setFiltroPerfil] = useState("Todos");
@@ -80,13 +70,17 @@ export default function Usuarios() {
   const [ordemAsc, setOrdemAsc] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<Usuario | null>(null);
-
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<Usuario | null>(null);
   const [form, setForm] = useState(FORM_VAZIO);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
-
   const [usuarioExcluindo, setUsuarioExcluindo] = useState<Usuario | null>(null);
+
+  useState(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  });
 
   const adicionarToast = useCallback((tipo: ToastMsg["tipo"], mensagem: string) => {
     const id = Date.now();
@@ -96,46 +90,21 @@ export default function Usuarios() {
 
   const removerToast = (id: number) => setToasts((prev) => prev.filter((t) => t.id !== id));
 
-  useEffect(() => {
-    async function fetchUsuarios() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/usuarios`);
-        if (response.ok) {
-          const data = await response.json();
-          setUsuarios(data);
-        } else {
-          adicionarToast("erro", "Erro ao buscar usuários no servidor.");
-        }
-      } catch (err) {
-        adicionarToast("erro", "Erro ao conectar com a API de usuários.");
-      }
-    }
-    fetchUsuarios();
-  }, [adicionarToast]);
+  const departamentos = ["Todos", ...Array.from(new Set(usuarios.map((u) => u.departamento).filter(Boolean)))];
 
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
-  }, []);
-
-  const departamentos = ["Todos", ...Array.from(new Set(usuarios.map(u => u.departamento).filter(Boolean)))];
-
-  const usuariosFiltrados = usuarios.filter((u) => {
-    const termo = termoPesquisa.toLowerCase();
-    const matchBusca =
-      u.nome.toLowerCase().includes(termo) ||
-      u.login.toLowerCase().includes(termo) ||
-      u.departamento.toLowerCase().includes(termo) ||
-      u.perfil.toLowerCase().includes(termo);
-    const matchPerfil = filtroPerfil === "Todos" || u.perfil === filtroPerfil;
-    const matchDepartamento = filtroDepartamento === "Todos" || u.departamento === filtroDepartamento;
-    return matchBusca && matchPerfil && matchDepartamento;
-  }).sort((a, b) => ordemAsc
-  ? a.nome.localeCompare(b.nome)
-  : b.nome.localeCompare(a.nome)
-  );
-  
+  const usuariosFiltrados = usuarios
+    .filter((u) => {
+      const termo = termoPesquisa.toLowerCase();
+      const matchBusca =
+        u.nome.toLowerCase().includes(termo) ||
+        u.login.toLowerCase().includes(termo) ||
+        (u.departamento ?? "").toLowerCase().includes(termo) ||
+        u.perfil.toLowerCase().includes(termo);
+      const matchPerfil = filtroPerfil === "Todos" || u.perfil === filtroPerfil;
+      const matchDep = filtroDepartamento === "Todos" || u.departamento === filtroDepartamento;
+      return matchBusca && matchPerfil && matchDep;
+    })
+    .sort((a, b) => ordemAsc ? a.nome.localeCompare(b.nome) : b.nome.localeCompare(a.nome));
 
   function abrirModalNovo() {
     setUsuarioEditando(null);
@@ -146,101 +115,51 @@ export default function Usuarios() {
 
   function abrirModalEdicao(u: Usuario) {
     setUsuarioEditando(u);
-    setForm({
-      nome: u.nome,
-      login: u.login,
-      senha: "", 
-      perfil: u.perfil,
-      telefone: u.telefone,
-      departamento: u.departamento,
-    });
+    setForm({ nome: u.nome, login: u.login, senha: "", perfil: u.perfil, telefone: u.telefone ?? "", departamento: u.departamento ?? "" });
     setSenhaVisivel(false);
     setModalAberto(true);
   }
 
-  async function handleSalvar() {
+  function handleSalvar() {
     if (!form.nome.trim() || !form.login.trim()) {
-      adicionarToast("erro", "Nome e login são obrigatórios.");
-      return;
+      adicionarToast("erro", "Nome e login são obrigatórios."); return;
     }
-
     if (!usuarioEditando && !form.senha.trim()) {
-      adicionarToast("erro", "A senha é obrigatória para novos usuários.");
-      return;
+      adicionarToast("erro", "A senha é obrigatória para novos usuários."); return;
     }
 
-    try {
-      if (usuarioEditando) {
-        const response = await fetch(`${API_BASE_URL}/usuarios/${usuarioEditando.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(form)
-        });
-
-        if (response.ok) {
-          const atualizado = await response.json();
-          setUsuarios((prev) =>
-            prev.map((u) => (u.id === usuarioEditando.id ? atualizado : u))
-          );
-          adicionarToast("sucesso", "Usuário atualizado com sucesso.");
-          setModalAberto(false);
-        } else {
-          const errorData = await response.json();
-          adicionarToast("erro", errorData.error || "Erro ao atualizar usuário.");
-        }
-      } else {
-        const response = await fetch(`${API_BASE_URL}/usuarios`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(form)
-        });
-
-        if (response.ok) {
-          const novo = await response.json();
-          setUsuarios((prev) => [novo, ...prev]);
-          adicionarToast("sucesso", "Usuário criado com sucesso.");
-          setModalAberto(false);
-        } else {
-          const errorData = await response.json();
-          adicionarToast("erro", errorData.error || "Erro ao criar usuário.");
-        }
-      }
-    } catch (err) {
-      adicionarToast("erro", "Erro ao conectar com o servidor.");
+    if (usuarioEditando) {
+      const atualizado: Usuario = {
+        ...usuarioEditando,
+        nome: form.nome,
+        login: form.login,
+        senha: form.senha.trim() ? form.senha : usuarioEditando.senha,
+        perfil: form.perfil,
+        telefone: form.telefone,
+        departamento: form.departamento,
+      };
+      usuariosDb.update(atualizado);
+      adicionarToast("sucesso", "Usuário atualizado com sucesso.");
+    } else {
+      usuariosDb.create(form);
+      adicionarToast("sucesso", "Usuário criado com sucesso.");
     }
+    setUsuarios(usuariosDb.list());
+    setModalAberto(false);
   }
 
-  async function handleExcluir() {
+  function handleExcluir() {
     if (!usuarioExcluindo) return;
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/usuarios/${usuarioExcluindo.id}`, {
-        method: "DELETE"
-      });
-
-      if (response.ok) {
-        setUsuarios((prev) => prev.filter((u) => u.id !== usuarioExcluindo.id));
-        adicionarToast("sucesso", "Usuário removido.");
-        setUsuarioExcluindo(null);
-      } else {
-        const errorData = await response.json();
-        adicionarToast("erro", errorData.error || "Erro ao remover usuário.");
-      }
-    } catch (err) {
-      adicionarToast("erro", "Erro ao conectar com o servidor.");
-    }
+    usuariosDb.remove(usuarioExcluindo.id);
+    setUsuarios(usuariosDb.list());
+    adicionarToast("sucesso", "Usuário removido.");
+    setUsuarioExcluindo(null);
   }
 
   return (
     <div className="app-container">
       <ToastContainer toasts={toasts} onRemover={removerToast} />
-
       <main className="page">
-
         <div className="page-header">
           <h1 className="page-title">
             <i className="fas fa-users"></i> Gerenciamento de Usuários
@@ -254,13 +173,9 @@ export default function Usuarios() {
           <div className="filtros-header">
             <div className="form-group search-group">
               <i className="fas fa-magnifying-glass search-icon"></i>
-              <input
-                type="text"
-                className="form-input search-input"
+              <input type="text" className="form-input search-input"
                 placeholder="Pesquisar por nome, login, perfil ou departamento..."
-                value={termoPesquisa}
-                onChange={(e) => setTermoPesquisa(e.target.value)}
-              />
+                value={termoPesquisa} onChange={(e) => setTermoPesquisa(e.target.value)} />
               {termoPesquisa && (
                 <button className="search-clear" onClick={() => setTermoPesquisa("")}>
                   <i className="fas fa-xmark"></i>
@@ -271,24 +186,15 @@ export default function Usuarios() {
           <div className="filter-badges-row">
             <span className="filter-label"><i className="fas fa-shield-halved"></i> Perfil:</span>
             {["Todos", "administrador", "usuario", "checker"].map((p) => (
-              <button
-                key={p}
-                className={`filter-badge ${filtroPerfil === p ? "active theme-all" : ""}`}
-                onClick={() => setFiltroPerfil(p)}
-              >
+              <button key={p} className={`filter-badge ${filtroPerfil === p ? "active theme-all" : ""}`} onClick={() => setFiltroPerfil(p)}>
                 {p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
             ))}
           </div>
-
           <div className="filter-badges-row">
             <span className="filter-label"><i className="fas fa-building"></i> Departamento:</span>
             {departamentos.map((d) => (
-              <button
-                key={d}
-                className={`filter-badge ${filtroDepartamento === d ? "active theme-all" : ""}`}
-                onClick={() => setFiltroDepartamento(d)}
-              >
+              <button key={d} className={`filter-badge ${filtroDepartamento === d ? "active theme-all" : ""}`} onClick={() => setFiltroDepartamento(d)}>
                 {d}
               </button>
             ))}
@@ -312,8 +218,7 @@ export default function Usuarios() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div className="usuario-card-nome">{u.nome}</div>
                   <span className={PERFIL_ESTILO[u.perfil]} style={{ fontSize: "0.72rem" }}>
-                    <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>
-                    {PERFIL_LABEL[u.perfil]}
+                    <i className={`fas ${PERFIL_ICONE[u.perfil]} badge-icon`}></i>{PERFIL_LABEL[u.perfil]}
                   </span>
                 </div>
                 <div className="usuario-card-body">
@@ -327,10 +232,7 @@ export default function Usuarios() {
               </div>
             ))}
             {usuariosFiltrados.length === 0 && (
-              <div className="empty-state compact">
-                <i className="fas fa-users-slash"></i>
-                <p>Nenhum usuário encontrado.</p>
-              </div>
+              <div className="empty-state compact"><i className="fas fa-users-slash"></i><p>Nenhum usuário encontrado.</p></div>
             )}
           </div>
         ) : (
@@ -339,7 +241,7 @@ export default function Usuarios() {
               <thead>
                 <tr>
                   <th>
-                    <button className="btn-sort" onClick={() => setOrdemAsc((v) => !v)} title="Ordenar por nome">
+                    <button className="btn-sort" onClick={() => setOrdemAsc((v) => !v)}>
                       <i className="fas fa-user"></i> Nome
                       <i className="fas fa-right-left" style={{ marginLeft: 6, fontSize: "0.8rem", transform: "rotate(90deg)" }}></i>
                     </button>
@@ -382,20 +284,14 @@ export default function Usuarios() {
                   </tr>
                 ))}
                 {usuariosFiltrados.length === 0 && (
-                  <tr>
-                    <td colSpan={6}>
-                      <div className="empty-state compact">
-                        <i className="fas fa-users-slash"></i>
-                        <p>Nenhum usuário encontrado.</p>
-                      </div>
-                    </td>
-                  </tr>
+                  <tr><td colSpan={6}><div className="empty-state compact"><i className="fas fa-users-slash"></i><p>Nenhum usuário encontrado.</p></div></td></tr>
                 )}
               </tbody>
             </table>
           </div>
         )}
 
+        {/* Modal Criar/Editar */}
         {modalAberto && (
           <div className="modal-overlay" onClick={() => setModalAberto(false)}>
             <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
@@ -408,107 +304,59 @@ export default function Usuarios() {
                   <i className="fas fa-xmark"></i>
                 </button>
               </div>
-
               <div className="view-details">
                 {usuarioEditando && (
                   <div className="view-item">
                     <span className="view-label"><i className="fas fa-calendar"></i> Data de Cadastro</span>
-                    <span className="view-value">
-                      {new Date(usuarioEditando.dataCriacao + "T00:00:00").toLocaleDateString("pt-BR")}
-                    </span>
+                    <span className="view-value">{new Date(usuarioEditando.dataCriacao).toLocaleDateString("pt-BR")}</span>
                   </div>
                 )}
-
                 <div className="view-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
                   <div className="form-group">
                     <label className="form-label"><i className="fas fa-user"></i> Nome completo *</label>
-                    <input
-                      className="form-input"
-                      value={form.nome}
-                      onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                      placeholder="Nome do usuário"
-                    />
+                    <input className="form-input" value={form.nome} onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))} placeholder="Nome do usuário" />
                   </div>
-
                   <div className="form-group">
                     <label className="form-label"><i className="fas fa-at"></i> Login *</label>
-                    <input
-                      className="form-input"
-                      value={form.login}
-                      onChange={(e) => setForm((f) => ({ ...f, login: e.target.value }))}
-                      placeholder="Login de acesso"
-                    />
+                    <input className="form-input" value={form.login} onChange={(e) => setForm((f) => ({ ...f, login: e.target.value }))} placeholder="Login de acesso" />
                   </div>
                 </div>
-
                 <div className="view-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
                   <div className="form-group">
                     <label className="form-label"><i className="fas fa-lock"></i> Senha *</label>
                     <div style={{ position: "relative" }}>
-                      <input
-                        className="form-input"
-                        type={senhaVisivel ? "text" : "password"}
-                        value={form.senha}
+                      <input className="form-input" type={senhaVisivel ? "text" : "password"} value={form.senha}
                         onChange={(e) => setForm((f) => ({ ...f, senha: e.target.value }))}
-                        placeholder="Senha de acesso"
-                        style={{ paddingRight: "2.5rem" }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setSenhaVisivel((v) => !v)}
-                        style={{
-                          position: "absolute", right: "0.75rem", top: "50%",
-                          transform: "translateY(-50%)", background: "none",
-                          border: "none", cursor: "pointer", color: "var(--c-text-muted)",
-                        }}
-                        title={senhaVisivel ? "Ocultar senha" : "Mostrar senha"}
-                      >
+                        placeholder={usuarioEditando ? "Deixe em branco para manter" : "Senha de acesso"}
+                        style={{ paddingRight: "2.5rem" }} />
+                      <button type="button" onClick={() => setSenhaVisivel((v) => !v)}
+                        style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--c-text-muted)" }}>
                         <i className={`fas ${senhaVisivel ? "fa-eye-slash" : "fa-eye"}`}></i>
                       </button>
                     </div>
                   </div>
-
                   <div className="form-group">
                     <label className="form-label"><i className="fas fa-shield-halved"></i> Perfil *</label>
-                    <select
-                      className="form-input"
-                      value={form.perfil}
-                      onChange={(e) => setForm((f) => ({ ...f, perfil: e.target.value as PerfilUsuario }))}
-                    >
+                    <select className="form-input" value={form.perfil} onChange={(e) => setForm((f) => ({ ...f, perfil: e.target.value as PerfilUsuario }))}>
                       <option value="administrador">Administrador</option>
                       <option value="usuario">Usuario</option>
                       <option value="checker">Checker</option>
                     </select>
                   </div>
                 </div>
-
                 <div className="view-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
                   <div className="form-group">
                     <label className="form-label"><i className="fas fa-building"></i> Departamento</label>
-                    <input
-                      className="form-input"
-                      value={form.departamento}
-                      onChange={(e) => setForm((f) => ({ ...f, departamento: e.target.value }))}
-                      placeholder="Ex: Engenharia, TI, Operações..."
-                    />
+                    <input className="form-input" value={form.departamento} onChange={(e) => setForm((f) => ({ ...f, departamento: e.target.value }))} placeholder="Ex: Engenharia, TI..." />
                   </div>
-
                   <div className="form-group">
                     <label className="form-label"><i className="fas fa-phone"></i> Telefone</label>
-                    <input
-                      className="form-input"
-                      value={form.telefone}
-                      onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))}
-                      placeholder="(12) 99999-0000"
-                    />
+                    <input className="form-input" value={form.telefone} onChange={(e) => setForm((f) => ({ ...f, telefone: e.target.value }))} placeholder="(12) 99999-0000" />
                   </div>
                 </div>
               </div>
-
               <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setModalAberto(false)}>
-                  Cancelar
-                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setModalAberto(false)}>Cancelar</button>
                 <button type="button" className="btn btn-primary" onClick={handleSalvar}>
                   <i className={`fas ${usuarioEditando ? "fa-floppy-disk" : "fa-user-plus"}`}></i>{" "}
                   {usuarioEditando ? "Salvar Alterações" : "Criar Usuário"}
@@ -518,6 +366,7 @@ export default function Usuarios() {
           </div>
         )}
 
+        {/* Modal Exclusão */}
         {usuarioExcluindo && (
           <div className="modal-overlay" onClick={() => setUsuarioExcluindo(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -527,7 +376,6 @@ export default function Usuarios() {
                   <i className="fas fa-xmark"></i>
                 </button>
               </div>
-
               <div style={{ padding: "1rem 0" }}>
                 <p style={{ color: "var(--c-text-2)", marginBottom: "1rem" }}>
                   Tem certeza que deseja excluir o usuário abaixo? Esta ação não pode ser desfeita.
@@ -544,7 +392,7 @@ export default function Usuarios() {
                   <div className="view-item">
                     <span className="view-label">Perfil</span>
                     <span className="view-value">
-                      <span className={PERFIL_ESTILO[usuarioExcluindo.perfil]} style={{ fontSize: "0.6rem"}}>
+                      <span className={PERFIL_ESTILO[usuarioExcluindo.perfil]} style={{ fontSize: "0.6rem" }}>
                         <i className={`fas ${PERFIL_ICONE[usuarioExcluindo.perfil]} badge-icon`}></i>
                         {usuarioExcluindo.perfil.charAt(0).toUpperCase() + usuarioExcluindo.perfil.slice(1)}
                       </span>
@@ -552,11 +400,8 @@ export default function Usuarios() {
                   </div>
                 </div>
               </div>
-
               <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setUsuarioExcluindo(null)}>
-                  Cancelar
-                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setUsuarioExcluindo(null)}>Cancelar</button>
                 <button type="button" className="btn btn-danger-solid" onClick={handleExcluir}>
                   <i className="fas fa-trash"></i> Confirmar Exclusão
                 </button>
@@ -565,15 +410,14 @@ export default function Usuarios() {
           </div>
         )}
 
+        {/* Modal Detalhes Mobile */}
         {usuarioSelecionado && (
           <div className="modal-overlay" onClick={() => setUsuarioSelecionado(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header" style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0, flex: 1 }}>
                   <i className="fas fa-user" style={{ flexShrink: 0 }}></i>
-                  <span style={{ fontWeight: 700, fontSize: "0.9rem"}}>
-                    {usuarioSelecionado.nome}
-                  </span>
+                  <span style={{ fontWeight: 700, fontSize: "0.9rem" }}>{usuarioSelecionado.nome}</span>
                 </div>
                 <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexShrink: 0 }}>
                   <button className="btn btn-warning btn-icon" onClick={() => { abrirModalEdicao(usuarioSelecionado); setUsuarioSelecionado(null); }} title="Editar">
@@ -612,14 +456,11 @@ export default function Usuarios() {
               </div>
               <div className="modal-footer">
                 <div></div>
-                <button type="button" className="btn btn-ghost" onClick={() => setUsuarioSelecionado(null)}>
-                  Fechar
-                </button>
+                <button type="button" className="btn btn-ghost" onClick={() => setUsuarioSelecionado(null)}>Fechar</button>
               </div>
             </div>
           </div>
         )}
-
       </main>
     </div>
   );
