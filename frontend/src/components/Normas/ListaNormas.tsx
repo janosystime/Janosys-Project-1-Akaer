@@ -8,7 +8,7 @@ type PropsListaNormas = {
   filtrosAtivos: boolean;
   onLimparFiltros: () => void;
   onEditar: (norma: Norma) => void;
-  onExcluir: (id: string) => void;
+  onExcluir: (url: string) => void;
   onVerDetalhes: (norma: Norma) => void;
   onVerPdf: (url: string, nome: string) => void;
   onVerImagens: (imagens: string[]) => void;

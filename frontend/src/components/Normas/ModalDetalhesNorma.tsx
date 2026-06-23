@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { API_BASE_URL } from "../../config/api";
 import type { Peca } from "../../utils/pecas";
 import type { Norma } from "./NormasViewModel";
 import { CAT_ICONES, ORG_ORIGENS } from "./NormasViewModel";
@@ -41,12 +40,21 @@ export default function ModalDetalhesNorma({
   useEffect(() => {
     async function fetchVersoes() {
       setCarregandoVersoes(true);
+
       try {
-        const response = await fetch(`${API_BASE_URL}/normas/${norma.id}/versoes`);
-        if (response.ok) {
-          const data = await response.json();
-          setVersoes(data);
-        }
+        const response = await fetch("/data/normas.json");
+        const data = await response.json();
+
+        console.log("DATA COMPLETA:", data);
+        console.log("NORMA ID:", norma.id);
+
+        const normaCompleta = data.find(
+          (n: any) => n.id === norma.id
+        );
+
+        console.log("NORMA ENCONTRADA:", normaCompleta);
+
+        setVersoes(normaCompleta?.versoes || []);
       } catch (err) {
         console.error("Erro ao carregar versões:", err);
       } finally {
@@ -185,13 +193,13 @@ export default function ModalDetalhesNorma({
             <div className="view-item"><span className="view-label"><i className="fas fa-link"></i> Referências</span><ul className="view-list">{safeParseArray(norma.referencias).map((ref, i) => (<li key={i}><i className="fas fa-caret-right view-list-icon"></i> {ref}</li>))}</ul></div>
           )}
 
-          {(norma.temPdf || (safeParseArray(norma.imagens).length > 0)) && (
+          {(!!norma.urlPdf || (safeParseArray(norma.imagens).length > 0)) && (
             <>
               <hr className="divider" />
               <div className="view-item">
                 <span className="view-label"><i className="fas fa-paperclip"></i> Anexos</span>
-                {norma.temPdf && (
-                  <button type="button" className="attachment-pdf attachment-link btn-pdf-view" onClick={() => onViewPdf(norma.id, norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`)}>
+                {norma.urlPdf && (
+                  <button type="button" className="attachment-pdf attachment-link btn-pdf-view" onClick={() => onViewPdf(norma.urlPdf!, norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`)}>
                     <i className="fas fa-file-pdf icon-pdf-red"></i><span className="attachment-pdf-name">{norma.nomePdf || `${norma.id.replace(" ", "_")}.pdf`}</span>
                   </button>
                 )}
@@ -213,7 +221,7 @@ export default function ModalDetalhesNorma({
           {safeParseArray(norma.notas).length === 0 &&
             safeParseArray(norma.referencias).length === 0 &&
             safeParseArray(norma.palavrasChave).length === 0 &&
-            !norma.temPdf && safeParseArray(norma.imagens).length === 0 && (
+            !norma.urlPdf && safeParseArray(norma.imagens).length === 0 && (
               <div className="empty-state compact">
                 <i className="fas fa-folder-open"></i>
                 <p>Nenhuma nota ou anexo.</p>

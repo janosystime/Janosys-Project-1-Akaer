@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "lucide-react": "^1.11.0",
+    "pdf-lib": "^1.17.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-markdown": "^10.1.0",

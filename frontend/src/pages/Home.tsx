@@ -60,7 +60,7 @@ export default function Home() {
 
   const [pecaVisualizar, setPecaVisualizar] = useState<Peca | null>(null);
   const [normaDetalheVisualizar, setNormaDetalheVisualizar] = useState<Norma | null>(null);
-  const [pdfVisualizar, setPdfVisualizar] = useState<{ id: string; nome: string } | null>(null);
+  const [pdfVisualizar, setPdfVisualizar] = useState<{ url: string; nome: string } | null>(null);
   const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
 
@@ -296,7 +296,7 @@ export default function Home() {
           )}
         </div>
 
-        {pdfVisualizar && <VisualizadorPdf id={pdfVisualizar.id} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
+        {pdfVisualizar && <VisualizadorPdf url={pdfVisualizar.url} nome={pdfVisualizar.nome} onClose={() => setPdfVisualizar(null)} />}
 
         {indiceImagemAberta !== null && imagensAbertas && (
           <LightboxImagens imagens={imagensAbertas} indiceInicial={indiceImagemAberta} onClose={() => { setIndiceImagemAberta(null); setImagensAbertas(null); }} />
@@ -359,7 +359,7 @@ export default function Home() {
                                 </div>
                                 <div className="vinculo-norma-actions">
                                   {n.nomePdf && (
-                                    <button type="button" className="btn btn-info btn-icon" onClick={(e) => { e.stopPropagation(); setPdfVisualizar({ id: n.id, nome: n.nomePdf! }); }} title="Visualizar PDF">
+                                    <button type="button" className="btn btn-info btn-icon" onClick={(e) => { e.stopPropagation(); setPdfVisualizar({ url: `/pdf/${n.nomePdf}`, nome: n.nomePdf! }); }} title="Visualizar PDF">
                                       <i className="fas fa-file-pdf"></i>
                                     </button>
                                   )}
@@ -397,7 +397,7 @@ export default function Home() {
           <ModalDetalhesNorma
             norma={normaDetalheVisualizar}
             onClose={() => setNormaDetalheVisualizar(null)}
-            onViewPdf={(id, nome) => setPdfVisualizar({ id, nome })}
+            onViewPdf={(url, nome) => setPdfVisualizar({ url, nome })}
             onViewImages={(imgs, idx) => { setImagensAbertas(imgs); setIndiceImagemAberta(idx); }}
           />
         )}

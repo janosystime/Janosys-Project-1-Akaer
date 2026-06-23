@@ -231,15 +231,15 @@
 .chatbot-boas-vindas h3 {
   font-size: 18px;
   color: var(--cor-texto);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .chatbot-boas-vindas p {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--cor-cinza-escuro);
   max-width: 400px;
-  line-height: 1.5;
-  margin-bottom: 24px;
+  line-height: 1;
+  margin-bottom: 8px;
 }
 
 /* --- Chips de perguntas-exemplo --- */

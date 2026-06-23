@@ -1,0 +1,18 @@
+[
+  {
+    "id": "rbac-25-1309",
+    "nome": "RBAC 25-1309",
+    "versoes": [
+      {
+        "versao": "1.0",
+        "data": "2025-01-10",
+        "arquivo": "/pdf/rbac-25-1309-v1.pdf"
+      },
+      {
+        "versao": "2.0",
+        "data": "2025-06-01",
+        "arquivo": "/pdf/rbac-25-1309-v2.pdf"
+      }
+    ]
+  }
+]

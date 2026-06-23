@@ -128,7 +128,7 @@ export default function Biblioteca() {
           onEditar={abrirModalEdicao}
           onExcluir={handleDelete}
           onVerDetalhes={setNormaVisualizar}
-          onVerPdf={(idNorma, nomePdfVisualizado) => setPdfAberto({ id: idNorma, nome: nomePdfVisualizado })}
+          onVerPdf={(url, nome) => setPdfAberto({ url, nome })}
           onVerImagens={(imagensParaVisualizar) => {
             setImagensAbertas(imagensParaVisualizar);
             setIndiceImagemAberta(0);
@@ -163,7 +163,7 @@ export default function Biblioteca() {
           onFecharDetalhes={() => setNormaVisualizar(null)}
           onEditar={abrirModalEdicao}
           onExcluir={handleDelete}
-          onAbrirPdf={(idNorma, nomePdfVisualizado) => setPdfAberto({ id: idNorma, nome: nomePdfVisualizado })}
+          onAbrirPdf={(urlNorma, nomePdfVisualizado) => setPdfAberto({ url: urlNorma, nome: nomePdfVisualizado })}
           onAbrirImagens={(imagensParaVisualizar, indice) => {
             setImagensAbertas(imagensParaVisualizar);
             setIndiceImagemAberta(indice);

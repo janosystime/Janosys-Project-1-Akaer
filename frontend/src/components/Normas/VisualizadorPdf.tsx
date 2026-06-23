@@ -4,7 +4,6 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { obterUsuarioAtual } from "../../auth/session";
-import { API_BASE_URL } from "../../config/api";
 import MarcaDaguaPdf from "./MarcaDaguaPdf";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -15,47 +14,21 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 const LARGURA_PAGINA = Math.min(window.innerWidth * 0.8, 800);
 
 type PropsVisualizadorPdf = {
-  id: string;
+  url: string;
   nome: string;
   onClose: () => void;
 };
 
 export default function VisualizadorPdf({
-  id,
+  url,
   nome,
   onClose,
 }: PropsVisualizadorPdf) {
   const usuario = obterUsuarioAtual();
   const nomeUsuario = usuario?.nome ?? "Usuário Desconhecido";
 
-  const urlView = `${API_BASE_URL}/normas/${encodeURIComponent(id)}/view`;
-
-  const [baixando, setBaixando] = useState(false);
-
-  const baixarComMarcaDagua = useCallback(async () => {
-    setBaixando(true);
-    try {
-      const resposta = await fetch(
-        `${API_BASE_URL}/normas/${encodeURIComponent(id)}/download`,
-        { headers: { "x-usuario-nome": nomeUsuario } }
-      );
-      if (!resposta.ok) throw new Error("Falha no download");
-      const blob = await resposta.blob();
-      const urlBlob = URL.createObjectURL(blob);
-      const ancora = document.createElement("a");
-      ancora.href = urlBlob;
-      ancora.download = nome || `${id}.pdf`;
-      document.body.appendChild(ancora);
-      ancora.click();
-      ancora.remove();
-      URL.revokeObjectURL(urlBlob);
-    } catch {
-      alert("Erro ao baixar o PDF. Tente novamente.");
-    } finally {
-      setBaixando(false);
-    }
-  }, [id, nome, nomeUsuario]);
-
+  const urlView = url;
+  
   const [totalPaginas, setTotalPaginas] = useState<number>();
   const [paginaAtual, setPaginaAtual] = useState<number>(1);
 
@@ -104,17 +77,7 @@ export default function VisualizadorPdf({
             {nome}
           </div>
           <div className="pdf-viewer-actions">
-            <button
-              className="btn btn-primary"
-              onClick={baixarComMarcaDagua}
-              disabled={baixando}
-              title="Baixar com marca d'água"
-            >
-              <i className={`fas ${baixando ? "fa-spinner fa-spin" : "fa-download"}`} />
-              <span style={{ marginLeft: 6 }}>
-                {baixando ? "Gerando..." : "Baixar (marca d'água)"}
-              </span>
-            </button>
+
             <button
               className="btn btn-danger btn-icon"
               onClick={onClose}
