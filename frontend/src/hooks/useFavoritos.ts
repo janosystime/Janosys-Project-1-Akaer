@@ -5,8 +5,7 @@ import { favoritosDb, usuariosDb } from "../utils/storage";
 
 export default function useFavoritos() {
   const sessao = obterUsuarioAtual();
-  /*const encontrado = sessao ? usuariosDb.findByLogin(sessao.email) : null;*/
-  const encontrado = usuariosDb.findByLogin(sessao.nome);
+  const encontrado = sessao ? usuariosDb.findByLogin(sessao.nome) : null;
 
   const [usuarioId] = useState<number | null>(encontrado?.id ?? null);
   const [favoritos, setFavoritos] = useState<Set<string>>(
