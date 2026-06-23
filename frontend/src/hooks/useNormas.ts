@@ -46,7 +46,7 @@ export default function useNormas() {
   const [filtroItem, setFiltroItem] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
 
-  const [pdfAberto, setPdfAberto] = useState<{ url: string; nome: string } | null>(null);
+  const [pdfAberto, setPdfAberto] = useState<{ id: string; nome: string } | null>(null);
   const [imagensAbertas, setImagensAbertas] = useState<string[] | null>(null);
   const [indiceImagemAberta, setIndiceImagemAberta] = useState<number | null>(null);
 

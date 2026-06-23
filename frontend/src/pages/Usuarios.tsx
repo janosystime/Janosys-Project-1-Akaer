@@ -194,7 +194,7 @@ export default function Usuarios() {
           <div className="filter-badges-row">
             <span className="filter-label"><i className="fas fa-building"></i> Departamento:</span>
             {departamentos.map((d) => (
-              <button key={d} className={`filter-badge ${filtroDepartamento === d ? "active theme-all" : ""}`} onClick={() => setFiltroDepartamento(d)}>
+              <button key={d} className={`filter-badge ${filtroDepartamento === d ? "active theme-all" : ""}`} onClick={() => setFiltroDepartamento(d ?? '')}>
                 {d}
               </button>
             ))}
