@@ -14,7 +14,7 @@ export default function ContainerDeToasts({
       {toasts.map((toastAtual) => (
         <div key={toastAtual.id} className={`toast toast-${toastAtual.tipo}`}>
           <i
-            className={`fas ${toastAtual.tipo === "sucesso" ? "fa-check-circle" : "fa-circle-exclamation"}`}
+            className={`fas ${toastAtual.tipo === "sucesso" ? "fa-check-circle" : toastAtual.tipo === "info" ? "fa-robot" : "fa-circle-exclamation"}`}
           ></i>
           <span>{toastAtual.mensagem}</span>
           <button

@@ -355,6 +355,13 @@ export default function useNormas() {
             "sucesso",
             `Norma "${normaSalva.id}" atualizada com sucesso!`,
           );
+          // Toast de re-indexação RAG (aparece após 1.5s)
+          setTimeout(() => {
+            adicionarToast(
+              "info",
+              `🤖 Re-indexando "${normaSalva.id}" para o assistente IA...`,
+            );
+          }, 1500);
           fecharModal();
         } else {
           const errorData = await response.json();
@@ -381,6 +388,13 @@ export default function useNormas() {
             "sucesso",
             `Norma "${normaSalva.id}" registrada com sucesso!`,
           );
+          // Toast de indexação RAG (aparece após 1.5s)
+          setTimeout(() => {
+            adicionarToast(
+              "info",
+              `🤖 Indexando "${normaSalva.id}" para o assistente IA...`,
+            );
+          }, 1500);
           fecharModal();
         } else {
           const errorData = await response.json();
@@ -420,6 +434,13 @@ export default function useNormas() {
             );
             fecharConfirmacao();
             adicionarToast("sucesso", `Norma "${idParaExcluir}" excluída.`);
+            // Toast de remoção do índice RAG (aparece após 1.5s)
+            setTimeout(() => {
+              adicionarToast(
+                "info",
+                `🤖 Removendo "${idParaExcluir}" do índice do assistente IA...`,
+              );
+            }, 1500);
           } else {
             const errorData = await response.json();
             adicionarToast("erro", errorData.error || "Erro ao excluir norma.");

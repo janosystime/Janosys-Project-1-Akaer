@@ -22,8 +22,11 @@ services:
     environment:
       DATABASE_URL: "mysql://root:password@db:3306/janosys_db"
       PORT: "3001"
+      RAG_SERVICE_URL: "http://rag:8000"
     depends_on:
       db:
+        condition: service_healthy
+      rag:
         condition: service_healthy
     restart: unless-stopped
 

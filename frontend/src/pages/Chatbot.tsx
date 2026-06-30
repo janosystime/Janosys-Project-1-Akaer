@@ -1,5 +1,5 @@
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type ReactNode } from 'react'
 import { Bot, Send, FileText, ChevronDown, ChevronRight } from 'lucide-react'
 import ReactMarkdown from 'react-markdown' 
 import { RAG_API_BASE_URL } from '../config/api'
@@ -63,6 +63,7 @@ function FontesMensagem({ fontes }: { fontes: FonteDocumento[] }) {
           {fontes.map((fonte, i) => (
             <span key={i} className="chatbot-fonte-badge">
               <FileText size={12} />
+              <span className="chatbot-fonte-numero">{i + 1}</span>
               {fonte.filename} — p. {fonte.page}
             </span>
           ))}
@@ -70,6 +71,133 @@ function FontesMensagem({ fontes }: { fontes: FonteDocumento[] }) {
       )}
     </div>
   )
+}
+
+function CitacaoInline({
+  numero,
+  fonte,
+}: {
+  numero: number
+  fonte: FonteDocumento | null
+}) {
+  const [visivel, setVisivel] = useState(false)
+
+  const tooltipTexto = fonte
+    ? `${fonte.filename} — p. ${fonte.page}`
+    : `Trecho ${numero}`
+
+  return (
+    <span
+      className="citacao-inline"
+      onMouseEnter={() => setVisivel(true)}
+      onMouseLeave={() => setVisivel(false)}
+      onClick={() => setVisivel(!visivel)}
+    >
+      <span className="citacao-badge">{numero}</span>
+      {visivel && (
+        <span className="citacao-tooltip">
+          <FileText size={11} />
+          {tooltipTexto}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function parsearCitacoes(
+  texto: string,
+  fontes: FonteDocumento[],
+): ReactNode[] {
+  const regex = /【(\d+)】/g
+  const partes: ReactNode[] = []
+  let ultimoIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = regex.exec(texto)) !== null) {
+    if (match.index > ultimoIndex) {
+      partes.push(texto.slice(ultimoIndex, match.index))
+    }
+
+    const numero = parseInt(match[1], 10)
+    const fonte = fontes[numero - 1] || null
+
+    partes.push(
+      <CitacaoInline
+        key={`cite-${match.index}-${numero}`}
+        numero={numero}
+        fonte={fonte}
+      />,
+    )
+
+    ultimoIndex = regex.lastIndex
+  }
+
+  if (ultimoIndex < texto.length) {
+    partes.push(texto.slice(ultimoIndex))
+  }
+
+  return partes
+}
+
+function MarkdownComCitacoes({
+  texto,
+  fontes,
+}: {
+  texto: string
+  fontes: FonteDocumento[]
+}) {
+  // Verifica se existem citações no texto
+  const temCitacoes = /【\d+】/.test(texto)
+
+  if (!temCitacoes) {
+    return <ReactMarkdown>{texto}</ReactMarkdown>
+  }
+
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => (
+          <p>{processarFilhos(children, fontes)}</p>
+        ),
+        li: ({ children }) => (
+          <li>{processarFilhos(children, fontes)}</li>
+        ),
+        td: ({ children }) => (
+          <td>{processarFilhos(children, fontes)}</td>
+        ),
+        th: ({ children }) => (
+          <th>{processarFilhos(children, fontes)}</th>
+        ),
+      }}
+    >
+      {texto}
+    </ReactMarkdown>
+  )
+}
+
+function processarFilhos(
+  children: ReactNode,
+  fontes: FonteDocumento[],
+): ReactNode {
+  if (children == null) return children
+
+  if (typeof children === 'string') {
+    if (/【\d+】/.test(children)) {
+      return <>{parsearCitacoes(children, fontes)}</>
+    }
+    return children
+  }
+
+  if (Array.isArray(children)) {
+    return children.map((child, i) => {
+      if (typeof child === 'string' && /【\d+】/.test(child)) {
+        return <span key={`parsed-${i}`}>{parsearCitacoes(child, fontes)}</span>
+      }
+      return child
+    })
+  }
+
+  return children
 }
 
 export default function Chatbot() {
@@ -214,7 +342,11 @@ export default function Chatbot() {
           {mensagens.map((msg) => (
             <div key={msg.id} className={`chatbot-msg ${msg.tipo}`}>
               <div className="chatbot-msg-bolha">
-                <ReactMarkdown>{msg.texto}</ReactMarkdown>
+                {msg.tipo === 'bot' && msg.fontes ? (
+                  <MarkdownComCitacoes texto={msg.texto} fontes={msg.fontes} />
+                ) : (
+                  <ReactMarkdown>{msg.texto}</ReactMarkdown>
+                )}
               </div>
               
               {msg.tipo === 'bot' && msg.fontes && (

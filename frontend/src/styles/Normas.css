@@ -1382,6 +1382,15 @@ body {
   color: var(--c-danger);
   font-size: 1.1rem;
 }
+.toast-info {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+.toast-info i {
+  color: #2563eb;
+  font-size: 1.1rem;
+}
 .toast-close {
   background: none;
   border: none;

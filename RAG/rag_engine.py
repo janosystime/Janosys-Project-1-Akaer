@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 import chromadb
@@ -8,6 +9,8 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import CrossEncoder
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 MODELO_EMBEDDINGS = "sentence-transformers/all-MiniLM-L6-v2"
@@ -57,8 +60,8 @@ def get_chroma_collection():
     )
     return colecao
 
-
 def expand_query_safely(query: str, client: InferenceClient) -> str:
+    """Expande a query com sinônimos técnicos e termos do glossário."""
     query_lower = query.lower()
     expansões_estaticas = []
     
@@ -92,8 +95,8 @@ Termos extraídos:"""
     query_expandida = f"{query} {' '.join(expansões_estaticas)} {termos_llm}".strip()
     return query_expandida
 
-
 def hybrid_retrieve(query_expandida: str, top_k_dense: int = 15, top_k_sparse: int = 15, final_candidates: int = 10) -> tuple[list, list]:
+    """Busca híbrida combinando embeddings densos (ChromaDB) e esparsos (BM25) via RRF."""
     colecao = get_chroma_collection()
     
     resultados_dense = colecao.query(query_texts=[query_expandida], n_results=top_k_dense)
@@ -136,8 +139,8 @@ def hybrid_retrieve(query_expandida: str, top_k_dense: int = 15, top_k_sparse: i
     
     return docs_hibridos, metas_hibridos
 
-
 def rerank_candidates(query_original: str, documentos: list, metadados: list, top_n: int = 4) -> tuple[list, list]:
+    """Re-rankeia candidatos usando um Cross-Encoder para maior precisão."""
     if not documentos:
         return [], []
         
@@ -160,72 +163,433 @@ def listar_documentos() -> list[str]:
     nomes = {meta.get("filename", "") for meta in metadados if meta.get("filename", "")}
     return sorted(list(nomes))
 
+def extrair_filtros_query(query: str) -> dict:
+    query_lower = query.lower()
+
+    paginas = []
+
+    padrao_pagina = re.findall(
+        r'(?:p[aá]ginas?\s*|p\.\s*|pg\.?\s*|pag\.?\s*)(\d+(?:\s*(?:e|,|a)\s*\d+)*)',
+        query_lower,
+    )
+    for match in padrao_pagina:
+        if ' a ' in match:
+            partes = match.split(' a ')
+            try:
+                inicio, fim = int(partes[0].strip()), int(partes[1].strip())
+                paginas.extend(range(inicio, fim + 1))
+            except ValueError:
+                pass
+        else:
+            numeros = re.findall(r'\d+', match)
+            paginas.extend(int(n) for n in numeros)
+
+    norma_hint = None
+
+    padroes_norma = [
+        r'(rbac[\s\-]*[\d\.]*)',
+        r'(far[\s\-]*[\d\.]*)',
+        r'(cs[\s\-]*[\d\.]*)',
+        r'(sae[\s\-]*(?:arp|as)?[\s\-]*[\d\.]*)',
+        r'(iso[\s\-]*[\d\.]*)',
+        r'(arp[\s\-]*[\d\.]*)',
+        r'norma\s+([a-záàâãéèêíïóôõúüç\w\s\-\.]+?)(?:\s+indexada|\s+cadastrada|\s+página|\s*\?|\s*$)',
+    ]
+
+    for padrao in padroes_norma:
+        match = re.search(padrao, query_lower)
+        if match:
+            norma_hint = match.group(1).strip().rstrip('.')
+            break
+
+    return {
+        "paginas": paginas,
+        "norma_hint": norma_hint,
+    }
 
 
-SYSTEM_PROMPT = """Você é um assistente técnico da Akaer, especialista em normas aeronáuticas para o sistema SIGNA.
-Sua missão é fornecer respostas ultra-objetivas, diretas e amplamente espaçadas para engenheiros.
+def busca_por_metadados(
+    paginas: list[int] | None = None,
+    norma_hint: str | None = None,
+    max_resultados: int = 10,
+) -> tuple[list, list]:
+    colecao = get_chroma_collection()
 
-Regras estritas de conteúdo e formatação:
-1. DIRETO AO PONTO: Nunca use introduções vazias ou resumos conclusivos. Vá direto à resposta.
-2. PROIBIDO CITAR FONTES NO TEXTO: NUNCA escreva o nome do documento, siglas de arquivos ou números de páginas (ex: evite "pdf", "p. 278", "rbac"). A interface do sistema já exibe os documentos consultados automaticamente. Foque apenas no conteúdo técnico.
-3. ZERO ALUCINAÇÃO: Se a informação não estiver nos trechos, diga "Informação não disponível".
-4. FORMATO EM TÓPICOS ESPAÇADOS: Você deve OBRIGATORIAMENTE seguir o modelo abaixo, garantindo uma linha em branco entre cada item e iniciando com o termo em **negrito**.
+    todos = colecao.get(include=["documents", "metadatas"])
+    all_ids = todos.get("ids", [])
+    all_texts = todos.get("documents", [])
+    all_metas = todos.get("metadatas", [])
 
-Siga exatamente este exemplo de estrutura:
-**[Tema Principal da Pergunta]**
+    if not all_texts:
+        return [], []
 
-* **Termo Técnico A:** Resumo curto e direto da regra ou requisito extraído do texto.
+    resultados = []
 
-* **Termo Técnico B:** Resumo curto e direto da regra ou requisito extraído do texto."""
+    for i, (doc_id, texto, meta) in enumerate(zip(all_ids, all_texts, all_metas)):
+        score = 0
+        filename_lower = meta.get("filename", "").lower()
+        page = meta.get("page", None)
 
-TEMPLATE_USUARIO = """Abaixo estão trechos extraídos de documentos normativos aeronáuticos filtrados por relevância híbrida. Use esses trechos para responder minha pergunta.
+        if norma_hint:
+            hint_parts = norma_hint.replace("-", " ").split()
+            matches_norma = all(part in filename_lower.replace("-", " ") for part in hint_parts)
+            if matches_norma:
+                score += 10
+
+        if paginas and page is not None:
+            if page in paginas:
+                score += 100
+
+        if score > 0:
+            resultados.append((score, texto, meta))
+
+    resultados.sort(key=lambda x: x[0], reverse=True)
+    resultados = resultados[:max_resultados]
+
+    docs = [r[1] for r in resultados]
+    metas = [r[2] for r in resultados]
+
+    return docs, metas
+
+def retrieve_context(
+    query: str,
+    top_n: int = 4,
+    expand: bool = True,
+    final_candidates: int = 10,
+) -> dict:
+    filtros = extrair_filtros_query(query)
+    tem_filtros = bool(filtros["paginas"]) or bool(filtros["norma_hint"])
+
+    docs_meta, metas_meta = [], []
+    if tem_filtros:
+        docs_meta, metas_meta = busca_por_metadados(
+            paginas=filtros["paginas"],
+            norma_hint=filtros["norma_hint"],
+            max_resultados=top_n,
+        )
+
+    cliente_llm = InferenceClient(provider="auto", token=HF_TOKEN)
+
+    if expand:
+        query_expandida = expand_query_safely(query, cliente_llm)
+    else:
+        query_expandida = query
+
+    docs_semanticos, metas_semanticos = hybrid_retrieve(
+        query_expandida, final_candidates=final_candidates
+    )
+    docs_reranked, metas_reranked = rerank_candidates(
+        query, docs_semanticos, metas_semanticos, top_n=top_n
+    )
+
+    if tem_filtros and docs_meta:
+        docs_finais = list(docs_meta)
+        metas_finais = list(metas_meta)
+
+        textos_ja_incluidos = set(d[:200] for d in docs_finais)
+        for doc, meta in zip(docs_reranked, metas_reranked):
+            if doc[:200] not in textos_ja_incluidos and len(docs_finais) < top_n * 2:
+                docs_finais.append(doc)
+                metas_finais.append(meta)
+                textos_ja_incluidos.add(doc[:200])
+
+        documentos = docs_finais[:top_n]
+        metadados = metas_finais[:top_n]
+    else:
+        documentos = docs_reranked
+        metadados = metas_reranked
+
+    trechos = []
+    fontes = []
+    for doc, meta in zip(documentos, metadados):
+        nome_arquivo = meta.get("filename", "desconhecido")
+        pagina = meta.get("page", "?")
+        trechos.append({
+            "texto": doc,
+            "filename": nome_arquivo,
+            "page": pagina,
+            "norma_id": meta.get("norma_id", ""),
+            "titulo": meta.get("titulo", ""),
+            "organizacao": meta.get("organizacao", ""),
+            "categoria": meta.get("categoria", ""),
+        })
+        fontes.append({"filename": nome_arquivo, "page": pagina})
+
+    return {
+        "trechos": trechos,
+        "fontes": fontes,
+        "query_expandida": query_expandida if not tem_filtros else query,
+        "documentos_indexados": listar_documentos(),
+        "filtros_detectados": filtros,
+    }
+
+def call_llm(
+    mensagens: list[dict],
+    max_tokens: int = 2048,
+    temperature: float = 0.6,
+) -> str:
+    cliente_llm = InferenceClient(provider="auto", token=HF_TOKEN)
+
+    try:
+        resposta = cliente_llm.chat_completion(
+            model=MODELO_LLM,
+            messages=mensagens,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        return resposta.choices[0].message.content
+    except Exception as e:
+        logger.error(str(e))
+        return str(e)
+
+PROMPT_CHATBOT = """Você é um engenheiro aeronáutico sênior e consultor técnico da Akaer, integrado ao sistema SIGNA (Sistema Integrado de Gestão de Normas Aeronáuticas).
+
+Você tem amplo conhecimento em normas aeronáuticas (RBAC, FAR, CS, SAE ARP, ISO), certificação de aeronaves, análise de segurança de sistemas, aeronavegabilidade e engenharia estrutural.
+
+COMO RESPONDER:
+
+1. PRIORIZE OS DOCUMENTOS: Base sua resposta nos trechos fornecidos. Quando a informação vier dos documentos, seja preciso e fiel ao conteúdo.
+
+2. COMPLEMENTE COM CONHECIMENTO TÉCNICO: Quando os trechos não cobrirem completamente a pergunta, você pode complementar com seu conhecimento técnico aeronáutico para dar contexto, explicar conceitos ou conectar informações. Neste caso, indique sutilmente que está complementando (ex: "De forma geral na aviação...", "Tipicamente neste contexto...").
+
+3. SINTETIZE E CONECTE: Não se limite a repetir trechos isolados. Sintetize informações de múltiplos trechos, identifique relações entre requisitos, e ofereça uma visão integrada.
+
+4. ADAPTE O FORMATO À PERGUNTA:
+   - Perguntas conceituais → parágrafos explicativos fluidos
+   - Perguntas sobre requisitos específicos → tópicos organizados
+   - Perguntas comparativas → tabelas ou comparações estruturadas
+   - Perguntas sobre processos → etapas sequenciais
+   - Use **negrito** para termos-chave, mas varie a estrutura naturalmente
+
+5. CITAÇÕES INLINE OBRIGATÓRIAS: Sempre que usar informação de um trecho específico, insira o marcador 【n】 imediatamente após a frase ou afirmação correspondente, onde "n" é o número do trecho (1, 2, 3 ou 4). Exemplos:
+   - "A análise de segurança deve considerar falhas latentes e ativas【1】."
+   - "O critério de tolerância a dano exige que a estrutura suporte cargas limite após dano acidental【2】, e isso se aplica tanto a estruturas metálicas quanto compostas【3】."
+   Se uma afirmação combina informações de múltiplos trechos, cite todos os relevantes: 【1】【3】.
+   NÃO cite nomes de arquivos, páginas ou siglas de documentos no texto — apenas use os marcadores 【n】. A interface exibirá automaticamente o documento e página correspondentes ao passar o cursor sobre o marcador.
+
+6. SE NÃO HOUVER INFORMAÇÃO RELEVANTE: Diga que a informação específica não está disponível na base atual, mas ofereça contexto geral se possível. Não insira marcadores 【n】 em afirmações baseadas em conhecimento geral.
+
+7. TOM: Técnico mas acessível. Imagine que está explicando para um colega engenheiro — seja claro, direto, mas não robótico. Evite introduções genéricas como "Claro!" ou "Ótima pergunta!"."""
+
+TEMPLATE_CHATBOT = """Abaixo estão trechos de documentos normativos aeronáuticos, numerados de 1 a N, selecionados por relevância para minha pergunta. Use-os como base principal para sua resposta, complementando com conhecimento técnico quando necessário.
 
 TRECHOS DOS DOCUMENTOS:
 {contexto}
 
 MINHA PERGUNTA: {pergunta}
 
-Responda com base nos trechos acima de forma direta em tópicos, omitindo completamente nomes de arquivos ou páginas no seu texto."""
+Responda de forma inteligente e bem estruturada, adaptando o formato ao tipo de pergunta. IMPORTANTE: insira marcadores 【n】 (onde n = número do trecho) após cada afirmação baseada em um trecho específico, para que a interface possa mostrar a fonte ao passar o cursor. Não mencione nomes de arquivos ou páginas no texto."""
 
+
+PROMPT_AUDITORIA = """Você é um auditor de conformidade aeronáutica da Akaer, especialista em verificação de aderência a normas no sistema SIGNA.
+
+Sua tarefa é analisar um texto técnico (relatório, procedimento ou documento de engenharia) e verificar se ele está em conformidade com as normas aeronáuticas relevantes.
+
+COMO ANALISAR:
+
+1. IDENTIFIQUE REQUISITOS: Nos trechos fornecidos, identifique os requisitos normativos aplicáveis ao texto analisado.
+
+2. VERIFIQUE CONFORMIDADE: Para cada requisito identificado, avalie se o texto do engenheiro atende, atende parcialmente ou não atende.
+
+3. FORMATO DA RESPOSTA — use exatamente esta estrutura:
+
+**Resumo Geral:** [Conforme / Parcialmente Conforme / Não Conforme]
+
+**Requisitos Verificados:**
+
+* **[Requisito]:** ✅ Conforme — [breve justificativa]【n】
+* **[Requisito]:** ⚠️ Parcial — [o que falta]【n】
+* **[Requisito]:** ❌ Não Conforme — [o que está errado e como corrigir]【n】
+
+**Recomendações:** [Se houver itens parciais ou não conformes, sugira ações corretivas]
+
+4. CITAÇÕES: Use marcadores 【n】 para indicar de qual trecho normativo veio cada verificação.
+5. Seja rigoroso mas justo — não invente não-conformidades."""
+
+TEMPLATE_AUDITORIA = """Abaixo estão trechos de normas aeronáuticas relevantes, e o texto técnico que precisa ser auditado.
+
+TRECHOS NORMATIVOS:
+{contexto}
+
+TEXTO PARA AUDITAR:
+{texto_auditoria}
+
+Analise a conformidade do texto com os requisitos normativos acima. Use marcadores 【n】 para rastrear cada verificação até o trecho normativo correspondente."""
+
+
+PROMPT_NOTAS = """Você é um redator técnico aeronáutico da Akaer, especialista em sintetizar normas complexas em notas técnicas claras e acionáveis para o sistema SIGNA.
+
+Sua tarefa é gerar notas técnicas estruturadas a partir dos trechos da norma fornecidos.
+
+COMO GERAR NOTAS:
+
+1. Identifique os pontos-chave, requisitos e procedimentos nos trechos.
+2. Reescreva-os como notas técnicas curtas e objetivas.
+3. Cada nota deve ser auto-suficiente (compreensível sem ler a norma inteira).
+4. Use linguagem imperativa quando apropriado ("Deve-se...", "É necessário...", "Verificar se...").
+5. Agrupe as notas por tema quando possível.
+
+FORMATO:
+Retorne uma lista JSON de strings, onde cada string é uma nota técnica:
+["Nota 1...", "Nota 2...", "Nota 3..."]
+
+Retorne APENAS o JSON, sem explicações adicionais."""
+
+TEMPLATE_NOTAS = """Abaixo estão trechos de uma norma aeronáutica. Gere notas técnicas claras e acionáveis a partir deles.
+
+TRECHOS DA NORMA:
+{contexto}
+
+INFORMAÇÕES DA NORMA:
+- Código: {codigo}
+- Título: {titulo}
+- Organização: {organizacao}
+
+Retorne as notas como uma lista JSON de strings."""
 
 def generate_answer(query: str) -> dict:
-    cliente_llm = InferenceClient(provider="auto", token=HF_TOKEN)
-    
-    query_expandida = expand_query_safely(query, cliente_llm)
-    
-    docs_candidatos, metas_candidatos = hybrid_retrieve(query_expandida, final_candidates=10)
-    
-    documentos, metadados = rerank_candidates(query, docs_candidatos, metas_candidatos, top_n=4)
+    contexto = retrieve_context(query, top_n=4)
 
-    docs_disponiveis = listar_documentos()
-    lista_docs = "DOCUMENTOS INDEXADOS NO SISTEMA:\n" + "\n".join(f"  - {nome}" for nome in docs_disponiveis)
-
-    trechos = []
-    fontes = []
-    for i, (doc, meta) in enumerate(zip(documentos, metadados)):
-        nome_arquivo = meta.get("filename", "desconhecido")
-        pagina = meta.get("page", "?")
-        trechos.append(f"[Trecho {i+1} — {nome_arquivo}, p.{pagina}]\n{doc}")
-        fontes.append({"filename": nome_arquivo, "page": pagina})
-
-    contexto = lista_docs + "\n\n" + "\n\n".join(trechos)
-    mensagem_usuario = TEMPLATE_USUARIO.format(contexto=contexto, pergunta=query)
-
-    try:
-        resposta = cliente_llm.chat_completion(
-            model=MODELO_LLM,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": mensagem_usuario},
-            ],
-            max_tokens=1024,
-            temperature=0.4,
+    trechos_formatados = []
+    for i, trecho in enumerate(contexto["trechos"]):
+        trechos_formatados.append(
+            f"[Trecho {i+1} — {trecho['filename']}, p.{trecho['page']}]\n{trecho['texto']}"
         )
-        texto_resposta = resposta.choices[0].message.content
-    except Exception as e:
-        texto_resposta = f"Erro ao gerar resposta com o LLM: {str(e)}"
+
+    lista_docs = "DOCUMENTOS INDEXADOS NO SISTEMA:\n" + "\n".join(
+        f"  - {nome}" for nome in contexto["documentos_indexados"]
+    )
+
+    contexto_completo = lista_docs + "\n\n" + "\n\n".join(trechos_formatados)
+    mensagem_usuario = TEMPLATE_CHATBOT.format(contexto=contexto_completo, pergunta=query)
+
+    texto_resposta = call_llm(
+        mensagens=[
+            {"role": "system", "content": PROMPT_CHATBOT},
+            {"role": "user", "content": mensagem_usuario},
+        ],
+        max_tokens=2048,
+        temperature=0.6,
+    )
 
     return {
         "answer": texto_resposta,
+        "sources": contexto["fontes"],
+    }
+
+def analyze_compliance(
+    texto_relatorio: str,
+    norma_ids: list[str] | None = None,
+    top_n: int = 6,
+) -> dict:
+    contexto = retrieve_context(texto_relatorio, top_n=top_n)
+
+    if norma_ids:
+        norma_ids_set = set(norma_ids)
+        trechos_filtrados = [
+            t for t in contexto["trechos"]
+            if t.get("norma_id", "") in norma_ids_set
+        ]
+        if trechos_filtrados:
+            contexto["trechos"] = trechos_filtrados
+            contexto["fontes"] = [
+                {"filename": t["filename"], "page": t["page"]}
+                for t in trechos_filtrados
+            ]
+
+    trechos_formatados = []
+    for i, trecho in enumerate(contexto["trechos"]):
+        trechos_formatados.append(
+            f"[Trecho {i+1} — {trecho['filename']}, p.{trecho['page']}]\n{trecho['texto']}"
+        )
+
+    contexto_completo = "\n\n".join(trechos_formatados)
+    mensagem_usuario = TEMPLATE_AUDITORIA.format(
+        contexto=contexto_completo,
+        texto_auditoria=texto_relatorio,
+    )
+
+    texto_analise = call_llm(
+        mensagens=[
+            {"role": "system", "content": PROMPT_AUDITORIA},
+            {"role": "user", "content": mensagem_usuario},
+        ],
+        max_tokens=2048,
+        temperature=0.3,
+    )
+
+    return {
+        "analysis": texto_analise,
+        "sources": contexto["fontes"],
+        "query_expandida": contexto["query_expandida"],
+    }
+
+def generate_notes(
+    norma_id: str,
+    titulo: str = "",
+    codigo: str = "",
+    organizacao: str = "",
+    top_n: int = 6,
+) -> dict:
+    contexto = retrieve_context(
+        f"{codigo} {titulo}",
+        top_n=top_n,
+        expand=False,  # Não expandir — queremos chunks exatos desta norma
+    )
+
+    trechos_da_norma = [
+        t for t in contexto["trechos"]
+        if t.get("norma_id", "") == norma_id
+    ]
+
+    if not trechos_da_norma:
+        trechos_da_norma = contexto["trechos"]
+
+    trechos_formatados = []
+    fontes = []
+    for i, trecho in enumerate(trechos_da_norma):
+        trechos_formatados.append(
+            f"[Trecho {i+1}]\n{trecho['texto']}"
+        )
+        fontes.append({"filename": trecho["filename"], "page": trecho["page"]})
+
+    contexto_completo = "\n\n".join(trechos_formatados)
+    mensagem_usuario = TEMPLATE_NOTAS.format(
+        contexto=contexto_completo,
+        codigo=codigo or norma_id,
+        titulo=titulo,
+        organizacao=organizacao,
+    )
+
+    texto_resposta = call_llm(
+        mensagens=[
+            {"role": "system", "content": PROMPT_NOTAS},
+            {"role": "user", "content": mensagem_usuario},
+        ],
+        max_tokens=2048,
+        temperature=0.4,
+    )
+
+    notas = []
+    try:
+        import json
+        # Limpa possíveis marcações markdown do LLM
+        texto_limpo = texto_resposta.strip()
+        if texto_limpo.startswith("```"):
+            texto_limpo = texto_limpo.split("\n", 1)[1]
+            texto_limpo = texto_limpo.rsplit("```", 1)[0]
+        notas = json.loads(texto_limpo)
+        if not isinstance(notas, list):
+            notas = [str(notas)]
+    except (json.JSONDecodeError, Exception):
+        notas = [
+            linha.strip().lstrip("- •*").strip()
+            for linha in texto_resposta.strip().split("\n")
+            if linha.strip() and len(linha.strip()) > 10
+        ]
+
+    return {
+        "notes": notas,
+        "raw_response": texto_resposta,
         "sources": fontes,
     }

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { prisma } from '../lib/prisma';
+import { notificarIngestaoRAG, notificarRemocaoRAG } from '../lib/rag-client';
 
 const PDF_DIR = path.join(__dirname, '..', '..', 'pdfs');
 
@@ -136,6 +137,9 @@ export class NormasController {
         return criada;
       });
 
+      // Fire-and-forget: notifica o RAG para indexar a nova norma
+      notificarIngestaoRAG(norma).catch(() => {});
+
       return res.status(201).json(sanitizarNorma(norma));
     } catch (error) {
       console.error('Erro ao criar norma:', error);
@@ -198,6 +202,9 @@ export class NormasController {
         await registrarVersao(tx, atualizada, 'EDICAO', usuarioNome);
         return atualizada;
       });
+
+      // Fire-and-forget: notifica o RAG para re-indexar a norma editada
+      notificarIngestaoRAG(norma).catch(() => {});
 
       return res.json(sanitizarNorma(norma));
     } catch (error) {
@@ -297,6 +304,9 @@ export class NormasController {
           where: { id }
         });
       });
+
+      // Fire-and-forget: notifica o RAG para remover a norma do índice
+      notificarRemocaoRAG(id).catch(() => {});
 
       return res.json({ message: 'Norma removida com sucesso' });
     } catch (error) {

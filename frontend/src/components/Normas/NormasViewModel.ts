@@ -21,7 +21,7 @@ export interface Norma {
 
 export interface ToastMsg {
   id: number;
-  tipo: "erro" | "sucesso";
+  tipo: "erro" | "sucesso" | "info";
   mensagem: string;
 }
 

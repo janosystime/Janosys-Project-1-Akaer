@@ -10,6 +10,7 @@ import { favoritosRoutes } from './routes/favoritos.routes';
 import { categoriasRoutes } from './routes/categorias.routes';
 import { subcategoriasRoutes } from './routes/subcategorias.routes';
 import { pecasRoutes } from './routes/pecas.routes';
+import { sincronizarTodasNormasRAG } from './lib/rag-client';
 
 dotenv.config();
 
@@ -35,4 +36,12 @@ app.use('/pecas', pecasRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+
+  // Sincroniza todas as normas com o RAG na inicialização (fire-and-forget)
+  setTimeout(() => {
+    console.log('[RAG] Iniciando sincronização inicial com o serviço RAG...');
+    sincronizarTodasNormasRAG()
+      .then(() => console.log('[RAG] Sincronização inicial concluída.'))
+      .catch((err) => console.error('[RAG] Erro na sincronização inicial:', err));
+  }, 5000);
 });
